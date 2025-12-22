@@ -1,0 +1,55 @@
+{
+  "name": "resonite_protoflux_scripting",
+  "description": "Create and execute ProtoFlux scripts in Resonite",
+  "version": "1.0.0",
+  "parameters": {
+    "script_name": {
+      "type": "string",
+      "description": "Name for the ProtoFlux script",
+      "required": true
+    },
+    "script_type": {
+      "type": "string",
+      "enum": ["avatar_animation", "world_interaction", "ui_control", "data_processing", "network_sync"],
+      "description": "Type of ProtoFlux script to create",
+      "required": true
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Parameters to pass to the script",
+      "additionalProperties": true
+    },
+    "execute_immediately": {
+      "type": "boolean",
+      "description": "Whether to execute the script immediately after creation",
+      "default": true
+    }
+  },
+  "template": "Create and execute a {script_type} ProtoFlux script named '{script_name}' with parameters {parameters}. Execute immediately: {execute_immediately}.",
+  "examples": [
+    {
+      "input": {
+        "script_name": "ColorChanger",
+        "script_type": "avatar_animation",
+        "parameters": {
+          "target_color": [1.0, 0.5, 0.0],
+          "transition_time": 2.0
+        },
+        "execute_immediately": true
+      },
+      "output": "Create an avatar animation ProtoFlux script called 'ColorChanger' that changes avatar color to orange over 2 seconds and execute it immediately."
+    },
+    {
+      "input": {
+        "script_name": "WelcomeSystem",
+        "script_type": "world_interaction",
+        "parameters": {
+          "greeting_message": "Welcome to my world!",
+          "trigger_distance": 5.0
+        },
+        "execute_immediately": true
+      },
+      "output": "Create a world interaction ProtoFlux script called 'WelcomeSystem' that displays a welcome message when users come within 5 meters and execute it immediately."
+    }
+  ]
+}

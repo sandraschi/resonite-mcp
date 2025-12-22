@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+"""CLI interface for Resonite MCP server."""
+
+import argparse
+import logging
+import sys
+from pathlib import Path
+
+from .server import server
+
+
+def main():
+    """Main CLI entry point."""
+    parser = argparse.ArgumentParser(
+        description="Resonite MCP Server - Natural language control for Resonite social VR platform"
+    )
+
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host to bind the HTTP server to (default: 127.0.0.1)"
+    )
+
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to bind the HTTP server to (default: 8000)"
+    )
+
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        default="INFO",
+        help="Set the logging level (default: INFO)"
+    )
+
+    parser.add_argument(
+        "--stdio",
+        action="store_true",
+        help="Run in stdio mode for MCP protocol (default: HTTP server mode)"
+    )
+
+    parser.add_argument(
+        "--version",
+        action="version",
+        version="%(prog)s 0.1.0"
+    )
+
+    args = parser.parse_args()
+
+    # Configure logging
+    logging.basicConfig(
+        level=getattr(logging, args.log_level),
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+
+    logger = logging.getLogger(__name__)
+
+    if args.stdio:
+        # Run in MCP stdio mode
+        logger.info("Starting Resonite MCP server in stdio mode")
+        import mcp.server.stdio
+        mcp.server.stdio.run_server(server.to_server())
+    else:
+        # Run HTTP server mode
+        logger.info(f"Starting Resonite MCP server on {args.host}:{args.port}")
+        import uvicorn
+
+        # Run FastAPI server
+        uvicorn.run(
+            "resonite_mcp.http_server:app",
+            host=args.host,
+            port=args.port,
+            reload=True,
+            log_level=args.log_level.lower(),
+        )
+
+
+if __name__ == "__main__":
+    main()
