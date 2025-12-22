@@ -111,8 +111,11 @@ Add to your Cursor settings JSON:
   "mcp": {
     "resonite": {
       "command": "python",
-      "args": ["-m", "resonite_mcp"],
-      "cwd": "D:\\Dev\\repos\\resonite-mcp"
+      "args": ["-m", "resonite_mcp", "--stdio"],
+      "cwd": "D:\\Dev\\repos\\resonite-mcp",
+      "env": {
+        "PYTHONPATH": "src"
+      }
     }
   }
 }
@@ -279,3 +282,5 @@ After installation, you can:
 
 **Installation verified on**: Windows 10/11, macOS 12+, Ubuntu 20.04+
 **Last updated**: December 22, 2025
+
+
