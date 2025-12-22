@@ -712,6 +712,8 @@ ProtoFlux represents a fundamental shift in how we think about programming in VR
 
 Whether you're creating simple interactive objects or building complex virtual worlds, ProtoFlux gives you the power to bring your imagination to life in Resonite. 🚀✨
 
+**For practical script examples and implementations, see the [Useful ProtoFlux Scripts Guide](./USEFUL_PROTOFLUX_SCRIPTS.md).**
+
 ---
 
 *This guide covers ProtoFlux as of Resonite 2025.1. Check the official wiki for the latest updates and new features.*

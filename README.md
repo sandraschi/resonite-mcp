@@ -118,6 +118,7 @@ Once configured, you can use natural language commands like:
 - **[Artifacts Guide](./ARTIFACTS_GUIDE.md)** - Import/export 3D models, VRM avatars, Gaussian splats
 - **[Marble Integration Guide](./MARBLE_RESONITE_GUIDE.md)** - World Labs Marble photogrammetry workflows
 - **[ProtoFlux Guide](./PROTOFLUX_GUIDE.md)** - Comprehensive guide to visual programming
+- **[Useful ProtoFlux Scripts](./USEFUL_PROTOFLUX_SCRIPTS.md)** - Essential scripts for VR creators
 - **[Platform Comparison](./RESONITE_COMPARISON.md)** - How Resonite compares to VRChat, AltspaceVR, etc.
 - **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
 - **[Troubleshooting](./docs/TROUBLESHOUTING.md)** - Common issues and solutions
