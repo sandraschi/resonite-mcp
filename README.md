@@ -115,6 +115,7 @@ Once configured, you can use natural language commands like:
 
 ### For Beginners
 - **[Beginner's Guide](./BEGINNERS_GUIDE.md)** - Complete guide for total newcomers to Resonite
+- **[Access Guide](./RESONITE_ACCESS_GUIDE.md)** - How to run Resonite on Quest, Pico, PC, mobile
 - **[Artifacts Guide](./ARTIFACTS_GUIDE.md)** - Import/export 3D models, VRM avatars, Gaussian splats
 - **[Marble Integration Guide](./MARBLE_RESONITE_GUIDE.md)** - World Labs Marble photogrammetry workflows
 - **[ProtoFlux Guide](./PROTOFLUX_GUIDE.md)** - Comprehensive guide to visual programming
