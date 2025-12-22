@@ -115,6 +115,7 @@ Once configured, you can use natural language commands like:
 
 ### For Beginners
 - **[Beginner's Guide](./BEGINNERS_GUIDE.md)** - Complete guide for total newcomers to Resonite
+- **[Artifacts Guide](./ARTIFACTS_GUIDE.md)** - Import/export 3D models, VRM avatars, Gaussian splats
 - **[ProtoFlux Guide](./PROTOFLUX_GUIDE.md)** - Comprehensive guide to visual programming
 - **[Platform Comparison](./RESONITE_COMPARISON.md)** - How Resonite compares to VRChat, AltspaceVR, etc.
 - **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
