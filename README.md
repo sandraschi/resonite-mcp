@@ -115,6 +115,7 @@ Once configured, you can use natural language commands like:
 
 ### For Beginners
 - **[Beginner's Guide](./BEGINNERS_GUIDE.md)** - Complete guide for total newcomers to Resonite
+- **[Platform Comparison](./RESONITE_COMPARISON.md)** - How Resonite compares to VRChat, AltspaceVR, etc.
 - **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
 - **[Troubleshooting](./docs/TROUBLESHOUTING.md)** - Common issues and solutions
 
