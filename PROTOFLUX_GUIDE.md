@@ -714,6 +714,8 @@ Whether you're creating simple interactive objects or building complex virtual w
 
 **For practical script examples and implementations, see the [Useful ProtoFlux Scripts Guide](./USEFUL_PROTOFLUX_SCRIPTS.md).**
 
+**For hands-on step-by-step tutorials perfect for beginners, see the [ProtoFlux Hands-On Guide](./PROTOFLUX_HANDS_ON_GUIDE.md).**
+
 ---
 
 *This guide covers ProtoFlux as of Resonite 2025.1. Check the official wiki for the latest updates and new features.*

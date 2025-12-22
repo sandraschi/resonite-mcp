@@ -508,4 +508,6 @@ Save incremental versions. ProtoFlux changes can break worlds unexpectedly.
 
 **These ProtoFlux scripts solve real problems for VR creators, from basic avatar animation to complex world interactions. Start with the Top 5 and build your ProtoFlux toolkit progressively!** 🎮✨
 
+**For hands-on step-by-step tutorials perfect for beginners in the tutorial world, see the [ProtoFlux Hands-On Guide](./PROTOFLUX_HANDS_ON_GUIDE.md).**
+
 **For MCP integration examples, see the [Resonite MCP Guide](./README.md) and [ProtoFlux Guide](./PROTOFLUX_GUIDE.md).**
