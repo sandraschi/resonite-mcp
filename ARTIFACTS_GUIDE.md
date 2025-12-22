@@ -294,9 +294,12 @@ Gaussian Splats are a cutting-edge 3D representation technique that captures rea
 
 ### 📥 Splat Import Process
 
-#### Using World Labs Marble (Recommended)
+#### Primary Method: World Labs Marble
+For comprehensive Marble workflows, see the **[Marble Integration Guide](./MARBLE_RESONITE_GUIDE.md)**.
+
+**Quick Marble Workflow:**
 1. **Sign up** for World Labs Marble account
-2. **Upload photos/videos** of your scene
+2. **Upload photos/videos** of your scene (50-200 overlapping shots)
 3. **Wait for processing** (takes 10-60 minutes)
 4. **Download PLY files**:
    - `splat.ply` - The Gaussian splat data
