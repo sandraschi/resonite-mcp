@@ -111,6 +111,19 @@ Once configured, you can use natural language commands like:
 - "Set my avatar's happiness to 80%"
 - "Execute the color changer ProtoFlux script"
 
+## Documentation
+
+### For Beginners
+- **[Beginner's Guide](./BEGINNERS_GUIDE.md)** - Complete guide for total newcomers to Resonite
+- **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
+- **[Troubleshooting](./docs/TROUBLESHOUTING.md)** - Common issues and solutions
+
+### For Developers
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete tool documentation
+- **[HTTP API](http://127.0.0.1:8000/docs)** - Interactive REST API documentation
+
+---
+
 ## Usage Examples
 
 ### Basic Session Management
