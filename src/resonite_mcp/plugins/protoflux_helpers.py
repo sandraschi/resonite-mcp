@@ -1,7 +1,6 @@
 """ProtoFlux Helpers Plugin - Advanced ProtoFlux scripting tools."""
 
-import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from fastmcp import FastMCP
 

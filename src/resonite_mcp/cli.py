@@ -4,7 +4,6 @@
 import argparse
 import asyncio
 import logging
-import sys
 
 from .server import initialize_server, server
 

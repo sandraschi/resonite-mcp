@@ -1,6 +1,5 @@
 """OSC Extensions Plugin - Additional OSC tools for Resonite MCP."""
 
-import asyncio
 from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP

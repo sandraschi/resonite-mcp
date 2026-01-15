@@ -1,0 +1,2 @@
+[console_scripts]
+resonite-mcp = resonite_mcp.cli:main

@@ -1,9 +1,10 @@
 """Pytest configuration for Resonite MCP tests."""
 
 import asyncio
-import pytest
 import sys
 from pathlib import Path
+
+import pytest
 
 # Add src to Python path for tests
 src_path = Path(__file__).parent.parent / "src"
@@ -21,7 +22,7 @@ def event_loop():
 @pytest.fixture(autouse=True)
 def reset_osc_state():
     """Reset OSC client and server state before each test."""
-    from resonite_mcp.server import osc_clients, osc_servers, osc_recordings
+    from resonite_mcp.tools.osc import osc_clients, osc_recordings, osc_servers
 
     # Clear all OSC state
     osc_clients.clear()
@@ -32,5 +33,7 @@ def reset_osc_state():
 @pytest.fixture
 def mock_osc_client():
     """Mock OSC client for testing."""
-    with pytest.mock.patch("resonite_mcp.server.SimpleUDPClient") as mock_client:
+    with pytest.mock.patch("resonite_mcp.tools.osc.SimpleUDPClient") as mock_client:
         yield mock_client
+
+

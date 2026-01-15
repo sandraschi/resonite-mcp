@@ -18,7 +18,7 @@ async def send_osc_http(host: str, port: int, address: str, values: Optional[Lis
         SimpleUDPClient = udp_client.SimpleUDPClient
 
         # Get or create OSC client
-        from .server import osc_clients
+        from .tools.osc import osc_clients
         client_key = f"{host}:{port}"
 
         if client_key not in osc_clients:
@@ -52,10 +52,12 @@ async def send_osc_http(host: str, port: int, address: str, values: Optional[Lis
 async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> Dict[str, Any]:
     """Start OSC server (HTTP version)."""
     try:
-        from .server import osc_servers
+        import asyncio
+
         from pythonosc.dispatcher import Dispatcher
         from pythonosc.osc_server import AsyncIOOSCUDPServer
-        import asyncio
+
+        from .tools.osc import osc_servers
 
         if port in osc_servers:
             return {"status": "error", "message": f"OSC server already running on port {port}"}
@@ -84,7 +86,7 @@ async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> Dict[str
 async def stop_osc_server_http(port: int) -> Dict[str, Any]:
     """Stop OSC server (HTTP version)."""
     try:
-        from .server import osc_servers
+        from .tools.osc import osc_servers
 
         if port not in osc_servers:
             return {"status": "error", "message": f"No OSC server running on port {port}"}

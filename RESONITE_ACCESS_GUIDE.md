@@ -193,11 +193,11 @@ Resonite supports a wide range of VR headsets across different ecosystems.
 ## 📱 Mobile Access
 
 ### **Resonite Mobile App**
-**Limited but accessible mobile experience**
+**Limited mobile experience - iOS app availability unclear**
 
 #### **Platforms:**
-- **iOS** (iPhone/iPad) - App Store
-- **Android** - Google Play Store
+- **iOS** (iPhone/iPad) - **NOT CURRENTLY AVAILABLE** in App Store
+- **Android** - Google Play Store (limited availability)
 
 #### **Features:**
 - **Basic world browsing** - View public worlds
@@ -216,6 +216,30 @@ Resonite supports a wide range of VR headsets across different ecosystems.
 - **Samsung Gear VR** (limited support)
 - **Google Cardboard/Daydream** (basic support)
 - **Generic mobile VR** (experimental)
+
+#### **Phone-Based VR Reality Check:**
+```
+VR on phones: "Immersive" experience where you:
+- Hold heavy phone at arm's length
+- Strain neck and arms constantly
+- Get sweaty palms from phone heat
+- Deal with cable tangles and battery drain
+- Look like a malfunctioning robot to others
+
+Meanwhile, proper VR headsets:
+- Self-contained, comfortable
+- 6DOF tracking (move naturally)
+- Room-scale movement
+- No phone heating up in your hands
+- Actually immersive, not just "VR-like"
+```
+
+#### **Why Proper VR Matters for Creation:**
+- **ProtoFlux Editing**: Need both hands free for complex scripting
+- **World Building**: Scale objects, precise placement requires natural movement
+- **Testing Interactions**: Walk around, grab objects, test physics properly
+- **Social Collaboration**: Full presence in shared spaces
+- **Comfort**: Hours of creation work vs. minutes of phone-based "VR"
 
 ---
 
@@ -344,14 +368,14 @@ Resonite worlds and avatars work across platforms with some limitations:
 
 ## 📊 Platform Comparison
 
-| Feature | Desktop PC | Quest Standalone | Quest Link | Pico 4 | Mobile |
-|---------|------------|------------------|------------|---------|--------|
-| **ProtoFlux Editing** | ✅ Full | ❌ View only | ✅ Full | ❌ View only | ❌ None |
-| **World Building** | ✅ Full | ❌ None | ✅ Full | ❌ None | ❌ None |
-| **VR Quality** | ✅ High (PC dependent) | ✅ Good | ✅ High | ✅ Good | ❌ None |
-| **Performance** | ✅ Best | ✅ Good | ✅ Best | ✅ Good | ✅ Basic |
-| **Setup Complexity** | ⚠️ Medium | 🔴 Hard | ⚠️ Medium | 🟢 Easy | 🟢 Easy |
-| **Cost** | 💰 PC required | 🟢 Free (after Quest) | 💰 PC + Quest | 🟢 Free (after Pico) | 🟢 Free |
+| Feature | Desktop PC | Quest Standalone | Quest Link | Pico 4 Standalone | Pico 4 SteamVR | Mobile |
+|---------|------------|------------------|------------|------------------|---------------|--------|
+| **ProtoFlux Editing** | ✅ Full | ❌ View only | ✅ Full | ❌ View only | ✅ Full | ❌ None |
+| **World Building** | ✅ Full | ❌ None | ✅ Full | ❌ None | ✅ Full | ❌ None |
+| **VR Quality** | ✅ High (PC dependent) | ✅ Good | ✅ High | ✅ Good | ✅ High | ❌ None |
+| **Performance** | ✅ Best | ✅ Good | ✅ Best | ✅ Good | ✅ Best | ✅ Basic |
+| **Setup Complexity** | ⚠️ Medium | 🔴 Hard | ⚠️ Medium | 🟢 Easy | ⚠️ Medium | 🟢 Easy |
+| **Cost** | 💰 PC required | 🟢 Free (after Quest) | 💰 PC + Quest | 🟢 Free (after Pico) | 💰 PC + Pico | 🟢 Free |
 | **Portability** | ❌ Stationary | 🟡 Room-scale | ❌ Tethered | 🟡 Room-scale | ✅ Full |
 | **Social Features** | ✅ Full | ✅ Full | ✅ Full | ✅ Full | ⚠️ Limited |
 
@@ -377,6 +401,8 @@ Resonite worlds and avatars work across platforms with some limitations:
 1. **Download from Pico Store** - Official app, just works
 2. **Enable eye tracking** - Better performance and immersion
 3. **Explore Pico communities** - Platform-specific social features
+4. **Unlock SteamVR mode** - Access full PC creation tools
+5. **Maximize your investment** - No Pico 5 announced yet
 
 ### **If You Have PC Only:**
 1. **Start with desktop mode** - Learn basics without VR
@@ -416,7 +442,57 @@ Resonite worlds and avatars work across platforms with some limitations:
 
 **Resonite's multi-platform support means you can start on any device and grow your experience over time!** 
 
-**Your Quest and Pico 4 give you excellent VR access - try Standalone mode first for the easiest introduction to VR social worlds.** 🎮🕶️
+**Your Quest and Pico 4 give you excellent VR access - try Standalone mode first for the easiest introduction to VR social worlds.**
+
+## 🔄 Maximizing Pico 4 (No Pico 5 Yet)
+
+### **Why Pico 4 Still Rocks:**
+- **SteamVR Integration**: Full PC VR capabilities
+- **Eye Tracking**: Performance boost (if you have Pro)
+- **Wireless**: Freedom of movement
+- **Affordable**: Best value in VR
+- **Community**: Active development and mods
+
+### **Pico 4 Power User Tips:**
+```bash
+# Unlock maximum potential:
+1. Use SteamVR mode for creation work
+2. Keep firmware updated for improvements
+3. Join Pico communities for tips and mods
+4. Consider community ROMs for extra features
+5. Integrate with PC workflow (MCPs, tools, etc.)
+```
+
+### **Future-Proofing Your Setup:**
+- **PC upgrades** boost SteamVR performance
+- **Software updates** improve standalone features
+- **Community developments** add new capabilities
+- **Cross-platform** access (Quest + Pico)
+
+### **The VR Market Reality:**
+- **Meta dominates** standalone VR market
+- **PC VR stable** but no major new entrants
+- **Apple Vision Pro** - expensive, limited ecosystem
+- **Pico strategy** - Android ecosystem focus
+- **Premium VR struggles** - High-end headsets face adoption challenges
+
+#### **Immersed Visor Context (as of 2023 knowledge):**
+- **Premium positioning** - $3000+ headset, ultra-high resolution
+- **Production challenges** - Complex manufacturing, limited scale
+- **Market saturation** - Quest/Pro dominance in consumer space
+- **Enterprise focus** - B2B sales more challenging than consumer
+- **Survival strategy** - Possibly pivoting or seeking acquisition
+
+#### **Why Premium VR Struggles:**
+```
+High-end VR challenges:
+- Price point: $2000-5000 vs $300-500 for mainstream
+- Market size: Enterprise buyers vs mass consumers
+- Technical complexity: Ultra-high res needs powerful PCs
+- Software ecosystem: Limited apps vs Quest's 500+ titles
+- Competition: Meta's scale and Apple Vision Pro's luxury positioning
+- Timing: Post-pandemic VR enthusiasm waned
+```
 
 **For technical details on each platform, check the [Resonite Integration Guide](./RESONITE_INTEGRATION_GUIDE.md).**
 

@@ -1,0 +1,10 @@
+id = "resonite-mcp"
+name = "ResoniteVRPlatform"
+version = "0.1.0"
+schema_version = 1
+authors = ["Sandra <sandraschipal@hotmail.com>"]
+description = "Social VR world creation and scripting"
+repository = "https://github.com/sandraschi/resonite-mcp"
+
+[context_servers.resonite-mcp]
+name = "Resonite VR Tools"

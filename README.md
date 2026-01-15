@@ -11,6 +11,9 @@
 
 The Resonite MCP Server provides comprehensive integration between Claude Desktop and the Resonite social VR platform. Through natural language commands, users can control avatars, manage worlds, execute ProtoFlux scripts, and participate in social interactions within Resonite.
 
+#### 🏮 The Miko's Digital Shrine
+In the spirit of kami and miko - this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The somewhat superannuated miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
+
 ### Key Features
 
 - **Avatar Control**: Load avatars, set parameters, control animations

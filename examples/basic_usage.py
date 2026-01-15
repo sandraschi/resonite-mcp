@@ -13,12 +13,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from resonite_mcp.server import (
-    resonite_session_start,
-    resonite_world_load,
     resonite_avatar_load,
     resonite_parameter_set,
     resonite_protoflux_execute,
     resonite_session_end,
+    resonite_session_start,
     send_osc,
     start_osc_server,
     stop_osc_server,
@@ -73,7 +72,7 @@ async def basic_session_workflow():
 
         # 6. End session
         print("\\n6. Ending session...")
-        end_result = await resonite_session_end()
+        await resonite_session_end()
         print("✅ Session ended cleanly")
 
     except Exception as e:
@@ -106,7 +105,7 @@ async def osc_communication_demo():
 
         # Stop OSC server
         print("Stopping OSC server...")
-        stop_result = await stop_osc_server(9001)
+        await stop_osc_server(9001)
         print("✅ OSC server stopped")
 
     except Exception as e:
@@ -132,7 +131,7 @@ async def advanced_workflow():
         ]
 
         for avatar_path, slot, params in avatars:
-            result = await resonite_avatar_load(avatar_path, slot, params)
+            await resonite_avatar_load(avatar_path, slot, params)
             print(f"✅ Loaded avatar in slot {slot}: {Path(avatar_path).name}")
 
         # Execute complex ProtoFlux sequence
@@ -143,7 +142,7 @@ async def advanced_workflow():
         ]
 
         for script_name, params in scripts:
-            result = await resonite_protoflux_execute(script_name, params)
+            await resonite_protoflux_execute(script_name, params)
             print(f"✅ Executed script: {script_name}")
 
         # Demonstrate parameter animation
@@ -171,7 +170,7 @@ async def main():
     try:
         import resonite_mcp
         print(f"✅ Server version: {resonite_mcp.__version__}")
-        print(f"✅ Server ready for demos")
+        print("✅ Server ready for demos")
     except ImportError as e:
         print(f"❌ Cannot import server: {e}")
         return
@@ -191,3 +190,11 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
+
+
+
+
+
+

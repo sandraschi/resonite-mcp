@@ -7,9 +7,10 @@ enabling avatar control, world management, ProtoFlux scripting, and social inter
 
 import asyncio
 import logging
-import os
 import sys
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
+
+from fastmcp import FastMCP
 
 # Windows binary mode setup for stdin/stdout
 # Commented out as it interferes with MCP stdio protocol
@@ -65,7 +66,6 @@ _is_stdio_mode = (
 )
 
 # FastMCP 2.13.1+ server initialization
-from fastmcp import FastMCP
 
 server = FastMCP(
     name="Resonite MCP",
@@ -92,7 +92,6 @@ except ImportError:
     plugin_manager = None
 
 # Import all tool modules to register individual tools
-from . import tools
 
 
 @server.tool()

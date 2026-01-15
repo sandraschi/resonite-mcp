@@ -1,0 +1,113 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-8.4.2, pluggy-1.6.0 -- C:\Users\sandr\AppData\Local\Programs\Python\Python310\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default'
+metadata: {'Python': '3.10.11', 'Platform': 'Windows-10-10.0.28020-SP0', 'Packages': {'pytest': '8.4.2', 'pluggy': '1.6.0'}, 'Plugins': {'anyio': '4.11.0', 'respx': '0.22.0', 'dash': '3.2.0', 'hypothesis': '6.148.8', 'aio': '2.0.0', 'asyncio': '1.2.0', 'cov': '7.0.0', 'html': '4.1.1', 'metadata': '3.1.1', 'mock': '3.15.1', 'timeout': '2.4.0', 'xdist': '3.8.0'}, 'JAVA_HOME': 'C:\\Program Files\\Eclipse Adoptium\\jdk-25.0.1.8-hotspot'}
+rootdir: D:\Dev\repos\resonite-mcp
+configfile: pyproject.toml
+plugins: anyio-4.11.0, respx-0.22.0, dash-3.2.0, hypothesis-6.148.8, aio-2.0.0, asyncio-1.2.0, cov-7.0.0, html-4.1.1, metadata-3.1.1, mock-3.15.1, timeout-2.4.0, xdist-3.8.0
+asyncio: mode=strict, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/unit/test_server.py::TestOSCTools::test_send_osc_success[asyncio] FAILED [100%]
+ERROR: Coverage failure: total of 16 is less than fail-under=80
+
+
+================================== FAILURES ===================================
+_________________ TestOSCTools.test_send_osc_success[asyncio] _________________
+
+self = <test_server.TestOSCTools object at 0x00000219D55175E0>
+
+    @pytest.mark.asyncio
+    async def test_send_osc_success(self):
+        """Test successful OSC message sending."""
+>       with patch("resonite_mcp.server.SimpleUDPClient") as mock_client_class:
+
+tests\unit\test_server.py:17: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000219D5588DF0>
+
+    def __enter__(self):
+        """Perform the patch."""
+        new, spec, spec_set = self.new, self.spec, self.spec_set
+        autospec, kwargs = self.autospec, self.kwargs
+        new_callable = self.new_callable
+        self.target = self.getter()
+    
+        # normalise False to None
+        if spec is False:
+            spec = None
+        if spec_set is False:
+            spec_set = None
+        if autospec is False:
+            autospec = None
+    
+        if spec is not None and autospec is not None:
+            raise TypeError("Can't specify spec and autospec")
+        if ((spec is not None or autospec is not None) and
+            spec_set not in (True, None)):
+            raise TypeError("Can't provide explicit spec_set *and* spec or autospec")
+    
+>       original, local = self.get_original()
+
+C:\Users\sandr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1447: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <unittest.mock._patch object at 0x00000219D5588DF0>
+
+    def get_original(self):
+        target = self.getter()
+        name = self.attribute
+    
+        original = DEFAULT
+        local = False
+    
+        try:
+            original = target.__dict__[name]
+        except (AttributeError, KeyError):
+            original = getattr(target, name, DEFAULT)
+        else:
+            local = True
+    
+        if name in _builtins and isinstance(target, ModuleType):
+            self.create = True
+    
+        if not self.create and original is DEFAULT:
+>           raise AttributeError(
+                "%s does not have the attribute %r" % (target, name)
+            )
+E           AttributeError: FastMCP('Resonite MCP') does not have the attribute 'SimpleUDPClient'
+
+C:\Users\sandr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1420: AttributeError
+=============================== tests coverage ================================
+______________ coverage: platform win32, python 3.10.11-final-0 _______________
+
+Name                                            Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------------------
+src\resonite_mcp\__init__.py                        5      0   100%
+src\resonite_mcp\__main__.py                        2      2     0%   4-5
+src\resonite_mcp\cli.py                            22     22     0%   4-69
+src\resonite_mcp\http_functions.py                160    160     0%   4-343
+src\resonite_mcp\http_server.py                   321    321     0%   4-475
+src\resonite_mcp\models.py                         47      0   100%
+src\resonite_mcp\plugins\__init__.py                3      0   100%
+src\resonite_mcp\plugins\base_plugin.py            21     10    52%   28-32, 67, 85-86, 90, 94
+src\resonite_mcp\plugins\osc_extensions.py         52     52     0%   3-183
+src\resonite_mcp\plugins\plugin_manager.py        127    102    20%   38-55, 66-99, 111-131, 142-160, 171-196, 204-212, 223-229, 244, 257-267
+src\resonite_mcp\plugins\protoflux_helpers.py      72     72     0%   3-276
+src\resonite_mcp\server.py                         50     26    48%   31-32, 36, 40, 44, 47-48, 51, 90-92, 101, 112-132
+src\resonite_mcp\tools\__init__.py                  2      0   100%
+src\resonite_mcp\tools\avatar.py                   55     42    24%   29-58, 72-91, 101-122
+src\resonite_mcp\tools\inventory.py               151    127    16%   42-54, 66-129, 137-150, 158-186, 194-226, 234-254, 262-285, 293-323
+src\resonite_mcp\tools\osc.py                     153    125    18%   43-71, 98-152, 175-194, 222-256, 268-282, 294-324, 336-357, 369-420
+src\resonite_mcp\tools\plugin.py                   77     60    22%   28-81, 101-128, 148-175, 197-227, 246-301, 321-369
+src\resonite_mcp\tools\session.py                  62     45    27%   38-99, 115-135, 154-183, 200-223
+src\resonite_mcp\tools\system.py                   49     38    22%   38-296, 320-509
+-----------------------------------------------------------------------------
+TOTAL                                            1431   1204    16%
+Coverage HTML written to dir htmlcov
+FAIL Required test coverage of 80% not reached. Total coverage: 15.86%
+=========================== short test summary info ===========================
+FAILED tests/unit/test_server.py::TestOSCTools::test_send_osc_success[asyncio]
+============================== 1 failed in 5.28s ==============================

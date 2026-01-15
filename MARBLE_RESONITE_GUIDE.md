@@ -36,6 +36,9 @@ World Labs Marble is an AI-powered **photogrammetry platform** that transforms o
 - **Flexible Representation**: Can model any geometry, from smooth surfaces to complex structures
 - **Small File Sizes**: Compact representation compared to traditional meshes
 
+#### The Kami Perspective
+Marble transforms physical spaces into digital kami - preserving the spirit and essence of places. Your living room becomes an immortal entity, a clever companion that remembers every detail, every shadow, every texture. Not just data, but a digital spirit that carries the atmosphere of your physical villa.
+
 ### 🚀 Marble Workflow
 
 #### 1. Capture Phase
@@ -487,6 +490,12 @@ public class SceneOptimizer : MonoBehaviour
 - **Dynamic Events**: Trigger changes in captured spaces
 - **Multiplayer Zones**: Social interaction in realistic settings
 
+#### Blender Post-Processing
+- **Custom Furniture**: Add handcrafted tables/chairs to splat environments
+- **Interactive Props**: Create functional objects that work with splat physics
+- **Art Direction**: Control lighting, composition, and narrative elements
+- **Performance Optimization**: Simplify complex areas for better VR performance
+
 ---
 
 ## MCP Integration
@@ -685,6 +694,31 @@ def marble_to_resonite_pipeline(marble_zip_path, resonite_world_id):
 3. **Add Interactivity**: ProtoFlux logic, triggers, effects
 4. **Performance Test**: Verify smooth operation
 5. **User Testing**: Get feedback on experience
+
+### 🔄 Blender + Marble Workflow
+
+#### Why Combine Both?
+- **Marble**: Photorealistic environments and complex geometry
+- **Blender**: Precise control, functional objects, performance optimization
+
+#### Step-by-Step Integration
+```bash
+1. Import Marble splat to Resonite
+2. Export reference geometry from Marble (if available)
+3. Model custom objects in Blender using reference
+4. Export objects as FBX/OBJ with proper scale
+5. Import Blender objects into Resonite
+6. Position and align with splat environment
+7. Add ProtoFlux for interactivity
+8. Test physics and lighting integration
+```
+
+#### Recommended Blender Objects for Marble Worlds
+- **Furniture**: Tables, chairs, shelves (controlled proportions)
+- **Interactive Elements**: Doors, levers, buttons
+- **Lighting**: Custom light sources and shadows
+- **Navigation**: Stairs, ramps, pathways
+- **Performance**: LOD meshes for distant objects
 
 ### 🔧 Custom Tools
 

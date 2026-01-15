@@ -1,12 +1,10 @@
 """Plugin manager for Resonite MCP server."""
 
-import asyncio
 import importlib
 import inspect
 import logging
-import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 
 from fastmcp import FastMCP
 
@@ -74,7 +72,7 @@ class PluginManager:
 
             # Find plugin classes that inherit from BasePlugin
             plugin_classes = []
-            for name, obj in inspect.getmembers(module):
+            for _name, obj in inspect.getmembers(module):
                 if (inspect.isclass(obj) and
                     issubclass(obj, BasePlugin) and
                     obj != BasePlugin):
@@ -265,3 +263,11 @@ class PluginManager:
 
         # Re-initialize
         return await self.initialize_plugin(plugin, server)
+
+
+
+
+
+
+
+

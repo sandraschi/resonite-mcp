@@ -133,7 +133,7 @@
 
 #### Blender Export
 ```python
-# Recommended FBX export settings
+# Recommended FBX export settings for visual mesh
  bpy.ops.export_scene.fbx(
      filepath="model.fbx",
      use_selection=True,
@@ -143,7 +143,47 @@
      mesh_smooth_type='EDGE',
      use_tspace=True
  )
+
+# For collision mesh (physics only)
+ bpy.ops.export_scene.fbx(
+     filepath="model_collision.fbx",
+     use_selection=True,
+     use_mesh_modifiers=True,
+     # Disable materials and complex geometry
+     bake_anim=False
+ )
 ```
+
+#### Creating Physics-Ready Objects in Blender
+
+##### Candlestick Example Workflow:
+```python
+# 1. Create High-Detail Visual Mesh
+- Model detailed candlestick with proper topology
+- Add materials, textures, and UV mapping
+- Use subdivision surface for smooth curves
+- Name object: "Candlestick_Visual"
+
+# 2. Create Simplified Collision Mesh
+- Duplicate the visual mesh
+- Remove complex details (intricate patterns, small decorations)
+- Simplify geometry (reduce polygons significantly)
+- Keep basic shape for physics accuracy
+- Name object: "Candlestick_Collision"
+
+# 3. Physics Material Setup
+- Add rigid body physics to collision mesh
+- Set material properties:
+  - Friction: 0.8 (slight grip)
+  - Bounciness: 0.1 (minimal bounce)
+  - Mass: 0.5 kg (realistic weight)
+```
+
+##### Collision Mesh Optimization:
+- **Visual Mesh**: 5,000+ polygons (detailed appearance)
+- **Collision Mesh**: 50-200 polygons (physics performance)
+- **Ratio**: 10:1 to 100:1 reduction for performance
+- **Shape**: Maintains silhouette but simplified internals
 
 #### Unity Export
 - Use FBX Exporter package
@@ -285,6 +325,9 @@ f 1 2 3
 ### 🎯 What are Gaussian Splats?
 
 Gaussian Splats are a cutting-edge 3D representation technique that captures real-world scenes as clouds of 3D Gaussians. Unlike traditional meshes, splats can represent complex geometry, lighting, and materials in a single, efficient format.
+
+#### The Philosophical Layer
+In the spirit of kami - these digital entities that capture and preserve moments in time, much like how kami inhabit and protect natural places. A Marble splat of your living room becomes a digital kami, preserving the essence of that space even as the physical room changes.
 
 #### Advantages:
 - **Photorealistic**: Capture real lighting and materials

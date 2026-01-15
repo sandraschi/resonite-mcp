@@ -1,0 +1,49 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "maintainers": ["sandraschi"],
+  "name": "resonite-mcp",
+  "description": "Complete Resonite social VR platform control with avatar management, world building, ProtoFlux scripting, and real-time social interactions.",
+  "type": "mcp_server",
+  "status": "beta",
+  "framework": "FastMCP 2.13+",
+  "tools": 40,
+  "transport": ["stdio", "http"],
+  "keywords": [
+    "resonite",
+    "vr",
+    "social-vr",
+    "avatar",
+    "protoflux",
+    "world-building",
+    "osc",
+    "real-time",
+    "fastmcp",
+    "immersive"
+  ],
+  "features": {
+    "avatar_control": {
+      "enabled": true,
+      "capabilities": ["load", "parameters", "animations"]
+    },
+    "world_management": {
+      "enabled": true,
+      "operations": ["load", "save", "sessions"]
+    },
+    "protoflux_scripting": {
+      "enabled": true,
+      "features": ["create", "execute", "visual-scripts"]
+    },
+    "social_features": {
+      "enabled": true,
+      "capabilities": ["real-time-interactions", "collaboration"]
+    },
+    "inventory_management": {
+      "enabled": true,
+      "features": ["assets", "items", "organization"]
+    },
+    "osc_integration": {
+      "enabled": true,
+      "protocols": ["osc-control", "real-time-sync"]
+    }
+  }
+}
