@@ -1,6 +1,7 @@
-import { HelpCircle, ExternalLink, ChevronDown } from 'lucide-react';
+import { ExternalLink, ChevronDown, BookOpen, MessageSquare, Terminal, Zap, Info } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/common/utils';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const FAQ = [
     {
@@ -28,17 +29,27 @@ const FAQ = [
 function AccordionItem({ q, a }: { q: string; a: string }) {
     const [open, setOpen] = useState(false);
     return (
-        <div className="glass-card overflow-hidden">
+        <div className={cn(
+            "border border-border/50 bg-card/30 backdrop-blur-md glass rounded-xl overflow-hidden transition-all duration-300",
+            open && "border-indigo-500/40 bg-indigo-500/[0.02]"
+        )}>
             <button
                 onClick={() => setOpen(p => !p)}
-                aria-expanded={open}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/[0.02] transition-colors"
+                aria-expanded={open ? "true" : "false"}
+                title={open ? "Collapse section" : "Expand section"}
+                className="w-full flex items-center justify-between p-4 text-left group transition-colors"
             >
-                <span className="text-sm font-medium text-slate-200">{q}</span>
-                <ChevronDown className={cn('w-4 h-4 text-slate-500 transition-transform flex-shrink-0', open && 'rotate-180')} aria-hidden="true" />
+                <span className={cn(
+                    "text-sm font-bold tracking-tight transition-colors",
+                    open ? "text-indigo-400" : "text-foreground group-hover:text-indigo-300"
+                )}>{q}</span>
+                <ChevronDown className={cn(
+                    'w-4 h-4 text-muted-foreground transition-transform duration-300',
+                    open ? 'rotate-180 text-indigo-400' : 'group-hover:text-indigo-300'
+                )} aria-hidden="true" />
             </button>
             {open && (
-                <div className="px-4 pb-4 text-sm text-slate-400 leading-relaxed border-t border-white/[0.04] pt-3">
+                <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-white/[0.04] pt-4 animate-in slide-in-from-top-2 duration-300">
                     {a}
                 </div>
             )}
@@ -48,62 +59,126 @@ function AccordionItem({ q, a }: { q: string; a: string }) {
 
 export function Help() {
     return (
-        <div className="space-y-8 page-enter">
-            <div className="flex items-center gap-3">
-                <HelpCircle className="w-5 h-5 text-indigo-400" aria-hidden="true" />
+        <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-2 border-b border-border/30">
                 <div>
-                    <h2 className="text-lg font-bold gradient-text">Help &amp; Documentation</h2>
-                    <p className="text-sm text-slate-500">Getting started with Resonite MCP</p>
+                    <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
+                        Neural <span className="text-indigo-400">Documentation</span>
+                    </h2>
+                    <p className="text-muted-foreground mt-1 flex items-center gap-2">
+                        <BookOpen className="h-3 w-3 text-indigo-400" />
+                        Synchronizing Intelligence • Protocol Guides
+                    </p>
+                </div>
+                <div className="flex gap-2">
+                    <div className="h-1 w-8 rounded-full bg-indigo-500" />
+                    <div className="h-1 w-4 rounded-full bg-indigo-500/50" />
+                    <div className="h-1 w-2 rounded-full bg-indigo-500/20" />
                 </div>
             </div>
 
-            {/* Quick links */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {[
-                    { label: 'Resonite Wiki API', href: 'https://wiki.resonite.com/API', desc: 'Official REST API reference' },
-                    { label: 'Resonite Discord', href: 'https://discord.gg/resonite', desc: 'Community support' },
-                    { label: 'OSC Documentation', href: 'https://wiki.resonite.com/OSC', desc: 'OSC control interface' },
-                    { label: 'ProtoFlux Guide', href: 'https://wiki.resonite.com/ProtoFlux', desc: 'Visual scripting system' },
-                ].map(({ label, href, desc }) => (
-                    <a
-                        key={href}
-                        href={href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="glass-card p-4 flex items-center justify-between group hover:border-indigo-500/30 transition-all"
-                    >
-                        <div>
-                            <p className="text-sm font-medium text-slate-200 group-hover:text-indigo-300 transition-colors">{label}</p>
-                            <p className="text-xs text-slate-500">{desc}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Left Column: Quick Links & Quick Start */}
+                <div className="lg:col-span-12 xl:col-span-7 space-y-8">
+                    {/* Quick Start */}
+                    <Card className="border-border/50 bg-card/30 backdrop-blur-md glass overflow-hidden relative">
+                        <div className="absolute top-0 right-0 p-4 opacity-5">
+                            <Zap className="h-32 w-32 text-indigo-500" />
                         </div>
-                        <ExternalLink className="w-4 h-4 text-slate-600 group-hover:text-indigo-400 transition-colors" aria-hidden="true" />
-                    </a>
-                ))}
-            </div>
+                        <CardHeader className="border-b border-border/50 bg-indigo-500/[0.03]">
+                            <CardTitle className="text-xs font-black uppercase tracking-[0.2em] text-foreground flex items-center gap-2">
+                                <Terminal className="h-4 w-4 text-indigo-400" />
+                                Accelerated Deployment
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-6">
+                            <div className="space-y-5">
+                                {[
+                                    { text: 'Set RESONITE_USER_ID and RESONITE_TOKEN in your environment configuration.', icon: '01' },
+                                    { text: 'Initialize the MCP engine: uv run python -m resonite_mcp', icon: '02' },
+                                    { text: 'Engage Resonite and enable OSC in Settings → Interface → OSC', icon: '03' },
+                                    { text: 'Verify the multiplex connection via the Status dashboard', icon: '04' },
+                                    { text: 'Browse Inventory for synchronized assets and synchronized worlds', icon: '05' },
+                                ].map((step, i) => (
+                                    <div key={i} className="flex items-start gap-4 group">
+                                        <div className="flex-shrink-0 w-8 h-8 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] flex items-center justify-center font-black group-hover:bg-indigo-500/20 group-hover:border-indigo-500/40 transition-all duration-300">
+                                            {step.icon}
+                                        </div>
+                                        <div className="pt-1.5 flex-1">
+                                            <p className="text-sm text-foreground/80 leading-snug group-hover:text-foreground transition-colors">
+                                                {step.text}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
 
-            {/* Quick start */}
-            <div className="glass-card p-5 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-300">Quick Start</h3>
-                <ol className="space-y-2 text-sm text-slate-400">
-                    {[
-                        'Set RESONITE_USER_ID and RESONITE_TOKEN in your .env file',
-                        'Start the MCP server: uv run python -m resonite_mcp',
-                        'Open Resonite and enable OSC in Settings → Interface → OSC',
-                        'Use Status page to verify the API connection',
-                        'Browse Inventory for your saved worlds and items',
-                    ].map((step, i) => (
-                        <li key={i} className="flex items-start gap-2">
-                            <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-600/30 text-indigo-300 text-xs flex items-center justify-center font-bold">{i + 1}</span>
-                            {step}
-                        </li>
-                    ))}
-                </ol>
-            </div>
+                    {/* Quick Resources */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-3 px-1">
+                            <div className="h-1 w-1 rounded-full bg-indigo-500" />
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/70">External Substrates</h3>
+                            <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {[
+                                { label: 'Resonite Wiki API', href: 'https://wiki.resonite.com/API', desc: 'REST protocol specifications' },
+                                { label: 'Resonite Discord', href: 'https://discord.gg/resonite', desc: 'Neural network support' },
+                                { label: 'OSC Documentation', href: 'https://wiki.resonite.com/OSC', desc: 'Control interface standards' },
+                                { label: 'ProtoFlux Guide', href: 'https://wiki.resonite.com/ProtoFlux', desc: 'Visual logic architectures' },
+                            ].map(({ label, href, desc }) => (
+                                <a
+                                    key={href}
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="border border-border/50 bg-card/30 backdrop-blur-md glass p-5 flex items-center justify-between group hover:border-indigo-500/40 hover:bg-indigo-500/[0.02] transition-all duration-300 rounded-2xl"
+                                >
+                                    <div className="space-y-1">
+                                        <p className="text-xs font-black uppercase tracking-[0.1em] text-foreground group-hover:text-indigo-400 transition-colors">{label}</p>
+                                        <p className="text-[10px] text-muted-foreground font-medium">{desc}</p>
+                                    </div>
+                                    <div className="p-2 rounded-full group-hover:bg-indigo-500/10 transition-colors">
+                                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground group-hover:text-indigo-400 transition-colors" aria-hidden="true" />
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
-            {/* FAQ */}
-            <div className="space-y-2">
-                <h3 className="text-sm font-semibold text-slate-400">Frequently Asked Questions</h3>
-                {FAQ.map(({ q, a }) => <AccordionItem key={q} q={q} a={a} />)}
+                {/* Right Column: FAQ */}
+                <div className="lg:col-span-12 xl:col-span-5 space-y-6">
+                    <div className="flex items-center gap-3 px-1">
+                        <div className="h-1 w-1 rounded-full bg-indigo-500" />
+                        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/70">Knowledge Base</h3>
+                        <div className="h-px flex-1 bg-gradient-to-r from-border/50 to-transparent" />
+                    </div>
+
+                    <div className="space-y-3">
+                        {FAQ.map(({ q, a }, i) => (
+                            <AccordionItem key={i} q={q} a={a} />
+                        ))}
+                    </div>
+
+                    <div className="mt-8 p-6 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 backdrop-blur-md">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 rounded-lg bg-indigo-500/10">
+                                <MessageSquare className="h-4 w-4 text-indigo-400" />
+                            </div>
+                            <h4 className="text-xs font-black uppercase tracking-widest text-foreground">Need Assistance?</h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed mb-4">
+                            If you encounter anomalies in the neural link, please consult the system logs or reach out on our Discord channel for expedited support.
+                        </p>
+                        <div className="flex items-center gap-2 text-[10px] font-bold text-indigo-400 uppercase tracking-widest">
+                            <Info className="h-3 w-3" />
+                            Build V1.0.4-SOTA • Operational
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     );

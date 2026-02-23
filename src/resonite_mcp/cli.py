@@ -23,8 +23,8 @@ def main():
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port to bind the HTTP server to (default: 8000)",
+        default=10715,
+        help="Port to bind the HTTP server to (default: 10715)",
     )
 
     parser.add_argument(
@@ -76,4 +76,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

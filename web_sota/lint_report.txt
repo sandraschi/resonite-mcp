@@ -1,0 +1,56 @@
+
+D:\Dev\repos\resonite-mcp\web_sota\src\common\apps-catalog.ts
+   2:5   error  'Github' is defined but never used        @typescript-eslint/no-unused-vars
+   8:5   error  'Box' is defined but never used           @typescript-eslint/no-unused-vars
+  17:11  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Dev\repos\resonite-mcp\web_sota\src\components\ui\badge.tsx
+  36:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\Dev\repos\resonite-mcp\web_sota\src\components\ui\button.tsx
+  56:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\Dev\repos\resonite-mcp\web_sota\src\components\ui\input.tsx
+  5:18  error  An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+D:\Dev\repos\resonite-mcp\web_sota\src\pages\integrations.tsx
+   96:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  116:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\Dev\repos\resonite-mcp\web_sota\src\pages\osc.tsx
+  6:5  error  'Activity' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\Dev\repos\resonite-mcp\web_sota\src\pages\rest_api.tsx
+   5:11  error  'ResonitePlatformInfo' is defined but never used  @typescript-eslint/no-unused-vars
+  23:44  error  'pfLoading' is assigned a value but never used    @typescript-eslint/no-unused-vars
+
+D:\Dev\repos\resonite-mcp\web_sota\src\pages\status.tsx
+    8:5   error  'Layers' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+  274:75  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\Dev\repos\resonite-mcp\web_sota\src\pages\status.tsx:274:75
+  272 |                     <div className="flex gap-4 p-2 rounded hover:bg-white/[0.02] transition-colors">
+  273 |                         <span className="text-indigo-400/50">[INFO]</span>
+> 274 |                         <span className="text-muted-foreground">{new Date(Date.now() - 30000).toISOString()}</span>
+      |                                                                           ^^^^^^^^^^ Cannot call impure function
+  275 |                         <span className="text-foreground">Internal bridge heartbeat active</span>
+  276 |                     </div>
+  277 |                     <div className="flex gap-4 p-2 rounded hover:bg-white/[0.02] transition-colors">  react-hooks/purity
+  279:75  error  Error: Cannot call impure function during render
+
+`Date.now` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+D:\Dev\repos\resonite-mcp\web_sota\src\pages\status.tsx:279:75
+  277 |                     <div className="flex gap-4 p-2 rounded hover:bg-white/[0.02] transition-colors">
+  278 |                         <span className="text-emerald-400/50">[OK]</span>
+> 279 |                         <span className="text-muted-foreground">{new Date(Date.now() - 60000).toISOString()}</span>
+      |                                                                           ^^^^^^^^^^ Cannot call impure function
+  280 |                         <span className="text-foreground">SOTA UI Module successfully glommed on</span>
+  281 |                     </div>
+  282 |                 </div>                                                                           react-hooks/purity
+
+Ô£û 15 problems (15 errors, 0 warnings)
+

@@ -1,11 +1,10 @@
+import type { ElementType } from 'react';
 import {
-    Github,
     Bot,
     Brain,
     LayoutGrid,
     Scan,
     MonitorPlay,
-    Box,
     Activity,
     Archive
 } from 'lucide-react';
@@ -14,7 +13,7 @@ export interface AppEntry {
     id: string;
     label: string;
     description: string;
-    icon: any;
+    icon: ElementType;
     url: string; // Absolute URL for cross-app navigation
     port: number;
     tags: string[];

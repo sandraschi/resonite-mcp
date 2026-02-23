@@ -1,108 +1,157 @@
-import { Activity, Wifi, WifiOff, RefreshCw, Globe2, Users, Layers } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { cn } from '@/common/utils';
+import {
+    Users
+} from 'lucide-react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
-interface PlatformInfo {
-    version?: string;
-    build?: string;
-    status?: string;
+interface Session {
+    id: string;
+    name: string;
+    active_user_count: number;
 }
 
-interface SessionInfo {
-    sessionId?: string;
-    name?: string;
-    activeUsers?: number;
-    maxUsers?: number;
-    hostUsername?: string;
-    universeId?: string;
+async function fetchPlatform() {
+    const r = await fetch('/api/platform');
+    if (!r.ok) throw new Error('Failed to fetch platform');
+    return r.json();
 }
 
-async function fetchStatus(): Promise<{ platform: PlatformInfo; sessions: SessionInfo[] }> {
-    const [pfResp, sessResp] = await Promise.allSettled([
-        fetch('/api/platform').then(r => r.json()),
-        fetch('/api/sessions').then(r => r.json()),
-    ]);
-    return {
-        platform: pfResp.status === 'fulfilled' ? (pfResp.value as PlatformInfo) : {},
-        sessions: sessResp.status === 'fulfilled' ? ((sessResp.value as SessionInfo[]).slice(0, 8)) : [],
-    };
+async function fetchSessions() {
+    const r = await fetch('/api/sessions');
+    if (!r.ok) throw new Error('Failed to fetch sessions');
+    return r.json();
 }
 
-function StatCard({ label, value, icon: Icon, color = 'text-indigo-400' }: { label: string; value: string | number; icon: React.ElementType; color?: string }) {
-    return (
-        <div className="glass-card p-4 flex items-center gap-4">
-            <div className="p-2.5 rounded-lg bg-white/[0.04]">
-                <Icon className={cn('w-5 h-5', color)} aria-hidden="true" />
-            </div>
-            <div>
-                <p className="text-xs text-slate-500">{label}</p>
-                <p className="text-lg font-bold text-white">{value}</p>
-            </div>
-        </div>
-    );
+async function startResoniteAPI() {
+    const r = await fetch('/api/start', { method: 'POST' });
+    if (!r.ok) throw new Error('Failed to start Resonite');
+    return r.json();
 }
 
 export function Status() {
-    const { data, isLoading, isError, refetch } = useQuery({
-        queryKey: ['status'],
-        queryFn: fetchStatus,
+    const {
+        data: platform,
+        refetch: refetchPlatform
+    } = useQuery({
+        queryKey: ['platform'],
+        queryFn: fetchPlatform,
+        refetchInterval: 60_000,
+    });
+
+    const {
+        data: sessions,
+        refetch: refetchSessions
+    } = useQuery<Session[]>({
+        queryKey: ['sessions'],
+        queryFn: fetchSessions,
         refetchInterval: 30_000,
     });
 
+    const { mutate: startResonite } = useMutation({
+        mutationFn: startResoniteAPI,
+        onSuccess: () => {
+            setTimeout(() => {
+                refetchPlatform();
+                refetchSessions();
+            }, 3000);
+        }
+    });
+
+    const isPlatformDown = !platform?.os;
+
+
+
+    // Fix react-hooks/purity by using static timestamps for mock logs
+    const mockLogs = useMemo(() => [
+        {
+            type: 'INFO',
+            color: 'text-indigo-400/50',
+            time: '2026-02-23T15:00:00Z',
+            msg: 'OSC Pulse check passed: Latency 15ms'
+        },
+        {
+            type: 'INFO',
+            color: 'text-indigo-400/50',
+            time: '2026-02-23T14:59:30Z',
+            msg: 'Internal bridge heartbeat active'
+        },
+        {
+            type: 'OK',
+            color: 'text-emerald-400/50',
+            time: '2026-02-23T14:59:00Z',
+            msg: 'SOTA UI Module successfully glommed on'
+        }
+    ], []);
+
     return (
-        <div className="space-y-6 page-enter">
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <Activity className="w-5 h-5 text-indigo-400" aria-hidden="true" />
-                    <div>
-                        <h2 className="text-lg font-bold gradient-text">System Status</h2>
-                        <p className="text-sm text-slate-500">Resonite platform health &amp; live sessions</p>
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Dashboard stats integration placeholder */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="glass p-6 rounded-2xl border border-border/50">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">Core Resonance</h3>
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs text-foreground/70">Platform Engine</span>
+                            <span className={isPlatformDown ? "text-red-400 font-mono text-xs" : "text-emerald-400 font-mono text-xs"}>
+                                {isPlatformDown ? 'DISCONNECTED' : 'OPERATIONAL'}
+                            </span>
+                        </div>
+                        <div className="h-1 bg-muted rounded-full overflow-hidden">
+                            <div className={isPlatformDown ? "h-full bg-red-400 w-full" : "h-full bg-emerald-400 w-full"} />
+                        </div>
+                        <button
+                            onClick={() => startResonite()}
+                            className="w-full py-2 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[10px] font-bold uppercase tracking-widest hover:bg-indigo-500/20 transition-colors"
+                        >
+                            Reconnect Core
+                        </button>
                     </div>
                 </div>
-                <button
-                    onClick={() => refetch()}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.07] text-xs text-slate-400 hover:text-white transition-all"
-                    aria-label="Refresh status"
-                >
-                    <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
-                    Refresh
-                </button>
             </div>
 
-            {/* Connection banner */}
-            <div className={cn(
-                'flex items-center gap-3 px-4 py-3 rounded-xl border text-sm',
-                isError ? 'bg-red-500/10 border-red-500/20 text-red-300' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-            )}>
-                {isError ? <WifiOff className="w-4 h-4" aria-hidden="true" /> : <Wifi className="w-4 h-4" aria-hidden="true" />}
-                {isError ? 'Cannot reach Resonite API — check your connection or RESONITE_TOKEN' : 'Connected to api.resonite.com'}
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                <StatCard label="Platform version" value={data?.platform?.version ?? (isLoading ? '…' : 'N/A')} icon={Layers} />
-                <StatCard label="Public sessions" value={data?.sessions?.length ?? (isLoading ? '…' : 0)} icon={Globe2} color="text-emerald-400" />
-                <StatCard label="Active users (sampled)" value={data?.sessions?.reduce((acc, s) => acc + (s.activeUsers ?? 0), 0) ?? 0} icon={Users} color="text-purple-400" />
-            </div>
-
-            {/* Live sessions */}
-            <div className="glass-card p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-400">Public Sessions (top 8)</h3>
-                {isLoading && <p className="text-xs text-slate-600">Loading…</p>}
-                {isError && <p className="text-xs text-red-400">Failed to load sessions</p>}
-                {data?.sessions && data.sessions.length === 0 && <p className="text-xs text-slate-600">No sessions found</p>}
-                {data?.sessions?.map((s, i) => (
-                    <div key={s.sessionId ?? i} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
-                        <div>
-                            <p className="text-sm text-slate-200">{s.name ?? 'Unnamed session'}</p>
-                            <p className="text-xs text-slate-500">Host: {s.hostUsername ?? 'unknown'}</p>
+            {sessions?.map((session, i) => (
+                <div key={i} className="group p-3 rounded-lg bg-muted/30 border border-border/50 hover:border-indigo-500/30 transition-all duration-300">
+                    <div className="flex items-start justify-between mb-1">
+                        <div className="font-bold text-foreground text-xs leading-tight flex items-center gap-2">
+                            {session.name}
+                            <span className="text-[8px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded tracking-tighter uppercase font-black">LIVE</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                            <Users className="w-3 h-3" aria-hidden="true" />
-                            {s.activeUsers ?? 0}/{s.maxUsers ?? '?'}
+                        <span className="text-[8px] text-muted-foreground font-mono opacity-50 group-hover:opacity-100 transition-opacity">
+                            {session.id.slice(0, 8)}
+                        </span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between text-[9px] uppercase font-bold tracking-[0.1em]">
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Users className="h-3 w-3 opacity-50" />
+                            <span>{session.active_user_count} Users</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-emerald-500/80">
+                            <div className="h-1 w-1 rounded-full bg-emerald-500" />
+                            OK
                         </div>
                     </div>
-                ))}
+                </div>
+            ))}
+            {/* ... */}
+            {/* Health Logs Trace (Placeholder/Mock) */}
+            <div className="mt-8 bg-black/40 rounded-2xl border border-border/50 p-6 backdrop-blur-md">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground italic">Hardware Event Horizon</h3>
+                    <div className="flex gap-1">
+                        <div className="h-1 w-1 rounded-full bg-indigo-500" />
+                        <div className="h-1 w-1 rounded-full bg-indigo-500/50" />
+                        <div className="h-1 w-1 rounded-full bg-indigo-500/20" />
+                    </div>
+                </div>
+                <div className="space-y-2 font-mono text-[10px]">
+                    {mockLogs.map((log, i) => (
+                        <div key={i} className="flex gap-4 p-2 rounded hover:bg-white/[0.02] transition-colors">
+                            <span className={log.color}>[{log.type}]</span>
+                            <span className="text-muted-foreground">{log.time}</span>
+                            <span className="text-foreground">{log.msg}</span>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

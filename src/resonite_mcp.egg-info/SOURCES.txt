@@ -6,6 +6,7 @@ src/resonite_mcp/cli.py
 src/resonite_mcp/http_functions.py
 src/resonite_mcp/http_server.py
 src/resonite_mcp/models.py
+src/resonite_mcp/resonite_link.py
 src/resonite_mcp/server.py
 src/resonite_mcp/transport.py
 src/resonite_mcp.egg-info/PKG-INFO
@@ -21,8 +22,11 @@ src/resonite_mcp/plugins/plugin_manager.py
 src/resonite_mcp/plugins/protoflux_helpers.py
 src/resonite_mcp/tools/__init__.py
 src/resonite_mcp/tools/avatar.py
+src/resonite_mcp/tools/integrations.py
 src/resonite_mcp/tools/inventory.py
 src/resonite_mcp/tools/osc.py
 src/resonite_mcp/tools/plugin.py
+src/resonite_mcp/tools/resonite_link.py
+src/resonite_mcp/tools/rest_api.py
 src/resonite_mcp/tools/session.py
 src/resonite_mcp/tools/system.py
