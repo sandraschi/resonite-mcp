@@ -20,6 +20,7 @@ In the spirit of kami and miko - this MCP server serves as a bridge between huma
 - **World Management**: Load/save worlds, manage sessions
 - **ProtoFlux Scripting**: Create and execute visual scripts in real-time
 - **OSC Communication**: Bidirectional communication with Resonite via OSC protocol
+- **ResoniteLink (NEW)**: Real-time WebSocket JSON protocol for high-performance 3D interaction
 - **Session Management**: Start, monitor, and end Resonite sessions
 - **Inventory Management**: Browse, search, spawn, and manage user assets
 - **Plugin System**: Extensible architecture with OSC and ProtoFlux plugins
@@ -47,8 +48,28 @@ This server follows FastMCP 2.13+ SOTA standards with:
 
 **Total: 31 tools (13 fully functional, 15 with mock responses, 3 documentation)**
 
-## Installation
+## 🚀 Installation
 
+### Prerequisites
+- [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
+- Python 3.12+
+
+### 📦 Quick Start
+Run immediately via `uvx`:
+```bash
+uvx resonite-mcp
+```
+
+### 🎯 Claude Desktop Integration
+Add to your `claude_desktop_config.json`:
+```json
+"mcpServers": {
+  "resonite-mcp": {
+    "command": "uv",
+    "args": ["--directory", "D:/Dev/repos/resonite-mcp", "run", "resonite-mcp"]
+  }
+}
+```
 ### Prerequisites
 
 - Python 3.8+
@@ -206,6 +227,12 @@ await start_osc_server(9001)
 - `get_osc_server_stats(port)` - Get server statistics
 - `clear_osc_message_buffer(port)` - Clear message buffer
 - `test_osc_echo(port?)` - Test OSC connectivity
+
+#### ResoniteLink (4 tools - NEW)
+- `resonite_link_connect(host?, port?)` - Connect to ResoniteLink WebSocket
+- `resonite_link_spawn(template_url, position?)` - Spawn object via ResoniteLink
+- `resonite_link_set(component_id, field, value)` - Set component field value
+- `resonite_link_get(component_id, field)` - Get component field value
 
 #### Plugin Management (5 tools)
 - `plugin_list()` - List all available plugins

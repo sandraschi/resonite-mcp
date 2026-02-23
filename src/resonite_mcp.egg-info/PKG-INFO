@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: resonite-mcp
-Version: 0.1.0
+Version: 0.1.1
 Summary: Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting
 Author-email: Sandra Schipal <sandra@example.com>
 License: MIT
@@ -22,15 +22,15 @@ Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Multimedia :: Graphics :: 3D Modeling
 Classifier: Topic :: Communications :: Chat
 Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
-Requires-Python: >=3.8
+Requires-Python: >=3.12
 Description-Content-Type: text/markdown
-Requires-Dist: fastmcp<2.14.0,>=2.13.1
+Requires-Dist: fastmcp[all]>=2.14.5
 Requires-Dist: python-osc>=1.8.0
 Requires-Dist: pydantic>=2.0
 Requires-Dist: aiohttp>=3.8.0
 Requires-Dist: websockets>=11.0.0
 Requires-Dist: uvloop>=0.17.0; sys_platform != "win32"
-Requires-Dist: psutil>=5.9.0
+Requires-Dist: ruff>=0.15.2
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
@@ -55,11 +55,14 @@ Requires-Dist: mkdocstrings[python]>=0.20.0; extra == "docs"
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![FastMCP 2.13.1+](https://img.shields.io/badge/FastMCP-2.13.1+-green.svg)](https://gofastmcp.com/)
-[![SOTA Compliant](https://img.shields.io/badge/SOTA-Compliant-brightgreen.svg)](https://gofastmcp.com/)
+[![Status](https://img.shields.io/badge/status-beta-blue.svg)](#)
 
 ## Overview
 
 The Resonite MCP Server provides comprehensive integration between Claude Desktop and the Resonite social VR platform. Through natural language commands, users can control avatars, manage worlds, execute ProtoFlux scripts, and participate in social interactions within Resonite.
+
+#### 🏮 The Miko's Digital Shrine
+In the spirit of kami and miko - this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The somewhat superannuated miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
 
 ### Key Features
 
@@ -68,6 +71,8 @@ The Resonite MCP Server provides comprehensive integration between Claude Deskto
 - **ProtoFlux Scripting**: Create and execute visual scripts in real-time
 - **OSC Communication**: Bidirectional communication with Resonite via OSC protocol
 - **Session Management**: Start, monitor, and end Resonite sessions
+- **Inventory Management**: Browse, search, spawn, and manage user assets
+- **Plugin System**: Extensible architecture with OSC and ProtoFlux plugins
 - **Dual Interface**: Both MCP stdio protocol and HTTP REST API
 - **Real-time Feedback**: Live parameter monitoring and event handling
 
@@ -79,6 +84,18 @@ This server follows FastMCP 2.13+ SOTA standards with:
 - Comprehensive error handling and logging
 - Dual MCP/stdio and HTTP/FastAPI interfaces
 - Plugin system for extensibility
+
+### Implementation Status
+
+- **✅ Core OSC Communication**: 8 tools fully implemented
+- **✅ Avatar Control**: 3 tools fully implemented
+- **✅ Session Management**: 4 tools (3 fully implemented, 1 mock)
+- **⚠️ Inventory Management**: 7 tools (structure complete, mock responses)
+- **⚠️ Plugin Management**: 5 tools (structure complete, mock responses)
+- **✅ System Tools**: 3 tools fully implemented
+- **✅ Health Monitoring**: 1 tool fully implemented
+
+**Total: 31 tools (13 fully functional, 15 with mock responses, 3 documentation)**
 
 ## Installation
 
@@ -147,6 +164,26 @@ Once configured, you can use natural language commands like:
 - "Set my avatar's happiness to 80%"
 - "Execute the color changer ProtoFlux script"
 
+## Documentation
+
+### For Beginners
+- **[Beginner's Guide](./BEGINNERS_GUIDE.md)** - Complete guide for total newcomers to Resonite
+- **[Access Guide](./RESONITE_ACCESS_GUIDE.md)** - How to run Resonite on Quest, Pico, PC, mobile
+- **[Artifacts Guide](./ARTIFACTS_GUIDE.md)** - Import/export 3D models, VRM avatars, Gaussian splats
+- **[Marble Integration Guide](./MARBLE_RESONITE_GUIDE.md)** - World Labs Marble photogrammetry workflows
+- **[ProtoFlux Guide](./PROTOFLUX_GUIDE.md)** - Comprehensive guide to visual programming
+- **[ProtoFlux Hands-On Guide](./PROTOFLUX_HANDS_ON_GUIDE.md)** - Step-by-step tutorials for beginners
+- **[Useful ProtoFlux Scripts](./USEFUL_PROTOFLUX_SCRIPTS.md)** - Essential scripts for VR creators
+- **[Platform Comparison](./RESONITE_COMPARISON.md)** - How Resonite compares to VRChat, AltspaceVR, etc.
+- **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
+- **[Troubleshooting](./docs/TROUBLESHOUTING.md)** - Common issues and solutions
+
+### For Developers
+- **[API Reference](./docs/API_REFERENCE.md)** - Complete tool documentation
+- **[HTTP API](http://127.0.0.1:8000/docs)** - Interactive REST API documentation
+
+---
+
 ## Usage Examples
 
 ### Basic Session Management
@@ -188,50 +225,92 @@ await start_osc_server(9001)
 
 ## API Reference
 
-### Core Tools
+### Available Tools (31 total)
 
-#### Session Management
-- `resonite_session_start(session_name?, world_path?, avatar_slot?)`
-- `resonite_session_status()`
-- `resonite_session_end()`
+#### Session Management (4 tools)
+- `resonite_session_start(session_name?, world_path?, avatar_slot?)` - Start new Resonite session
+- `resonite_session_status()` - Get current session status
+- `resonite_session_end()` - End current session
+- `resonite_world_load(world_path)` - Load a world in the session
 
-#### Avatar Control
-- `resonite_avatar_load(avatar_path, slot?, parameters?)`
-- `resonite_parameter_set(parameter_name, value, avatar_slot?)`
+#### Avatar Control (3 tools)
+- `resonite_avatar_load(avatar_path, slot?, parameters?)` - Load avatar with optional parameters
+- `resonite_parameter_set(parameter_name, value, avatar_slot?)` - Set avatar parameter value
+- `resonite_protoflux_execute(script_name, parameters?)` - Execute ProtoFlux script
 
-#### World Management
-- `resonite_world_load(world_path)`
+#### Inventory Management (7 tools)
+- `resonite_inventory_list(item_type?, search_query?, limit?, offset?)` - List inventory items
+- `resonite_inventory_search(query, item_type?)` - Search inventory by query
+- `resonite_inventory_spawn(item_data)` - Spawn item in world
+- `resonite_inventory_upload(file_data)` - Upload item to inventory
+- `resonite_inventory_delete(item_data)` - Delete item from inventory
+- `resonite_inventory_share(item_data)` - Share item with users
+- `resonite_inventory_info(item_id)` - Get detailed item information
 
-#### ProtoFlux Scripting
-- `resonite_protoflux_execute(script_name, parameters?)`
+#### OSC Communication (8 tools)
+- `send_osc(host, port, address, values?)` - Send OSC message
+- `start_osc_server(port, address?)` - Start OSC server for receiving
+- `stop_osc_server(port)` - Stop OSC server
+- `get_received_messages(port, address_pattern?, max_age_seconds?, limit?)` - Get received messages
+- `get_latest_message(port, address_pattern?)` - Get most recent message
+- `get_osc_server_stats(port)` - Get server statistics
+- `clear_osc_message_buffer(port)` - Clear message buffer
+- `test_osc_echo(port?)` - Test OSC connectivity
 
-#### OSC Communication
-- `send_osc(host, port, address, values?)`
-- `start_osc_server(port, address?)`
-- `stop_osc_server(port)`
-- `get_received_messages(port, address_pattern?, max_age_seconds?, limit?)`
-- `get_latest_message(port, address_pattern?)`
-- `get_osc_server_stats(port)`
-- `clear_osc_message_buffer(port)`
-- `test_osc_echo(port?)`
+#### Plugin Management (5 tools)
+- `plugin_list()` - List all available plugins
+- `plugin_load(plugin_name)` - Load a plugin
+- `plugin_unload(plugin_name)` - Unload a plugin
+- `plugin_reload(plugin_name)` - Reload a plugin
+- `plugin_discover()` - Discover available plugins
+- `plugin_info(plugin_name?)` - Get plugin information
+
+#### System Tools (3 tools)
+- `help(level?, topic?)` - Get help documentation
+- `status(level?, focus?)` - Get server status information
+- `health_check()` - Health check endpoint
 
 ### HTTP API Endpoints
 
 When running in HTTP mode (`resonite-mcp --host 127.0.0.1 --port 8000`), the following REST endpoints are available:
 
-- `GET /` - Server information
-- `GET /health` - Health check
-- `GET /docs` - Interactive API documentation
-- `POST /osc/send` - Send OSC messages
-- `POST /osc/server/start` - Start OSC server
+#### Server Management
+- `GET /` - Server information and API overview
+- `GET /health` - Health check endpoint
+- `GET /docs` - Interactive FastAPI documentation
+
+#### OSC Communication
+- `POST /osc/send` - Send OSC messages to Resonite
+- `POST /osc/server/start` - Start OSC server for receiving messages
 - `POST /osc/server/stop` - Stop OSC server
-- `POST /resonite/session/start` - Start Resonite session
-- `GET /resonite/session/status` - Get session status
-- `POST /resonite/avatar/load` - Load avatar
-- `POST /resonite/parameter/set` - Set avatar parameter
+
+#### Session Management
+- `POST /resonite/session/start` - Start new Resonite session
+- `GET /resonite/session/status` - Get current session status
+- `POST /resonite/session/end` - End current session
+- `POST /resonite/world/load` - Load a world in the session
+
+#### Avatar Control
+- `POST /resonite/avatar/load` - Load avatar with optional parameters
+- `POST /resonite/parameter/set` - Set avatar parameter value
 - `POST /resonite/protoflux/execute` - Execute ProtoFlux script
-- `POST /resonite/world/load` - Load world
-- `POST /resonite/session/end` - End session
+
+#### Inventory Management
+- `GET /resonite/inventory/list` - List inventory items with pagination
+- `GET /resonite/inventory/search` - Search inventory by query
+- `POST /resonite/inventory/spawn` - Spawn item in world
+- `POST /resonite/inventory/upload` - Upload item to inventory
+- `DELETE /resonite/inventory/delete` - Delete item from inventory
+- `POST /resonite/inventory/share` - Share item with other users
+- `GET /resonite/inventory/info/{item_id}` - Get detailed item information
+
+#### Plugin Management
+- `GET /plugins/list` - List all available plugins
+- `GET /plugins/discover` - Discover new plugins
+- `POST /plugins/load` - Load a specific plugin
+- `POST /plugins/unload` - Unload a specific plugin
+- `POST /plugins/reload` - Reload a specific plugin
+- `GET /plugins/info` - Get plugin information
 
 ## Configuration
 
@@ -365,13 +444,28 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [FastMCP](https://gofastmcp.com/) - The MCP framework powering this server
 - [python-osc](https://pypi.org/project/python-osc/) - OSC protocol implementation
 
+## Recent Updates (v0.1.0)
+
+### ✅ **Completed in December 2025**
+- Fixed MCP stdio mode startup issues
+- Corrected Cursor IDE configuration (use "mcp" not "mcpServers")
+- Resolved Windows binary mode interference with MCP protocol
+- Added comprehensive HTTP API endpoints (25+ endpoints)
+- Implemented 31 MCP tools with proper FastMCP 2.13.1+ compliance
+
+### 🔧 **Implementation Status**
+- **13 tools fully functional** (OSC communication, avatar control, session management)
+- **15 tools with mock responses** (inventory, plugin management - structure complete)
+- **3 documentation tools** (help, status, health check)
+- **Dual interface support** (MCP stdio + HTTP REST API)
+
 ## Roadmap
 
-### v0.2.0
-- [ ] Plugin system for custom tools
-- [ ] Inventory management tools
-- [ ] Social interaction helpers
-- [ ] Performance monitoring
+### v0.2.0 (Next Release)
+- [ ] Complete inventory management implementation
+- [ ] Plugin system dynamic loading
+- [ ] Social interaction tools
+- [ ] Performance monitoring and metrics
 
 ### v0.3.0
 - [ ] Web dashboard for HTTP mode

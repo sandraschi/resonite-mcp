@@ -11,6 +11,7 @@ import sys
 from typing import Any, Dict
 
 from fastmcp import FastMCP
+from .transport import run_server
 
 # Windows binary mode setup for stdin/stdout
 # Commented out as it interferes with MCP stdio protocol
@@ -91,7 +92,11 @@ except ImportError:
     logger.warning("Plugin system not available")
     plugin_manager = None
 
+# Global client instances
+resonite_link_client = None
+
 # Import all tool modules to register individual tools
+from . import tools
 
 
 @server.tool()
@@ -100,15 +105,29 @@ async def health_check() -> Dict[str, Any]:
     return {
         "status": "success",
         "message": "Resonite MCP server is healthy",
-        "version": "0.1.0",
-        "plugins_loaded": list(plugin_manager.loaded_plugins.keys()) if plugin_manager else [],
+        "version": "0.1.1",
+        "plugins_loaded": list(plugin_manager.loaded_plugins.keys())
+        if plugin_manager
+        else [],
         "osc_connected": True,  # Simplified
+        "resonite_link_connected": resonite_link_client.running
+        if resonite_link_client
+        else False,
     }
 
 
 async def initialize_server():
     """Initialize the server and load plugins."""
     logger.info("Initializing Resonite MCP server...")
+
+    global resonite_link_client
+    try:
+        from .resonite_link import ResoniteLinkClient
+
+        resonite_link_client = ResoniteLinkClient()
+        logger.info("ResoniteLink client instantiated")
+    except ImportError:
+        logger.warning("ResoniteLink client not available (websockets missing?)")
 
     # Load and initialize plugins
     if plugin_manager:
@@ -118,7 +137,9 @@ async def initialize_server():
         successful_plugins = sum(1 for success in plugin_results.values() if success)
         total_plugins = len(plugin_results)
 
-        logger.info(f"Plugin loading complete: {successful_plugins}/{total_plugins} plugins loaded")
+        logger.info(
+            f"Plugin loading complete: {successful_plugins}/{total_plugins} plugins loaded"
+        )
 
         if plugin_results:
             logger.info("Loaded plugins:")
@@ -133,7 +154,7 @@ async def initialize_server():
 
 if __name__ == "__main__":
     # Initialize server asynchronously
-    asyncio.run(initialize_server())
+    run_server(initialize_server, server_name="resonite-mcp")
 
     logger.info("Starting Resonite MCP server stdio interface...")
-    asyncio.run(server.run_stdio_async())
+    asyncio.run(run_server(server, server_name="resonite-mcp"))
