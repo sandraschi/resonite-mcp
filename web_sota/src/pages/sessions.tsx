@@ -114,57 +114,50 @@ export function Sessions() {
                         {data?.map(s => (
                             <div
                                 key={s.sessionId}
-                                className="group flex items-center justify-between p-4 glass-card border border-white/10 rounded-xl hover:border-indigo-500/50 hover:bg-card/60 transition-all duration-300"
+                                className="group flex flex-col md:flex-row md:items-center justify-between p-5 glass-card border border-white/10 rounded-2xl hover:border-violet-500/50 hover:bg-card/60 transition-all duration-300 gap-4"
                             >
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 flex-1 min-w-0">
                                     <div className={cn(
-                                        "p-2.5 rounded-lg border flex items-center justify-center",
-                                        s.sessionAccessLevel === 'Private'
-                                            ? "bg-slate-500/10 border-slate-500/20 text-slate-500"
-                                            : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                        "p-2.5 rounded-xl border flex items-center justify-center shrink-0",
+                                        s.sessionAccessLevel === 'Public'
+                                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                                            : "bg-amber-500/10 border-amber-500/20 text-amber-400"
                                     )}>
-                                        {s.sessionAccessLevel === 'Private' ? (
-                                            <Lock className="w-4 h-4" title="Private Session" />
-                                        ) : (
-                                            <Unlock className="w-4 h-4" title="Public Session" />
-                                        )}
+                                        {s.sessionAccessLevel === 'Public' ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
                                     </div>
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-2">
-                                            <p className="text-sm font-bold text-slate-100 group-hover:text-indigo-400 transition-colors uppercase tracking-tight">
-                                                {s.name ?? 'Unnamed Instance'}
-                                            </p>
-                                        </div>
-                                        <div className="flex items-center gap-3">
-                                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                                Host: <span className="text-slate-300">{s.hostUsername ?? 'Unknown Agent'}</span>
-                                            </p>
+                                    <div className="space-y-1 truncate">
+                                        <h3 className="text-sm font-bold text-slate-100 uppercase tracking-tight truncate">
+                                            {s.name || "Unnamed Session"}
+                                        </h3>
+                                        <div className="flex items-center gap-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                                            <span>{s.hostUsername ?? 'Unknown Agent'}</span>
                                             <span className="h-1 w-1 rounded-full bg-slate-700"></span>
-                                            <p className="text-[10px] font-mono text-slate-600 uppercase">
-                                                ID: {s.sessionId.split('-')[0]}...
-                                            </p>
+                                            <span className="font-mono text-slate-600 truncate">{s.sessionId.split('-')[0]}…</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 shrink-0">
                                     <div className={cn(
-                                        "flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-xs font-bold transition-all",
+                                        "flex items-center gap-2 px-3 py-1.5 rounded-lg border font-mono text-[10px] font-bold transition-all",
                                         (s.activeUsers ?? 0) > 0
-                                            ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
+                                            ? "bg-violet-500/10 border-violet-500/30 text-violet-400 shadow-[0_0_15px_rgba(99,102,241,0.1)]"
                                             : "bg-slate-700/20 border-white/5 text-slate-600"
                                     )}>
-                                        <Users className="w-3.5 h-3.5" aria-hidden="true" />
+                                        <Users className="w-3 h-3" />
                                         <span>{s.activeUsers ?? 0}</span>
                                         <span className="opacity-40">/</span>
                                         <span className="opacity-60">{s.maxUsers ?? '?'}</span>
                                     </div>
-                                    <button
-                                        title="View Session Details"
-                                        className="p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-slate-400"
+
+                                    <a
+                                        href={`resonite:///join/${s.sessionId}`}
+                                        className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/30 text-violet-100 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                                        title={`Join ${s.name} directly in Resonite`}
                                     >
-                                        <RefreshCw className="w-4 h-4" />
-                                    </button>
+                                        <Globe2 className="w-3.5 h-3.5" />
+                                        Join
+                                    </a>
                                 </div>
                             </div>
                         ))}

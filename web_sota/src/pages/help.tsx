@@ -24,6 +24,10 @@ const FAQ = [
         q: 'Why are sessions not loading?',
         a: `Public sessions load without auth from api.resonite.com/sessions. If the page is empty, check your network connection. Private sessions require auth.`,
     },
+    {
+        q: 'How do I set up Avatar Control?',
+        a: `To use the virtual joysticks, you need a ProtoFlux setup in your avatar: 1. Listen for OSC float parameters '/avatar/parameters/MoveX' and '/avatar/parameters/MoveY'. 2. Drive your character controller's lateral/forward velocity. 3. For perspective, listen to '/avatar/parameters/ThirdPerson'. See the Control page or the ProtoFlux guide for details.`,
+    },
 ];
 
 function AccordionItem({ q, a }: { q: string; a: string }) {

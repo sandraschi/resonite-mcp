@@ -2,13 +2,17 @@
 """HTTP server for Resonite MCP - FastAPI interface for web-based control."""
 
 import logging
+import shutil
+import tempfile
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+import subprocess
 
 # Functions will be imported inside endpoints to avoid tool wrapping
 
@@ -139,30 +143,37 @@ class UnitySyncRequest(BaseModel):
     unity_package: Optional[str] = None
 
 
+class ControlMoveRequest(BaseModel):
+    x: float
+    y: float
+
+
+class ControlViewRequest(BaseModel):
+    view_type: str  # "first-person", "third-person", "toggle"
+
+
+class FleetLaunchRequest(BaseModel):
+    """Request model for launching a fleet application."""
+
+    repo_path: str = Field(..., description="Absolute path to the repository root")
+
+
+class FleetLaunchResponse(BaseModel):
+    """Response model for fleet launch operation."""
+
+    success: bool
+    message: str
+
+
 # API Routes
-@app.get("/")
-async def root():
-    """Root endpoint with server information."""
-    return {
-        "name": "Resonite MCP Server",
-        "version": "0.1.1",
-        "description": "HTTP API for Resonite social VR platform control",
-        "endpoints": {
-            "docs": "/docs",
-            "health": "/health",
-            "osc": "/osc/*",
-            "resonite": "/resonite/*",
-        },
-    }
-
-
+@app.get("/api/v1/health")
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {
-        "status": "healthy",
-        "server": "Resonite MCP",
-        "version": "0.1.1",
+        "status": "ok",
+        "server": "resonite-mcp-sota",
+        "version": "2026.2.17",
         "capabilities": [
             "osc_communication",
             "avatar_control",
@@ -170,7 +181,60 @@ async def health_check():
             "protoflux_scripting",
             "session_management",
             "integrations",
+            "fleet_orchestration",
         ],
+    }
+
+
+@app.post("/api/v1/fleet/launch", response_model=FleetLaunchResponse)
+async def launch_app(request: FleetLaunchRequest) -> FleetLaunchResponse:
+    """Launch another MCP app via its start.ps1 script."""
+    path = Path(request.repo_path)
+    if not path.exists():
+        raise HTTPException(status_code=404, detail=f"Path {request.repo_path} does not exist")
+
+    # Security check: Ensure path is within D:/Dev/repos
+    try:
+        allowed_base = Path("D:/Dev/repos").resolve()
+        target_path = path.resolve()
+        target_path.relative_to(allowed_base)
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Access denied: Path outside allowed directory")
+
+    start_script = path / "web_sota" / "start.ps1"
+    if not start_script.exists():
+        start_script = path / "web" / "start.ps1"
+        if not start_script.exists():
+            start_script = path / "start.ps1"
+            if not start_script.exists():
+                raise HTTPException(status_code=400, detail="No valid SOTA entry point found")
+
+    try:
+        subprocess.Popen(
+            ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", str(start_script)],
+            cwd=str(path),
+            creationflags=subprocess.CREATE_NEW_CONSOLE,
+        )
+        return FleetLaunchResponse(success=True, message=f"Launched {path.name} successfully")
+    except Exception as e:
+        logger.error(f"Failed to launch {path.name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/")
+async def root():
+    """Root endpoint with server information."""
+    return {
+        "name": "Resonite MCP Server",
+        "version": "2026.2.17",
+        "description": "HTTP API for Resonite social VR platform control",
+        "endpoints": {
+            "docs": "/docs",
+            "health": "/api/v1/health",
+            "fleet": "/api/v1/fleet/*",
+            "osc": "/api/osc/*",
+            "resonite": "/api/resonite/*",
+        },
     }
 
 
@@ -1028,7 +1092,7 @@ VRM_DIR = Path.home() / ".avatarmcp" / "models"
 # avatars/ symlinks/mirrors ~/.avatarmcp/models/ for convenience.
 ASSET_ROOT = Path.home() / "Documents" / "ResoniteAssets"
 
-_3D_EXTS = {".vrm", ".fbx", ".obj", ".glb", ".gltf", ".blend", ".dae", ".3ds", ".ply"}
+_3D_EXTS = {".vrm", ".fbx", ".obj", ".glb", ".gltf", ".blend", ".dae", ".3ds", ".ply", ".splat"}
 
 ASSET_CATEGORIES = {
     "avatars": VRM_DIR,  # ~/.avatarmcp/models/
@@ -1037,6 +1101,78 @@ ASSET_CATEGORIES = {
     "architecture": ASSET_ROOT / "architecture",
     "misc": ASSET_ROOT / "misc",
 }
+
+
+class RLWriteRequest(BaseModel):
+    ref_id: str
+    value: Any
+    value_type: Optional[str] = None
+
+
+@app.post("/rl/world/write-field")
+async def world_write_field(req: RLWriteRequest):
+    """Update a specific field/property in Resonite."""
+    client = _get_rl_client()
+    try:
+        resp = await client.write_field(req.ref_id, req.value, req.value_type)
+        return {"status": "ok", "response": resp}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/rl/world/inject-file")
+async def inject_file(
+    file: UploadFile = File(...),
+    target_slot: str = Form("Root"),
+    pos_x: float = Form(0.0),
+    pos_y: float = Form(0.0),
+    pos_z: float = Form(0.0),
+):
+    """Directly inject a file from the browser into the Resonite world."""
+    client = _get_rl_client()
+    if not client.connected:
+        raise HTTPException(status_code=503, detail="Not connected to ResoniteLink")
+
+    # 1. Save to a temporary location
+    temp_dir = Path(tempfile.gettempdir()) / "resonite_mcp_inject"
+    temp_dir.mkdir(exist_ok=True)
+
+    # Use a unique name to avoid collisions
+    timestamp = int(time.time())
+    safe_filename = f"{timestamp}_{file.filename}"
+    temp_path = temp_dir / safe_filename
+
+    try:
+        with temp_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+
+        # 2. Trigger the import via ResoniteLink
+        # We use the absolute path so Resonite can find it on the local disk
+        payload = {
+            "type": "importFile",
+            "filePath": str(temp_path),
+            "targetSlotId": target_slot,
+            "position": {"x": pos_x, "y": pos_y, "z": pos_z},
+        }
+
+        resp = await client._send(payload)
+
+        return {
+            "status": "ok",
+            "filename": file.filename,
+            "temp_path": str(temp_path),
+            "target_slot": target_slot,
+            "response": resp,
+        }
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File injection failed (requires Resonite build ≥ 2026.1.8.6): {exc}",
+        ) from exc
+    finally:
+        # Clean up the temporary file after import attempt
+        if temp_path.exists():
+            temp_path.unlink()
 
 
 @app.get("/rl/world/asset-files")
@@ -1152,3 +1288,84 @@ async def import_vrm(req: VRMImportRequest):
             status_code=400,
             detail=f"VRM import failed (requires Resonite build ≥ 2026.1.8.6): {exc}",
         ) from exc
+
+
+# ---------------------------------------------------------------------------
+# Control & Mapping (Phase 8)
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/control/move")
+async def control_move(req: ControlMoveRequest):
+    """
+    Control avatar movement.
+    Sends OSC messages to Resonite (typically localhost:9000).
+    Requires 'MoveX' and 'MoveY' parameters to be set up in the avatar via ProtoFlux or Avatar Rig.
+    """
+    try:
+        from .tools.avatar import resonite_parameter_set
+
+        # Set MoveX (X-axis joystick)
+        await resonite_parameter_set("MoveX", req.x)
+        # Set MoveY (Y-axis joystick)
+        await resonite_parameter_set("MoveY", req.y)
+
+        return {"status": "ok", "x": req.x, "y": req.y}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/control/view")
+async def control_view(req: ControlViewRequest):
+    """
+    Toggle first/third person view.
+    Requires 'ThirdPerson' parameter in the avatar.
+    """
+    try:
+        from .tools.avatar import resonite_parameter_set
+
+        # Toggle or set specific view
+        # If 'toggle', we might need to read the current state first,
+        # but for now we'll assume the frontend tracks it or we just set specific values.
+        val = 1.0 if req.view_type == "third-person" else 0.0
+        await resonite_parameter_set("ThirdPerson", val)
+
+        return {"status": "ok", "view_type": req.view_type}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/world/map-data")
+async def world_map_data():
+    """
+    Get spatial data for 2D map visualization.
+    Scans the world for active users and important slots.
+    """
+    client = _get_rl_client()
+    if not client.connected:
+        return {"status": "ok", "nodes": [], "connected": False}
+
+    try:
+        # Attempt to get children of the Root slot
+        # This gives us a coarse map of everything in the world
+        children = await client.get_children("Root")
+        nodes = []
+
+        for child in children:
+            # Basic heuristic: names containing 'User' or certain patterns are likely avatars
+            name = child.get("name", "Unknown")
+            is_avatar = "User" in name or name.startswith("[")  # Common user tag patterns
+
+            nodes.append(
+                {
+                    "id": child.get("id"),
+                    "name": name,
+                    "position": child.get("position", {"x": 0, "y": 0, "z": 0}),
+                    "type": "avatar" if is_avatar else "object",
+                }
+            )
+
+        return {"status": "ok", "nodes": nodes, "connected": True}
+    except Exception as exc:
+        logger.error(f"Map data fetch failed: {exc}")
+        return {"status": "error", "message": f"Could not fetch map data: {exc}"}

@@ -20,6 +20,9 @@ import { Inventory } from '@/pages/inventory';
 import { ProtoFluxPage } from '@/pages/protoflux';
 import { ResoniteLinkPage } from '@/pages/resonite_link';
 import { World } from '@/pages/world';
+import { Control } from '@/pages/control';
+import { Map } from '@/pages/map';
+import { Apps } from '@/pages/apps';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,6 +55,9 @@ function App() {
             <Route path="/protoflux" element={<ProtoFluxPage />} />
             <Route path="/resonite-link" element={<ResoniteLinkPage />} />
             <Route path="/world" element={<World />} />
+            <Route path="/control" element={<Control />} />
+            <Route path="/map" element={<Map />} />
+            <Route path="/apps" element={<Apps />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AppLayout>

@@ -23,6 +23,9 @@ import {
     Cpu,
     Link2,
     TreePine,
+    Gamepad2,
+    Navigation,
+    Grid,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -37,8 +40,10 @@ const navItems = [
     { href: '/world', label: 'World', icon: TreePine, section: 'world' },
     { href: '/io', label: 'IO & Assets', icon: Package, section: 'world' },
     { href: '/inventory', label: 'Inventory', icon: Archive, section: 'world' },
+    { href: '/map', label: 'Map', icon: Navigation, section: 'world' },
     { href: '/marketplace', label: 'Marketplace', icon: ShoppingBag, section: 'world' },
     { href: '/avatar', label: 'Avatar', icon: User, section: 'identity' },
+    { href: '/control', label: 'Control', icon: Gamepad2, section: 'identity' },
     { href: '/osc', label: 'OSC Control', icon: Radio, section: 'systems' },
     { href: '/scripting', label: 'Scripting', icon: Terminal, section: 'systems' },
     { href: '/integrations', label: 'Integrations', icon: Share2, section: 'systems' },
@@ -47,8 +52,9 @@ const navItems = [
     { href: '/resonite-link', label: 'ResoniteLink', icon: Link2, section: 'systems' },
     { href: '/contacts', label: 'Contacts', icon: Users, section: 'social' },
     { href: '/chat', label: 'Chat', icon: MessageCircle, section: 'social' },
+    { href: '/apps', label: 'App Hub', icon: Grid, section: 'social' },
     { href: '/tools', label: 'Dev Tools', icon: Wrench, section: 'dev' },
-    { href: '/help', label: 'Help', icon: HelpCircle, section: 'dev' },
+    { href: '/help', label: 'Reference', icon: HelpCircle, section: 'dev' },
     { href: '/settings', label: 'Settings', icon: Settings, section: 'dev' },
 ];
 

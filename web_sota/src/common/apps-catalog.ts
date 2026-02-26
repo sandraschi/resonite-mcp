@@ -22,66 +22,111 @@ export interface AppEntry {
 // SOTA App Catalog - Centralized Registry for Fleet Navigation
 export const APPS_CATALOG: AppEntry[] = [
     {
-        id: 'fleet-dashboard',
-        label: 'Fleet Dashboard',
-        description: 'Central management for all MCP servers',
+        id: 'blender-mcp',
+        label: 'Blender Control',
+        description: '3D visualization and geometry orchestration.',
+        icon: Activity,
+        url: 'http://localhost:10848',
+        port: 10848,
+        tags: ['creative', '3d']
+    },
+    {
+        id: 'avatar-mcp',
+        label: 'Avatar Control',
+        description: 'VRM avatar management and animation orchestration.',
+        icon: Bot,
+        url: 'http://localhost:10792',
+        port: 10792,
+        tags: ['creative', 'avatar']
+    },
+    {
+        id: 'alexa-mcp',
+        label: 'Alexa Control',
+        description: 'Acoustic bridge and voice command orchestration.',
+        icon: Activity,
+        url: 'http://localhost:10800',
+        port: 10800,
+        tags: ['control', 'voice']
+    },
+    {
+        id: 'vienna-live-mcp',
+        label: 'Vienna Live MCP',
+        description: 'Transit and location-aware services in Vienna.',
         icon: LayoutGrid,
-        url: 'http://localhost:10794',
-        port: 10794,
+        url: 'http://localhost:10878',
+        port: 10878,
+        tags: ['transit', 'vienna']
+    },
+    {
+        id: 'handbrake-mcp',
+        label: 'Handbrake MCP',
+        description: 'Automated media transcoding and pipeline management.',
+        icon: MonitorPlay,
+        url: 'http://localhost:10874',
+        port: 10874,
+        tags: ['media', 'video']
+    },
+    {
+        id: 'virtualdj-mcp',
+        label: 'VirtualDJ MCP',
+        description: 'SOTA VJing and audio orchestration.',
+        icon: Activity,
+        url: 'http://localhost:10876',
+        port: 10876,
+        tags: ['media', 'audio']
+    },
+    {
+        id: 'openfang',
+        label: 'OpenFang',
+        description: 'Fleet supervisor and modular agentic node controller.',
+        icon: LayoutGrid,
+        url: 'http://localhost:10870',
+        port: 10870,
         tags: ['infra', 'admin']
     },
     {
-        id: 'advanced-memory',
-        label: 'Advanced Memory',
-        description: 'Semantic knowledge Graph and long-term memory',
-        icon: Brain,
-        url: 'http://localhost:10704',
-        port: 10704,
-        tags: ['ai', 'memory']
-    },
-    {
-        id: 'robotics',
-        label: 'Robotics Control',
-        description: 'Physical and virtual robot orchestration',
-        icon: Bot,
-        url: 'http://localhost:10706',
-        port: 10706,
-        tags: ['hardware', 'simulation']
-    },
-    {
         id: 'osc-mcp',
-        label: 'OSC Orchestrator',
-        description: 'Real-time media and robotics transport',
+        label: 'OSC Control',
+        description: 'Real-time control protocol bridge for high-end gear.',
         icon: Activity,
         url: 'http://localhost:10766',
         port: 10766,
-        tags: ['media', 'transport']
+        tags: ['control', 'media']
     },
     {
-        id: 'obs-mcp',
-        label: 'OBS Dashboard',
-        description: 'Live streaming and recording control',
+        id: 'rustdesk-mcp',
+        label: 'RustDesk MCP',
+        description: 'Secure remote access and fleet management.',
         icon: MonitorPlay,
-        url: 'http://localhost:10818',
-        port: 10818,
-        tags: ['media', 'streaming']
+        url: 'http://localhost:10804',
+        port: 10804,
+        tags: ['infra', 'remote']
     },
     {
-        id: 'ocr-interface',
-        label: 'OCR Interface',
-        description: 'Document scanning and text extraction',
-        icon: Scan,
-        url: 'http://localhost:10858',
-        port: 10858,
-        tags: ['utilities', 'ai']
+        id: 'vroidstudio-mcp',
+        label: 'VroidStudio MCP',
+        description: 'Avatar creation and VR character pipeline.',
+        icon: Bot,
+        url: 'http://localhost:10880',
+        port: 10880,
+        tags: ['creative', 'avatar']
     },
     {
-        id: 'winrar',
-        label: 'Archive Manager',
-        description: 'File compression and extraction utilities',
-        icon: Archive,
-        url: 'http://localhost:10763',
-        port: 10763,
-        tags: ['utility', 'files']
+        id: 'obsidian-mcp',
+        label: 'Obsidian MCP',
+        description: 'Knowledge graph and second brain integration.',
+        icon: Brain,
+        url: 'http://localhost:10704',
+        port: 10704,
+        tags: ['knowledge', 'ai']
+    },
+    {
+        id: 'mcp-central-docs',
+        label: 'Docs MCP',
+        description: 'Standardized MCP documentation and fleet registry.',
+        icon: Activity,
+        url: 'http://localhost:10720',
+        port: 10720,
+        tags: ['knowledge', 'admin']
     }
 ];

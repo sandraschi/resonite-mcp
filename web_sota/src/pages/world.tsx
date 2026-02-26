@@ -103,6 +103,29 @@ async function fetchAssets(category: AssetCategory): Promise<AssetListResponse> 
     return r.json() as Promise<AssetListResponse>;
 }
 
+async function writeField(payload: {
+    ref_id: string;
+    field_path: string;
+    value: unknown;
+}) {
+    const r = await fetch('/rl/world/write-field', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+}
+
+async function injectFile(formData: FormData) {
+    const r = await fetch('/rl/world/inject-file', {
+        method: 'POST',
+        body: formData,
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return r.json();
+}
+
 async function importAsset(payload: {
     file_path: string;
     target_slot: string;
@@ -199,10 +222,18 @@ function SlotRow({ slot, depth, selected, onSelect }: SlotRowProps) {
 // ---------------------------------------------------------------------------
 
 function Inspector({ refId }: { refId: string }) {
+    const queryClient = useQueryClient();
     const { data, isLoading, isError } = useQuery({
         queryKey: ['rl-node', refId],
         queryFn: () => fetchNode(refId),
         enabled: !!refId,
+    });
+
+    const mutation = useMutation({
+        mutationFn: writeField,
+        onSuccess: () => {
+            void queryClient.invalidateQueries({ queryKey: ['rl-node', refId] });
+        },
     });
 
     if (isLoading) return (
@@ -214,44 +245,86 @@ function Inspector({ refId }: { refId: string }) {
         <div className="text-xs text-red-400 p-4">Failed to load node data.</div>
     );
 
-    const fmt = (v: number) => v.toFixed(3);
+    const handleWrite = (field: string, val: unknown) => {
+        mutation.mutate({ ref_id: refId, field_path: field, value: val });
+    };
 
     return (
         <div className="space-y-4 p-4 text-xs font-mono">
             <div className="space-y-1">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Slot</p>
-                <p className="text-violet-300 truncate">{data.name ?? '(unnamed)'}</p>
+                <input
+                    type="text"
+                    defaultValue={data.name ?? ''}
+                    onBlur={(e) => handleWrite('Name', e.target.value)}
+                    title="Slot Name"
+                    className="w-full bg-transparent text-violet-300 border-none px-0 py-0 outline-none focus:ring-0"
+                />
                 <p className="text-slate-600 text-[10px] break-all">{data.refId}</p>
-                <span className={cn(
-                    'inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest',
-                    data.active !== false ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-700/40 text-slate-600'
-                )}>
+                <button
+                    onClick={() => handleWrite('Active', !(data.active !== false))}
+                    className={cn(
+                        'inline-block px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest transition-all',
+                        data.active !== false ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700/40 text-slate-600 border border-white/5'
+                    )}
+                >
                     {data.active !== false ? 'Active' : 'Inactive'}
-                </span>
+                </button>
             </div>
 
             {data.position && (
                 <div className="space-y-1">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Position</p>
-                    <p className="text-slate-300">x: {fmt(data.position.x)} y: {fmt(data.position.y)} z: {fmt(data.position.z)}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                        {(['x', 'y', 'z'] as const).map(axis => (
+                            <div key={axis} className="flex flex-col gap-0.5">
+                                <span className="text-[8px] text-slate-700">{axis.toUpperCase()}</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={data.position?.[axis]}
+                                    onBlur={(e) => handleWrite(`Position.${axis.toUpperCase()}`, parseFloat(e.target.value))}
+                                    title={`Position ${axis.toUpperCase()}`}
+                                    placeholder="0.00"
+                                    className="bg-white/5 border border-white/5 rounded px-1 py-0.5 text-slate-300 focus:border-violet-500/50 outline-none"
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
             {data.scale && (
                 <div className="space-y-1">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Scale</p>
-                    <p className="text-slate-300">x: {fmt(data.scale.x)} y: {fmt(data.scale.y)} z: {fmt(data.scale.z)}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                        {(['x', 'y', 'z'] as const).map(axis => (
+                            <div key={axis} className="flex flex-col gap-0.5">
+                                <span className="text-[8px] text-slate-700">{axis.toUpperCase()}</span>
+                                <input
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={data.scale?.[axis]}
+                                    onBlur={(e) => handleWrite(`Scale.${axis.toUpperCase()}`, parseFloat(e.target.value))}
+                                    title={`Scale ${axis.toUpperCase()}`}
+                                    placeholder="1.00"
+                                    className="bg-white/5 border border-white/5 rounded px-1 py-0.5 text-slate-300 focus:border-violet-500/50 outline-none"
+                                />
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
             {data.components && data.components.length > 0 && (
                 <div className="space-y-1">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">Components ({data.components.length})</p>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                    <div className="space-y-1 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
                         {data.components.map(c => (
-                            <div key={c.refId} className="flex items-center gap-2 py-1 border-b border-white/5">
-                                <Layers className="w-3 h-3 text-indigo-400 flex-none" aria-hidden="true" />
+                            <div key={c.refId} className="flex items-center gap-2 py-1 border-b border-white/5 group/comp">
+                                <Layers className="w-3 h-3 text-indigo-400 group-hover/comp:text-indigo-300 transition-colors flex-none" aria-hidden="true" />
                                 <span className="text-slate-300 truncate text-[10px]">{c.componentType.split('.').pop()}</span>
+                                <span className="ml-auto text-[8px] text-slate-700 opacity-0 group-hover/comp:opacity-100 transition-opacity">{c.refId.split('-')[0]}</span>
                             </div>
                         ))}
                     </div>
@@ -271,16 +344,17 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
     const [selectedPath, setSelectedPath] = useState('');
     const [pos, setPos] = useState({ x: 0, y: 0, z: 0 });
     const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
+    const [dragActive, setDragActive] = useState(false);
 
     const { data: assetData, isLoading: assetsLoading } = useQuery({
         queryKey: ['asset-files', category],
         queryFn: () => fetchAssets(category),
     });
 
-    const mutation = useMutation({
+    const spawnMutation = useMutation({
         mutationFn: importAsset,
         onSuccess: () => {
-            setToast({ ok: true, msg: 'Asset injected! Check Resonite.' });
+            setToast({ ok: true, msg: 'Asset spawned! Check Resonite.' });
             void queryClient.invalidateQueries({ queryKey: ['rl-children'] });
             setTimeout(() => setToast(null), 4000);
         },
@@ -290,12 +364,59 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
         },
     });
 
+    const injectMutation = useMutation({
+        mutationFn: injectFile,
+        onSuccess: () => {
+            setToast({ ok: true, msg: 'File injected into world!' });
+            void queryClient.invalidateQueries({ queryKey: ['rl-children'] });
+            setTimeout(() => setToast(null), 4000);
+        },
+        onError: (e: Error) => {
+            setToast({ ok: false, msg: `Injection failed: ${e.message}` });
+            setTimeout(() => setToast(null), 6000);
+        },
+    });
+
     const handleInject = () => {
         if (!selectedPath) return;
-        mutation.mutate({ file_path: selectedPath, target_slot: targetSlot ?? 'Root', position: pos });
+        spawnMutation.mutate({ file_path: selectedPath, target_slot: targetSlot ?? 'Root', position: pos });
     };
 
-    // Clear selection when category changes
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('target_slot', targetSlot ?? 'Root');
+        formData.append('pos_x', pos.x.toString());
+        formData.append('pos_y', pos.y.toString());
+        formData.append('pos_z', pos.z.toString());
+        injectMutation.mutate(formData);
+    };
+
+    const handleDrag = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+        else if (e.type === 'dragleave') setDragActive(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragActive(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('target_slot', targetSlot ?? 'Root');
+            formData.append('pos_x', pos.x.toString());
+            formData.append('pos_y', pos.y.toString());
+            formData.append('pos_z', pos.z.toString());
+            injectMutation.mutate(formData);
+        }
+    };
+
     const handleCategoryChange = (cat: AssetCategory) => {
         setCategory(cat);
         setSelectedPath('');
@@ -308,13 +429,36 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
                 <span className="text-xs font-bold text-slate-200 uppercase tracking-widest">Inject Asset</span>
             </div>
 
-            {/* Category tabs */}
+            <div
+                onDragEnter={handleDrag}
+                onDragOver={handleDrag}
+                onDragLeave={handleDrag}
+                onDrop={handleDrop}
+                className={cn(
+                    "relative group p-4 border-2 border-dashed rounded-xl transition-all duration-300 text-center",
+                    dragActive
+                        ? "bg-violet-500/10 border-violet-500/50"
+                        : "bg-black/20 border-white/5 hover:border-white/10"
+                )}
+            >
+                <div className="flex flex-col items-center gap-2">
+                    <Upload className={cn("w-6 h-6 transition-colors", dragActive ? "text-violet-400" : "text-slate-700")} />
+                    <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Drag & Drop 3D File</p>
+                        <p className="text-[9px] text-slate-600 mt-1">.VRM, .FBX, .GLB, .OBJ, .SPLAT</p>
+                    </div>
+                    <label className="cursor-pointer px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-[9px] font-bold text-slate-300 uppercase tracking-tighter transition-all">
+                        Browse Files
+                        <input type="file" className="hidden" onChange={handleFileUpload} accept=".vrm,.fbx,.obj,.glb,.gltf,.blend,.ply,.splat" />
+                    </label>
+                </div>
+            </div>
+
             <div className="flex flex-wrap gap-1">
                 {(Object.keys(CATEGORY_META) as AssetCategory[]).map(cat => (
                     <button
                         key={cat}
                         onClick={() => handleCategoryChange(cat)}
-                        title={`Browse ${CATEGORY_META[cat].label}`}
                         className={cn(
                             'flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border',
                             category === cat
@@ -328,11 +472,10 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
                 ))}
             </div>
 
-            {/* File picker */}
             <div className="space-y-1.5">
                 <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">
-                    {CATEGORY_META[category].label} File
-                    <span className="ml-1 text-slate-700 normal-case font-normal">({CATEGORY_META[category].hint})</span>
+                    Library Spawn
+                    <span className="ml-1 text-slate-700 normal-case font-normal">(ResoniteAssets/{category}/)</span>
                 </p>
                 {assetsLoading ? (
                     <Loader2 className="w-4 h-4 animate-spin text-violet-400" />
@@ -340,7 +483,7 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
                     <select
                         value={selectedPath}
                         onChange={e => setSelectedPath(e.target.value)}
-                        title={`Select ${CATEGORY_META[category].label} file`}
+                        title="Select file from library"
                         className="w-full bg-card/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 outline-none focus:border-violet-500/50"
                     >
                         <option value="">— Select file —</option>
@@ -350,37 +493,27 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
                     </select>
                 ) : (
                     <div className="flex items-center gap-2 text-xs text-slate-600 py-1">
-                        <FolderOpen className="w-4 h-4" aria-hidden="true" />
-                        <span>No 3D files found in <code className="text-slate-700">{assetData?.scan_dir ?? '…'}</code></span>
+                        <FolderOpen className="w-4 h-4" />
+                        <span>No files found in <code className="text-slate-700">{assetData?.scan_dir ?? '…'}</code></span>
                     </div>
                 )}
-                {/* Manual path fallback */}
-                <input
-                    type="text"
-                    value={selectedPath}
-                    onChange={e => setSelectedPath(e.target.value)}
-                    placeholder="…or paste absolute path to file"
-                    title="Asset file path"
-                    className="w-full bg-card/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-slate-400 placeholder:text-slate-700 outline-none focus:border-violet-500/50"
-                />
             </div>
 
-            {/* Spawn position */}
             <div className="space-y-1">
                 <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest flex items-center gap-1">
-                    <Crosshair className="w-3 h-3" aria-hidden="true" /> Spawn Position
+                    <Crosshair className="w-3 h-3" /> Target Position
                 </p>
                 <div className="grid grid-cols-3 gap-2">
                     {(['x', 'y', 'z'] as const).map(axis => (
                         <div key={axis} className="space-y-0.5">
-                            <label htmlFor={`pos-${axis}`} className="text-[9px] text-slate-600 uppercase">{axis}</label>
+                            <label className="text-[9px] text-slate-600 uppercase">{axis}</label>
                             <input
-                                id={`pos-${axis}`}
                                 type="number"
                                 step="0.1"
                                 value={pos[axis]}
                                 onChange={e => setPos(p => ({ ...p, [axis]: parseFloat(e.target.value) || 0 }))}
-                                title={`Position ${axis}`}
+                                title={`Spawn Position ${axis.toUpperCase()}`}
+                                placeholder="0.0"
                                 className="w-full bg-card/40 border border-white/10 rounded-lg px-2 py-1.5 text-xs font-mono text-slate-200 outline-none focus:border-violet-500/50"
                             />
                         </div>
@@ -388,29 +521,20 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
                 </div>
             </div>
 
-            {/* Target slot indicator */}
-            {targetSlot && (
-                <p className="text-[10px] text-slate-500">
-                    Parent slot: <span className="text-violet-400 font-mono">{targetSlot}</span>
-                </p>
-            )}
-
-            {/* Inject button */}
             <button
                 onClick={handleInject}
-                disabled={!selectedPath || mutation.isPending}
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-widest transition-all shadow-lg shadow-violet-500/20 active:scale-95"
-                title={`Inject ${CATEGORY_META[category].label} into Resonite world`}
+                disabled={!selectedPath || spawnMutation.isPending}
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold uppercase tracking-widest transition-all active:scale-95"
             >
-                {mutation.isPending
-                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Injecting…</>
-                    : <><Upload className="w-3.5 h-3.5" /> Inject {CATEGORY_META[category].label}</>
+                {spawnMutation.isPending
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Spawning…</>
+                    : <><Box className="w-3.5 h-3.5" /> Spawn From Library</>
                 }
             </button>
 
             {toast && (
                 <div className={cn(
-                    'p-3 rounded-lg text-xs font-bold',
+                    'p-3 rounded-lg text-xs font-bold animate-in fade-in slide-in-from-top-2',
                     toast.ok ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                         : 'bg-red-500/10 text-red-400 border border-red-500/20'
                 )}>

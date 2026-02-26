@@ -1,0 +1,13 @@
+
+> resonite-mcp-sota@0.0.0 lint
+> eslint .
+
+
+D:\Dev\repos\resonite-mcp\web_sota\src\components\ui\badge.tsx
+  36:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+D:\Dev\repos\resonite-mcp\web_sota\src\components\ui\button.tsx
+  56:18  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+Ô£û 2 problems (2 errors, 0 warnings)
+
