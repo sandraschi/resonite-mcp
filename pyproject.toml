@@ -28,7 +28,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "fastmcp[all]>=2.14.5",
+    "fastmcp[all]>=3.1.0",
     "python-osc>=1.8.0",
     "pydantic>=2.0",
     "aiohttp>=3.8.0",
@@ -39,6 +39,10 @@ dependencies = [
     "fastapi>=0.132.0",
     "uvicorn[standard]>=0.41.0",
     "httpx>=0.28.1",
+    "lancedb>=0.17.0",
+    "tantivy>=0.22.0",
+    "sentence-transformers>=3.0.0",
+    "beautifulsoup4>=4.12.0",
 ]
 
 [project.optional-dependencies]

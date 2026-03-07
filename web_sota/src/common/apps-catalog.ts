@@ -3,10 +3,8 @@ import {
     Bot,
     Brain,
     LayoutGrid,
-    Scan,
     MonitorPlay,
-    Activity,
-    Archive
+    Activity
 } from 'lucide-react';
 
 export interface AppEntry {

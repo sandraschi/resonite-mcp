@@ -22,7 +22,9 @@ import { ResoniteLinkPage } from '@/pages/resonite_link';
 import { World } from '@/pages/world';
 import { Control } from '@/pages/control';
 import { Map } from '@/pages/map';
+import { SearchPage } from '@/pages/search';
 import { Apps } from '@/pages/apps';
+import { PresenceGate } from '@/components/presence-gate';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,27 +40,37 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/status" element={<Status />} />
-            <Route path="/sessions" element={<Sessions />} />
-            <Route path="/io" element={<IoPage />} />
-            <Route path="/avatar" element={<AvatarPage />} />
-            <Route path="/scripting" element={<ScriptingPage />} />
-            <Route path="/marketplace" element={<MarketplacePage />} />
-            <Route path="/osc" element={<OSCPage />} />
-            <Route path="/rest-api" element={<RestApiPage />} />
-            <Route path="/integrations" element={<Integrations />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/tools" element={<Tools />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/protoflux" element={<ProtoFluxPage />} />
-            <Route path="/resonite-link" element={<ResoniteLinkPage />} />
-            <Route path="/world" element={<World />} />
-            <Route path="/control" element={<Control />} />
-            <Route path="/map" element={<Map />} />
-            <Route path="/apps" element={<Apps />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route
+              path="*"
+              element={
+                <PresenceGate>
+                  <Routes>
+                    <Route path="/sessions" element={<Sessions />} />
+                    <Route path="/io" element={<IoPage />} />
+                    <Route path="/avatar" element={<AvatarPage />} />
+                    <Route path="/scripting" element={<ScriptingPage />} />
+                    <Route path="/marketplace" element={<MarketplacePage />} />
+                    <Route path="/osc" element={<OSCPage />} />
+                    <Route path="/rest-api" element={<RestApiPage />} />
+                    <Route path="/integrations" element={<Integrations />} />
+                    <Route path="/contacts" element={<Contacts />} />
+                    <Route path="/chat" element={<Chat />} />
+                    <Route path="/tools" element={<Tools />} />
+                    <Route path="/help" element={<Help />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/protoflux" element={<ProtoFluxPage />} />
+                    <Route path="/resonite-link" element={<ResoniteLinkPage />} />
+                    <Route path="/world" element={<World />} />
+                    <Route path="/control" element={<Control />} />
+                    <Route path="/map" element={<Map />} />
+                    <Route path="/search" element={<SearchPage />} />
+                    <Route path="/apps" element={<Apps />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </PresenceGate>
+              }
+            />
           </Routes>
         </AppLayout>
       </Router>

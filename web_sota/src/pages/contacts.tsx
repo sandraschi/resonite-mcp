@@ -66,7 +66,7 @@ export function Contacts() {
                         <button
                             key={t}
                             onClick={() => setTab(t)}
-                            aria-pressed={tab === t}
+                            aria-pressed={tab === t ? "true" : "false"}
                             className={cn(
                                 'px-3 py-1 rounded-md text-xs font-medium capitalize transition-all',
                                 tab === t ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:text-slate-300'

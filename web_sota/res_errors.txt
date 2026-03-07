@@ -1,0 +1,15 @@
+12:16:33 AM - Projects in this build: 
+    * tsconfig.app.json
+    * tsconfig.node.json
+    * tsconfig.json
+
+12:16:33 AM - Project 'tsconfig.app.json' is out of date because buildinfo file 'node_modules/.tmp/tsconfig.app.tsbuildinfo' indicates that program needs to report errors.
+
+12:16:33 AM - Building project 'D:/Dev/repos/resonite-mcp/web_sota/tsconfig.app.json'...
+
+src/common/apps-catalog.ts(6,5): error TS6133: 'Scan' is declared but its value is never read.
+src/common/apps-catalog.ts(9,5): error TS6133: 'Archive' is declared but its value is never read.
+12:16:36 AM - Project 'tsconfig.node.json' is out of date because output file 'vite.config.js' does not exist
+
+12:16:36 AM - Building project 'D:/Dev/repos/resonite-mcp/web_sota/tsconfig.node.json'...
+

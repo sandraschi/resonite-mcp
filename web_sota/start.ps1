@@ -1,29 +1,65 @@
-# Webapp Start - Standardized SOTA
-$WebPort = 10714
-$BackendPort = $WebPort + 1
-$ProjectRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
+# Backend: 10715, Frontend: 10714 (proxy /api to backend). No manual uv/uvicorn.
 
-# 1. Kill any process squatting on the ports
-Write-Host "Checking for port squatters on $WebPort and $BackendPort..." -ForegroundColor Yellow
-$pids = Get-NetTCPConnection -LocalPort $WebPort, $BackendPort -ErrorAction SilentlyContinue | Where-Object { $_.OwningProcess -gt 4 } | Select-Object -ExpandProperty OwningProcess -Unique
-foreach ($p in $pids) {
-    Write-Host "Found squatter (PID: $p). Terminating..." -ForegroundColor Red
-    try { Stop-Process -Id $p -Force -ErrorAction Stop } catch { Write-Host "Warning: Could not terminate PID $p." -ForegroundColor Gray }
+$WebPort = 10714
+$BackendPort = 10715
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+
+function Clear-Port {
+    param([int]$Port)
+    $conns = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
+    if (-not $conns) { return $false }
+    $pids = $conns | Select-Object -ExpandProperty OwningProcess -Unique
+    foreach ($p in $pids) {
+        if ($p -and $p -ne 0) {
+            try {
+                Stop-Process -Id $p -Force -ErrorAction Stop
+                Write-Host "      PID $p (port $Port) stopped" -ForegroundColor DarkGray
+            }
+            catch { }
+        }
+    }
+    Start-Sleep -Milliseconds 400
+    return $true
 }
 
-# 2. Setup
-Set-Location $PSScriptRoot
-if (-not (Test-Path "node_modules")) { npm install }
+Write-Host "[RESONITE-MCP] SOTA startup (backend $BackendPort, frontend $WebPort)..." -ForegroundColor Cyan
 
-# 3. Start the Python backend in a new window
-Write-Host "Starting Python backend on port $BackendPort ..." -ForegroundColor Cyan
-$env:PYTHONPATH = "$ProjectRoot;$(Join-Path $ProjectRoot 'src')"
-$backendCmd = "Set-Location '$ProjectRoot'; uv run uvicorn resonite_mcp.http_server:app --host 127.0.0.1 --port $BackendPort --log-level info"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $backendCmd -WindowStyle Normal
+# 1. Clear port squatters
+foreach ($port in @($WebPort, $BackendPort)) {
+    $cleared = Clear-Port -Port $port
+    if ($cleared) { Write-Host "      Port $port cleared" -ForegroundColor Yellow }
+}
 
-# Give backend a moment to bind
+# 2. Sync deps and env from project root
+Push-Location $ProjectRoot
+if (-not (Test-Path "pyproject.toml")) {
+    Write-Host "[ERROR] pyproject.toml not found. Run from web_sota folder." -ForegroundColor Red
+    exit 1
+}
+uv sync --quiet
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[ERROR] uv sync failed." -ForegroundColor Red
+    exit 1
+}
+$env:PYTHONPATH = Join-Path $ProjectRoot "src"
+$env:MCP_TRANSPORT = "http"
+$env:MCP_PORT = [string]$BackendPort
+$env:MCP_HOST = "127.0.0.1"
+
+# 3. Start Python backend (HTTP mode; SOTA API via on_app_init)
+Write-Host "[RESONITE-MCP] Starting backend on port $BackendPort ..." -ForegroundColor Green
+$serverArgs = @("run", "python", "-m", "resonite_mcp.server", "--http", "--port", [string]$BackendPort)
+Start-Process -FilePath "uv" -ArgumentList $serverArgs -WorkingDirectory $ProjectRoot -NoNewWindow -PassThru
+Pop-Location
+
 Start-Sleep -Seconds 2
 
-# 4. Run server (Vite dev)
-Write-Host "Starting Vite frontend on port $WebPort ..." -ForegroundColor Cyan
+# 4. Frontend from web_sota
+Set-Location $PSScriptRoot
+if (-not (Test-Path "node_modules")) {
+    Write-Host "[RESONITE-MCP] Installing frontend deps..." -ForegroundColor Yellow
+    npm install --quiet
+}
+Write-Host "[RESONITE-MCP] Starting Vite on port $WebPort ..." -ForegroundColor Green
 npm run dev -- --port $WebPort --host

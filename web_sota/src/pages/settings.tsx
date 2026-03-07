@@ -42,9 +42,11 @@ export function Settings() {
                     <CardContent className="p-6 space-y-6">
                         <div className="space-y-4">
                             <div className="grid gap-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Neural Host Address</Label>
+                                <Label htmlFor="neural-host" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Neural Host Address</Label>
                                 <div className="relative group">
                                     <Input
+                                        id="neural-host"
+                                        aria-label="Neural Host Address"
                                         className="bg-muted/30 border-border/50 text-foreground placeholder-muted-foreground/50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all h-11 pl-4"
                                         defaultValue="http://localhost:1072x"
                                     />
@@ -94,18 +96,22 @@ export function Settings() {
                     <CardContent className="p-6 space-y-6">
                         <div className="space-y-4">
                             <div className="grid gap-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">I/O Timeout (ms)</Label>
+                                <Label htmlFor="io-timeout" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">I/O Timeout (ms)</Label>
                                 <Input
+                                    id="io-timeout"
                                     type="number"
+                                    aria-label="I/O Timeout in milliseconds"
                                     className="bg-muted/30 border-border/50 text-foreground placeholder-muted-foreground/50 rounded-xl focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all h-11"
                                     defaultValue="5000"
                                 />
                             </div>
 
                             <div className="grid gap-2 pt-2">
-                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Log Retention</Label>
+                                <Label htmlFor="log-retention" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Log Retention</Label>
                                 <select
+                                    id="log-retention"
                                     title="Log Retention Period"
+                                    aria-label="Log Retention Period"
                                     className="w-full bg-muted/30 border border-border/50 text-foreground rounded-xl h-11 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500/40 transition-all appearance-none cursor-pointer"
                                 >
                                     <option>Standard (1000 lines)</option>

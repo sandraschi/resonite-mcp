@@ -6,6 +6,7 @@ src/resonite_mcp/cli.py
 src/resonite_mcp/http_functions.py
 src/resonite_mcp/http_server.py
 src/resonite_mcp/models.py
+src/resonite_mcp/rag.py
 src/resonite_mcp/resonite_link.py
 src/resonite_mcp/server.py
 src/resonite_mcp/transport.py

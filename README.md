@@ -4,8 +4,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![FastMCP 2.14.3+](https://img.shields.io/badge/FastMCP-2.14.3+-green.svg)](https://gofastmcp.com/)
-[![Status](https://img.shields.io/badge/status-beta-blue.svg)](#)
+[![FastMCP 3.1.0+](https://img.shields.io/badge/FastMCP-3.1.0+-green.svg)](https://gofastmcp.com/)
+[![Status](https://img.shields.io/badge/status-SOTA-blue.svg)](#)
 
 ## Overview
 
@@ -23,10 +23,8 @@ In the spirit of kami and miko - this MCP server serves as a bridge between huma
 - **ResoniteLink**: Real-time WebSocket JSON protocol for high-performance 3D interaction
 - **Cloud Session Browser**: Browse public world sessions from `api.resonite.com` — thumbnails, user counts, join deep links
 - **World Inspector** *(NEW)*: Live scene-graph browser — traverse slots, inspect components, edit fields via ResoniteLink
-- **Asset Injection** *(NEW)*: Inject VRM avatars, props, furniture, and architecture models into a running Resonite world
-- **Session Management**: Start, monitor, and end Resonite sessions
-- **Inventory Management**: Browse, search, spawn, and manage user assets
-- **Plugin System**: Extensible architecture with OSC and ProtoFlux plugins
+- **Asset Injection**: Inject VRM avatars, props, furniture, and architecture models into a running Resonite world
+- **Presence Awareness & Onboarding** *(NEW)*: Self-detecting lifecycle gate that guides users to launch or install Resonite
 - **Dual Interface**: Both MCP stdio protocol and HTTP REST API
 - **Real-time Feedback**: Live parameter monitoring and event handling
 
@@ -48,6 +46,8 @@ This server follows FastMCP 2.13+ SOTA standards with:
 - **⚠️ Plugin Management**: 5 tools (structure complete, mock responses)
 - **✅ System Tools**: 3 tools fully implemented
 - **✅ Health Monitoring**: 1 tool fully implemented
+- **✅ Local LLM Substrate**: Full "Glom On" autonomy with Ollama/LM Studio detection
+- **✅ Presence Awareness**: Robust installation detection and launch orchestration
 
 **Total: 31 tools (13 fully functional, 15 with mock responses, 3 documentation)**
 
@@ -120,9 +120,10 @@ A premium dark-mode control panel ships alongside the MCP server:
 
 | Page | Description |
 |---|---|
-| Dashboard | Live server KPIs and connection status |
+| Dashboard | Live server KPIs and **Resonite Bridge** presence status |
 | **Sessions** | Browse public Resonite world sessions (cloud API proxy) |
 | **World Inspector** | Real-time slot hierarchy tree with field inspector and asset injector |
+| **Presence Gate** | Life-cycle gate for launching or installing Resonite (Auto-Unlock) |
 | ResoniteLink | Connect / disconnect / monitor ResoniteLink WebSocket |
 | Avatar | Avatar control |
 | OSC | OSC send/receive |
@@ -458,14 +459,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Recent Updates
 
-### v0.2.0 (2026-02-23) — Webapp Expansion
-- ✅ **Cloud Session Browser**: `GET /api/sessions` proxies `api.resonite.com` public sessions
-- ✅ **World Inspector page**: live slot hierarchy tree, inspector panel, field display
-- ✅ **Asset Injection panel**: inject VRM avatars, props, furniture, architecture via ResoniteLink `importFile`
-- ✅ Canonical asset dirs established (`~/.avatarmcp/models/`, `~/Documents/ResoniteAssets/`)
-- ✅ `httpx` dependency added for async cloud API proxy
-- ✅ New backend routes: `/rl/world/root|children|node`, `/rl/world/asset-files`, `/rl/world/import-vrm`
-- ✅ Sidebar and routing wired for new World page
+### v0.4.0 (2026-03-08) — Presence Awareness & Onboarding
+- ✅ **Presence Detection**: Backend monitoring for Resonite process and Steam installation
+- ✅ **Launch Orchestration**: One-click startup via `steam://` protocol handler
+- ✅ **Presence Gate**: Frontend gate that locks/unlocks features based on Resonite state
+- ✅ **Onboarding UI**: Premium setup guide for first-time virtual world explorers
+- 🧠 **v0.3.0 Additions**: Local LLM Substrate ("Glom On"), AI Synthesis for `ask_resonite`, `llm.py` detection module.
 
 ### v0.1.0 (December 2025) — Initial Release
 - Fixed MCP stdio mode startup issues
@@ -474,12 +473,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
-### v0.3.0
-- [ ] Field editing via world inspector (write-back to ResoniteLink)
-- [ ] Cloud API authenticated endpoints (friend lists, private sessions)
-- [ ] Drag-and-drop VRM file upload to `~/.avatarmcp/models/`
-- [ ] Recording and playback of sessions
-- [ ] Advanced ProtoFlux integration
+### v0.4.0
+- [x] Resonite installation detection (Registry/Filesystem)
+- [x] Process monitoring and launch orchestration
+- [x] Presence Gate UI for onboarding and startup
 
 ### Future
 - [ ] Voice command processing

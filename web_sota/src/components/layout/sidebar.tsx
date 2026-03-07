@@ -25,6 +25,7 @@ import {
     TreePine,
     Gamepad2,
     Navigation,
+    Search,
     Grid,
 } from 'lucide-react';
 
@@ -35,6 +36,7 @@ interface SidebarProps {
 
 const navItems = [
     { href: '/', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
+    { href: '/search', label: 'Semantic Search', icon: Search, section: 'main' },
     { href: '/status', label: 'Status', icon: Activity, section: 'main' },
     { href: '/sessions', label: 'Sessions', icon: Globe2, section: 'world' },
     { href: '/world', label: 'World', icon: TreePine, section: 'world' },
