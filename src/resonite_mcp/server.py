@@ -11,7 +11,7 @@ import sys
 from typing import Any, Dict
 
 from fastmcp import FastMCP
-from .transport import run_server
+from .transport import run_server_async
 
 # Windows binary mode setup for stdin/stdout
 # Commented out as it interferes with MCP stdio protocol
@@ -153,8 +153,8 @@ async def initialize_server():
 
 
 if __name__ == "__main__":
-    # Initialize server asynchronously
-    run_server(initialize_server, server_name="resonite-mcp")
+    async def _main():
+        await initialize_server()
+        await run_server_async(server, server_name="resonite-mcp")
 
-    logger.info("Starting Resonite MCP server stdio interface...")
-    asyncio.run(run_server(server, server_name="resonite-mcp"))
+    asyncio.run(_main())

@@ -205,10 +205,16 @@ async def run_server_async(
     Asynchronous unified server runner for all transport modes.
 
     Args:
-        mcp_app: FastMCP application instance.
+        mcp_app: FastMCP application instance (not a function).
         args: Parsed CLI arguments (optional, will parse if None).
         server_name: Server name for logging and help text.
     """
+    if not hasattr(mcp_app, "run_stdio_async"):
+        raise TypeError(
+            "run_server_async expects a FastMCP instance, not a function. "
+            "You may have passed initialize_server. Use the 'server' object instead, "
+            "e.g. await run_server_async(server, ...) after await initialize_server()."
+        )
     if args is None:
         parser = create_argument_parser(server_name)
         args = parser.parse_args()
