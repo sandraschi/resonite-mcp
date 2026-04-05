@@ -11,7 +11,7 @@
 
 The Resonite MCP Server provides comprehensive integration between Claude Desktop and the Resonite social VR platform. Through natural language commands, users can control avatars, manage worlds, execute ProtoFlux scripts, and participate in social interactions within Resonite.
 
-#### 🏮 The Miko's Digital Shrine
+####  The Miko's Digital Shrine
 In the spirit of kami and miko - this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The somewhat superannuated miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
 
 ### Key Features
@@ -21,8 +21,8 @@ In the spirit of kami and miko - this MCP server serves as a bridge between huma
 - **ProtoFlux Scripting**: Create and execute visual scripts in real-time
 - **OSC Communication**: Bidirectional communication with Resonite via OSC protocol
 - **ResoniteLink**: Real-time WebSocket JSON protocol for high-performance 3D interaction
-- **Cloud Session Browser**: Browse public world sessions from `api.resonite.com` — thumbnails, user counts, join deep links
-- **World Inspector** *(NEW)*: Live scene-graph browser — traverse slots, inspect components, edit fields via ResoniteLink
+- **Cloud Session Browser**: Browse public world sessions from `api.resonite.com`  thumbnails, user counts, join deep links
+- **World Inspector** *(NEW)*: Live scene-graph browser  traverse slots, inspect components, edit fields via ResoniteLink
 - **Asset Injection**: Inject VRM avatars, props, furniture, and architecture models into a running Resonite world
 - **Presence Awareness & Onboarding** *(NEW)*: Self-detecting lifecycle gate that guides users to launch or install Resonite
 - **Dual Interface**: Both MCP stdio protocol and HTTP REST API
@@ -39,31 +39,31 @@ This server follows FastMCP 2.13+ SOTA standards with:
 
 ### Implementation Status
 
-- **✅ Core OSC Communication**: 8 tools fully implemented
-- **✅ Avatar Control**: 3 tools fully implemented
-- **✅ Session Management**: 4 tools (3 fully implemented, 1 mock)
-- **⚠️ Inventory Management**: 7 tools (structure complete, mock responses)
-- **⚠️ Plugin Management**: 5 tools (structure complete, mock responses)
-- **✅ System Tools**: 3 tools fully implemented
-- **✅ Health Monitoring**: 1 tool fully implemented
-- **✅ Local LLM Substrate**: Full "Glom On" autonomy with Ollama/LM Studio detection
-- **✅ Presence Awareness**: Robust installation detection and launch orchestration
+- ** Core OSC Communication**: 8 tools fully implemented
+- ** Avatar Control**: 3 tools fully implemented
+- ** Session Management**: 4 tools (3 fully implemented, 1 mock)
+- ** Inventory Management**: 7 tools (structure complete, mock responses)
+- ** Plugin Management**: 5 tools (structure complete, mock responses)
+- ** System Tools**: 3 tools fully implemented
+- ** Health Monitoring**: 1 tool fully implemented
+- ** Local LLM Substrate**: Full "Glom On" autonomy with Ollama/LM Studio detection
+- ** Presence Awareness**: Robust installation detection and launch orchestration
 
 **Total: 31 tools (13 fully functional, 15 with mock responses, 3 documentation)**
 
-## 🚀 Installation
+##  Installation
 
 ### Prerequisites
 - [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
 - Python 3.12+
 
-### 📦 Quick Start
+###  Quick Start
 Run immediately via `uvx`:
 ```bash
 uvx resonite-mcp
 ```
 
-### 🎯 Claude Desktop Integration
+###  Claude Desktop Integration
 Add to your `claude_desktop_config.json`:
 ```json
 "mcpServers": {
@@ -90,7 +90,7 @@ cd resonite-mcp
 pip install -e ".[dev]"
 
 # Verify installation
-python -c "import resonite_mcp; print('✅ Installation successful')"
+python -c "import resonite_mcp; print(' Installation successful')"
 ```
 
 ### Install from PyPI (future)
@@ -108,7 +108,7 @@ pip install resonite-mcp
 resonite-mcp --stdio
 ```
 
-## 🌐 Webapp (port 10714)
+##  Webapp (port 10714)
 
 A premium dark-mode control panel ships alongside the MCP server:
 
@@ -351,20 +351,20 @@ When running in HTTP mode (`resonite-mcp --host 127.0.0.1 --port 8000`), the fol
 
 ```
 resonite-mcp/
-├── src/resonite_mcp/
-│   ├── __init__.py          # Package initialization
-│   ├── server.py            # Main MCP server with all tools
-│   ├── cli.py               # Command-line interface
-│   └── http_server.py      # FastAPI HTTP server
-├── tests/
-│   ├── unit/                # Unit tests
-│   ├── integration/         # Integration tests
-│   └── conftest.py          # Pytest configuration
-├── docs/                    # Documentation
-├── examples/                # Usage examples
-├── scripts/                 # Development scripts
-├── assets/prompts/          # MCP prompt templates
-└── pyproject.toml          # Project configuration
+ src/resonite_mcp/
+    __init__.py          # Package initialization
+    server.py            # Main MCP server with all tools
+    cli.py               # Command-line interface
+    http_server.py      # FastAPI HTTP server
+ tests/
+    unit/                # Unit tests
+    integration/         # Integration tests
+    conftest.py          # Pytest configuration
+ docs/                    # Documentation
+ examples/                # Usage examples
+ scripts/                 # Development scripts
+ assets/prompts/          # MCP prompt templates
+ pyproject.toml          # Project configuration
 ```
 
 ### Running Tests
@@ -393,12 +393,12 @@ resonite-mcp --host 127.0.0.1 --port 8000
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
+2. Create a feature branch: `git checkout -b feature/-feature`
 3. Write tests for your changes
 4. Ensure all tests pass: `pytest`
 5. Update documentation as needed
-6. Commit your changes: `git commit -m 'Add amazing feature'`
-7. Push to the branch: `git push origin feature/amazing-feature`
+6. Commit your changes: `git commit -m 'Add  feature'`
+7. Push to the branch: `git push origin feature/-feature`
 8. Open a Pull Request
 
 ### Code Standards
@@ -452,21 +452,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- [Resonite](https://resonite.com/) - The amazing social VR platform
+- [Resonite](https://resonite.com/) - The  social VR platform
 - [Yellow Dog Man Studios](https://yellowdogman.com/) - Creators of Resonite
 - [FastMCP](https://gofastmcp.com/) - The MCP framework powering this server
 - [python-osc](https://pypi.org/project/python-osc/) - OSC protocol implementation
 
 ## Recent Updates
 
-### v0.4.0 (2026-03-08) — Presence Awareness & Onboarding
-- ✅ **Presence Detection**: Backend monitoring for Resonite process and Steam installation
-- ✅ **Launch Orchestration**: One-click startup via `steam://` protocol handler
-- ✅ **Presence Gate**: Frontend gate that locks/unlocks features based on Resonite state
-- ✅ **Onboarding UI**: Premium setup guide for first-time virtual world explorers
-- 🧠 **v0.3.0 Additions**: Local LLM Substrate ("Glom On"), AI Synthesis for `ask_resonite`, `llm.py` detection module.
+### v0.4.0 (2026-03-08)  Presence Awareness & Onboarding
+-  **Presence Detection**: Backend monitoring for Resonite process and Steam installation
+-  **Launch Orchestration**: One-click startup via `steam://` protocol handler
+-  **Presence Gate**: Frontend gate that locks/unlocks features based on Resonite state
+-  **Onboarding UI**: Premium setup guide for first-time virtual world explorers
+-  **v0.3.0 Additions**: Local LLM Substrate ("Glom On"), AI Synthesis for `ask_resonite`, `llm.py` detection module.
 
-### v0.1.0 (December 2025) — Initial Release
+### v0.1.0 (December 2025)  Initial Release
 - Fixed MCP stdio mode startup issues
 - Added HTTP API endpoints (25+ endpoints)
 - Implemented 31 MCP tools with FastMCP 2.13.1+ compliance
@@ -485,4 +485,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Made with ❤️ for the Resonite community**
+**Made with  for the Resonite community**

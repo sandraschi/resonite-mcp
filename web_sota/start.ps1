@@ -1,4 +1,4 @@
-# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
+﻿# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
 # Backend: 10715, Frontend: 10714 (proxy /api to backend). No manual uv/uvicorn.
 
 $WebPort = 10714
@@ -62,4 +62,13 @@ if (-not (Test-Path "node_modules")) {
     npm install --quiet
 }
 Write-Host "[RESONITE-MCP] Starting Vite on port $WebPort ..." -ForegroundColor Green
+
+# 4b. Launch background task to open browser once frontend is ready (Auto-opened by Antigravity)
+$frontendUrl = "http://127.0.0.1:$WebPort/"
+$pollAndOpen = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
+Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
+
+Write-Host "Browser will open automatically when Vite is ready." -ForegroundColor Gray
 npm run dev -- --port $WebPort --host
+
+

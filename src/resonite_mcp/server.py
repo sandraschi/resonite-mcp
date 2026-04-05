@@ -17,7 +17,6 @@ from fastmcp import FastMCP
 from starlette.responses import JSONResponse
 from .transport import run_server_async
 from .llm import detect_local_llms, get_best_substrate, synthesize_answer
-from . import tools  # noqa: F401
 
 # Windows binary mode setup for stdin/stdout
 # Commented out as it interferes with MCP stdio protocol
@@ -88,6 +87,9 @@ Key capabilities:
 
 Always use OSC protocol for real-time control and provide clear feedback on actions taken.""",
 )
+
+# Import tools after server exists to avoid circular import (tools need server for @server.tool())
+from . import tools  # noqa: F401
 
 # Import plugin system
 try:

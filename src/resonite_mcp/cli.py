@@ -52,26 +52,25 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    # Initialize server (plugins, etc.)
-    asyncio.run(initialize_server())
-
     if args.stdio:
-        # Run in MCP stdio mode using FastMCP's run method
-        logger.info("Starting Resonite MCP server in stdio mode")
+        # Stdio: start immediately so Cursor gets tool list; RAG/plugins init on first use
+        logger.info("Starting Resonite MCP server in stdio mode (deferred init)")
         server.run(transport="stdio")
-    else:
-        # Run HTTP server mode
-        logger.info(f"Starting Resonite MCP server on {args.host}:{args.port}")
-        import uvicorn
+        return
 
-        # Run FastAPI server
-        uvicorn.run(
-            "resonite_mcp.http_server:app",
-            host=args.host,
-            port=args.port,
-            reload=True,
-            log_level=args.log_level.lower(),
-        )
+    # HTTP mode: full init before starting server
+    asyncio.run(initialize_server())
+    # Run HTTP server mode
+    logger.info(f"Starting Resonite MCP server on {args.host}:{args.port}")
+    import uvicorn
+
+    uvicorn.run(
+        "resonite_mcp.http_server:app",
+        host=args.host,
+        port=args.port,
+        reload=True,
+        log_level=args.log_level.lower(),
+    )
 
 
 if __name__ == "__main__":
