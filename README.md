@@ -1,10 +1,12 @@
 # Resonite MCP Server
 
-**FastMCP 2.14.3+ compliant server for natural language control of Resonite social VR platform.**
+[![FastMCP Version](https://img.shields.io/badge/FastMCP-3.1.0-blue?style=flat-square&logo=python&logoColor=white)](https://github.com/sandraschi/fastmcp) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![Linted with Biome](https://img.shields.io/badge/Linted_with-Biome-60a5fa?style=flat-square&logo=biome&logoColor=white)](https://biomejs.dev/) [![Built with Just](https://img.shields.io/badge/Built_with-Just-000000?style=flat-square&logo=gnu-bash&logoColor=white)](https://github.com/casey/just)
+
+**FastMCP 3.1.0+ compliant server for natural language control of Resonite social VR platform.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![FastMCP 3.1.0+](https://img.shields.io/badge/FastMCP-3.1.0+-green.svg)](https://gofastmcp.com/)
+[![FastMCP 3.1.0+](https://img.shields.io/badge/FastMCP-3.1.0+-green.svg)](https://goFastMCP 3.1.0com/)
 [![Status](https://img.shields.io/badge/status-SOTA-blue.svg)](#)
 
 ## Overview
@@ -30,7 +32,7 @@ In the spirit of kami and miko - this MCP server serves as a bridge between huma
 
 ### Architecture
 
-This server follows FastMCP 2.13+ SOTA standards with:
+This server follows FastMCP 3.1.0+ SOTA standards with:
 - Portmanteau tool organization for complex operations
 - Pydantic input validation for all tools
 - Comprehensive error handling and logging
@@ -446,6 +448,17 @@ Or set environment variable:
 LOG_LEVEL=DEBUG resonite-mcp --stdio
 ```
 
+
+## 🛡️ Industrial Quality Stack
+
+This project adheres to **SOTA 14.1** industrial standards for high-fidelity agentic orchestration:
+
+- **Python (Core)**: [Ruff](https://astral.sh/ruff) for linting and formatting. Zero-tolerance for `print` statements in core handlers (`T201`).
+- **Webapp (UI)**: [Biome](https://biomejs.dev/) for sub-millisecond linting. Strict `noConsoleLog` enforcement.
+- **Protocol Compliance**: Hardened `stdout/stderr` isolation to ensure crash-resistant JSON-RPC communication.
+- **Automation**: [Justfile](./justfile) recipes for all fleet operations (`just lint`, `just fix`, `just dev`).
+- **Security**: Automated audits via `bandit` and `safety`.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
@@ -454,7 +467,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Resonite](https://resonite.com/) - The  social VR platform
 - [Yellow Dog Man Studios](https://yellowdogman.com/) - Creators of Resonite
-- [FastMCP](https://gofastmcp.com/) - The MCP framework powering this server
+- [FastMCP](https://goFastMCP 3.1.0com/) - The MCP framework powering this server
 - [python-osc](https://pypi.org/project/python-osc/) - OSC protocol implementation
 
 ## Recent Updates
@@ -469,7 +482,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### v0.1.0 (December 2025)  Initial Release
 - Fixed MCP stdio mode startup issues
 - Added HTTP API endpoints (25+ endpoints)
-- Implemented 31 MCP tools with FastMCP 2.13.1+ compliance
+- Implemented 31 MCP tools with FastMCP 3.1.0+ compliance
 
 ## Roadmap
 

@@ -1,4 +1,14 @@
-﻿# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
+﻿Param([switch]$Headless)
+
+# --- SOTA Headless Standard ---
+if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
+    Start-Process pwsh -ArgumentList '-NoProfile', '-File', $PSCommandPath, '-Headless' -WindowStyle Hidden
+    exit
+}
+$WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
+# ------------------------------
+
+# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
 # Backend: 10715, Frontend: 10714 (proxy /api to backend). No manual uv/uvicorn.
 
 $WebPort = 10714
@@ -70,5 +80,6 @@ Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "
 
 Write-Host "Browser will open automatically when Vite is ready." -ForegroundColor Gray
 npm run dev -- --port $WebPort --host
+
 
 
