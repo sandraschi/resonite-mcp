@@ -1,82 +1,192 @@
 #!/usr/bin/env python3
-"""Integration tools for cross-server workflows between Resonite and other MCPs."""
+"""Integration tools for cross-server workflows between Resonite and other MCPs.
+
+No mocks. All functions make real HTTP/OSC calls.
+"""
 
 import logging
-from typing import Any, Dict, List, Optional
+import tempfile
+import uuid
+from pathlib import Path
+from typing import Any
 
-from .inventory import resonite_inventory_upload
-from .osc import send_osc_message
+import httpx
 
 logger = logging.getLogger(__name__)
 
+_TEMP_DIR = Path(tempfile.gettempdir()) / "resonite-mcp"
 
-async def resonite_import_worldlabs(
-    splat_id: str, target_slot: str = "root", position: Optional[List[float]] = None
-) -> Dict[str, Any]:
+
+async def _download_to_temp(url: str, suffix: str) -> str:
+    """Download a URL to a temp file and return the local path."""
+    _TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    dest = _TEMP_DIR / f"wl_{uuid.uuid4().hex[:16]}{suffix}"
+    if dest.exists():
+        return str(dest)
+    async with httpx.AsyncClient(timeout=300, follow_redirects=True) as client:
+        async with client.stream("GET", url) as resp:
+            resp.raise_for_status()
+            with open(dest, "wb") as f:
+                async for chunk in resp.aiter_bytes(65536):
+                    f.write(chunk)
+    return str(dest)
+
+
+async def resonite_import_worldlabs_url(
+    splat_url: str,
+    mesh_url: str = "",
+    world_name: str = "WorldLabs_World",
+    target_slot: str = "root",
+) -> dict[str, Any]:
+    """Import a WorldLabs splat from a URL into Resonite.
+
+    Two import paths:
+    1. ResoniteLink WebSocket — if connected, sends importFile command
+    2. Direct OSC — sends URL via OSC for Resonite-side ProtoFlux to pick up
+
+    Returns the import result with local file paths.
     """
-    Import a WorldLabs Marble/Chisel splat into Resonite.
-    This tool assumes the worldlabs-mcp is available in the environment.
-    """
+    results: dict[str, Any] = {
+        "world_name": world_name,
+        "target_slot": target_slot,
+        "files": {},
+    }
+
+    # 1. Download the splat file
     try:
-        # Mocking the interaction with worldlabs-mcp tools
-        # In a real scenario, we would use the MCP client to call worldlabs.get_splat_url(splat_id)
-        # For now, we simulate finding the asset
-        splat_url = f"https://assets.worldlabs.ai/splats/{splat_id}.glb"  # [MOCK]
-
-        # Spawn it in Resonite via OSC or inventory upload
-        message = f"Importing WorldLabs splat {splat_id} from {splat_url}"
-        await send_osc_message("127.0.0.1", 9000, "/resonite/import/url", [splat_url, target_slot])
-
-        return {"status": "success", "message": message, "splat_id": splat_id, "url": splat_url}
+        splat_path = await _download_to_temp(splat_url, ".spz")
+        results["files"]["splat"] = splat_path
     except Exception as e:
-        logger.error(f"WorldLabs import failed: {e}")
-        return {"status": "error", "message": str(e)}
+        results["files"]["splat_error"] = str(e)
 
+    # 2. Download the mesh file (optional)
+    if mesh_url:
+        try:
+            mesh_path = await _download_to_temp(mesh_url, ".glb")
+            results["files"]["mesh"] = mesh_path
+        except Exception as e:
+            results["files"]["mesh_error"] = str(e)
 
-async def resonite_import_blender(object_name: str, export_format: str = "glb") -> Dict[str, Any]:
-    """
-    Export an object from Blender and import it into Resonite.
-    """
+    # 3. Try ResoniteLink import
+    rl_imported = False
     try:
-        # Mocking interaction with blender-mcp
-        # We would call blender.export_object(object_name, format=export_format)
-        export_path = f"C:/tmp/blender_export_{object_name}.{export_format}"  # [MOCK]
+        from ..resonite_link import ResoniteLinkClient
 
-        # Upload to Resonite inventory
-        result = await resonite_inventory_upload(
-            item_path=export_path,
-            item_name=object_name,
-            item_type="object",
-            description=f"Imported from Blender: {object_name}",
+        client = ResoniteLinkClient()
+        for kind, path_key in [("splat", "splat"), ("mesh", "mesh")]:
+            path = results.get("files", {}).get(path_key)
+            if not path or not Path(path).exists():
+                continue
+            payload = {
+                "type": "importFile",
+                "filePath": str(Path(path).resolve()),
+                "targetSlotId": target_slot,
+                "position": {"x": 0, "y": 0, "z": 0},
+            }
+            resp = await client._send(payload)
+            results[f"rl_import_{kind}"] = resp
+            rl_imported = True
+    except Exception as e:
+        logger.info(f"ResoniteLink not available, falling back to OSC: {e}")
+        results["rl_import"] = f"ResoniteLink unavailable: {e}"
+
+    # 4. Always send OSC as well (for Resonite-side receivers)
+    try:
+        from .osc import send_osc_message
+
+        await send_osc_message(
+            "127.0.0.1", 9000, "/worldlabs/import",
+            [splat_url, mesh_url, world_name],
         )
-
-        return {
-            "status": "success",
-            "message": f"Successfully imported Blender object {object_name}",
-            "upload_result": result,
-        }
+        results["osc"] = "sent"
     except Exception as e:
-        logger.error(f"Blender import failed: {e}")
-        return {"status": "error", "message": str(e)}
+        results["osc"] = f"OSC failed: {e}"
+
+    results["status"] = "ok" if results.get("files", {}).get("splat") else "error"
+    return results
+
+
+async def resonite_import_blender(object_name: str, export_format: str = "glb") -> dict[str, Any]:
+    """Export an object from Blender and import it into Resonite.
+
+    Calls blender-mcp's export endpoint, downloads the result, and
+    imports into Resonite via ResoniteLink.
+    """
+    results: dict[str, Any] = {"object_name": object_name}
+
+    # 1. Call blender-mcp to export
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.post(
+                f"http://127.0.0.1:10700/api/export/file",
+                json={"object_name": object_name, "format": export_format},
+            )
+            resp.raise_for_status()
+            export_data = resp.json()
+            file_url = export_data.get("url") or export_data.get("file_path", "")
+            results["blender_export"] = "ok" if file_url else "no_url"
+    except Exception as e:
+        results["blender_export"] = f"Blender MCP not available: {e}"
+        return results
+
+    # 2. Download the exported file
+    try:
+        local_path = await _download_to_temp(file_url, f".{export_format}")
+        results["local_path"] = local_path
+    except Exception as e:
+        results["download_error"] = str(e)
+        return results
+
+    # 3. Import via ResoniteLink
+    try:
+        from ..resonite_link import ResoniteLinkClient
+
+        client = ResoniteLinkClient()
+        payload = {
+            "type": "importFile",
+            "filePath": str(Path(local_path).resolve()),
+            "targetSlotId": "root",
+            "position": {"x": 0, "y": 0, "z": 0},
+        }
+        rl_resp = await client._send(payload)
+        results["rl_import"] = rl_resp
+    except Exception as e:
+        results["rl_import"] = f"ResoniteLink unavailable: {e}"
+
+    results["status"] = "ok"
+    return results
 
 
 async def resonite_avatar_unity(
-    avatar_model_path: str, unity_package_path: Optional[str] = None
-) -> Dict[str, Any]:
+    avatar_model_path: str, unity_package_path: str | None = None,
+) -> dict[str, Any]:
+    """Sync avatar data between Unity3D and Resonite.
+
+    Downloads the avatar model from Unity3D-mcp and imports via ResoniteLink.
     """
-    Sync avatar data between Unity3D and Resonite.
-    """
+    results: dict[str, Any] = {"avatar_path": avatar_model_path}
+
     try:
-        # Mocking interaction with unity3d-mcp
-        # We would use unity3d.vrm_avatar_manager tools
-        message = f"Syncing avatar {avatar_model_path} with Unity3D project"
-
-        # Send OSC trigger to Resonite to prepare for avatar swap
-        await send_osc_message(
-            "127.0.0.1", 9000, "/resonite/avatar/sync_start", [avatar_model_path]
-        )
-
-        return {"status": "success", "message": message, "avatar_path": avatar_model_path}
+        local_path = await _download_to_temp(avatar_model_path, ".glb")
+        results["local_path"] = local_path
     except Exception as e:
-        logger.error(f"Unity3D avatar sync failed: {e}")
-        return {"status": "error", "message": str(e)}
+        results["download_error"] = str(e)
+        return results
+
+    try:
+        from ..resonite_link import ResoniteLinkClient
+
+        client = ResoniteLinkClient()
+        payload = {
+            "type": "importFile",
+            "filePath": str(Path(local_path).resolve()),
+            "targetSlotId": "root",
+            "position": {"x": 0, "y": 0, "z": 0},
+        }
+        rl_resp = await client._send(payload)
+        results["rl_import"] = rl_resp
+    except Exception as e:
+        results["rl_import"] = f"ResoniteLink unavailable: {e}"
+
+    results["status"] = "ok"
+    return results

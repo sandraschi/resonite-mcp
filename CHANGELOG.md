@@ -83,3 +83,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - ResoniteLink WebSocket client
 - Plugin system scaffolding
 - Inventory management scaffolding (mock responses)
+
+## [0.5.0] — 2026-05-07 — WorldLabs Import Pipeline 🚀
+
+### Added
+
+#### Backend (`http_server.py`, `integrations.py`)
+- **WorldLabs import endpoint** — `POST /api/v1/import/worldlabs` accepts `splat_url`, `mesh_url`, `world_name`. Downloads files from the bridge proxy, imports via ResoniteLink, sends OSC confirmation. No mocks, no placeholders.
+- **OSC receiver** — `POST /api/resonite/worldlabs/listen` starts a background OSC server on port 9001 listening for `/worldlabs/import`. Auto-triggers download + import pipeline.
+- **OSC receiver stop** — `POST /api/resonite/worldlabs/stop` shuts down the listener.
+- **ProtoFlux graph template** — `GET /api/resonite/worldlabs/protoflux` returns a JSON graph definition for OSCDataInput → StringSplit → HttpGet → ImportSplat.
+- **Platform detection** — `GET /api/resonite/platform` detects Resonite installations (Steam/Standalone) and checks if currently running via psutil.
+- **`python-osc` dependency** added for OSC server support.
+
+#### Integration Tools (`integrations.py`)
+- **`resonite_import_worldlabs_url()`** — real implementation: downloads SPZ/GLB from URL, imports via ResoniteLink, sends OSC. No mocks.
+- **`resonite_import_blender()`** — real implementation: calls blender-mcp, downloads exported file, imports via ResoniteLink.
+- **`resonite_avatar_unity()`** — real implementation: downloads avatar model, imports via ResoniteLink.
+
+#### Documentation
+- **WorldLabs import section** added to `PROTOFLUX_GUIDE.md` — step-by-step graph setup for OSC → import pipeline.
+- **MARBLE_RESONITE_GUIDE.md** — updated with automated import flow using resonite-mcp + worldlabs-mcp.
+- **Cross-server flow** documented: worldlabs-mcp (10865) → resonite-mcp (10715) → Resonite (OSC/ResoniteLink).
+
+### Changed
+- **`WorldLabsImportRequest`** model changed from `splat_id: str` to `splat_url: str, mesh_url: str, world_name: str` — accepts real URLs instead of fake IDs.
+- **`import_worldlabs` endpoint** updated to use the new model and call the real download/import pipeline.
+
+### Removed
+- **All mock/placeholder code** removed from integration tools. `resonite_import_worldlabs` (the old stubbed version) replaced with `resonite_import_worldlabs_url`.
+

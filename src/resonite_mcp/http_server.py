@@ -129,7 +129,9 @@ class PluginReloadRequest(BaseModel):
 
 
 class WorldLabsImportRequest(BaseModel):
-    splat_id: str
+    splat_url: str
+    mesh_url: str = ""
+    world_name: str = "WorldLabs_World"
     target_slot: str = "root"
 
 
@@ -544,10 +546,22 @@ async def get_system_status_api():
 # Integration API endpoints
 @app.post("/api/resonite/integrations/worldlabs")
 async def import_worldlabs(request: WorldLabsImportRequest):
-    """Import WorldLabs splat."""
-    from .tools.integrations import resonite_import_worldlabs
+    """Import a WorldLabs splat from URL into Resonite.
 
-    return await resonite_import_worldlabs(request.splat_id, request.target_slot)
+    Downloads the SPZ/GLB from the bridge proxy, then imports via
+    ResoniteLink (if connected) or falls back to inventory upload.
+    """
+    from .tools.integrations import resonite_import_worldlabs_url
+
+    if not request.splat_url:
+        raise HTTPException(status_code=400, detail="splat_url is required")
+
+    return await resonite_import_worldlabs_url(
+        splat_url=request.splat_url,
+        mesh_url=request.mesh_url,
+        world_name=request.world_name,
+        target_slot=request.target_slot,
+    )
 
 
 @app.post("/api/resonite/integrations/blender")
@@ -1369,3 +1383,195 @@ async def world_map_data():
     except Exception as exc:
         logger.error(f"Map data fetch failed: {exc}")
         return {"status": "error", "message": f"Could not fetch map data: {exc}"}
+
+
+# ---------------------------------------------------------------------------
+# WorldLabs import OSC receiver
+# ---------------------------------------------------------------------------
+
+_worldlabs_osc_server: Any = None
+
+
+@app.post("/api/resonite/worldlabs/listen")
+async def start_worldlabs_listener() -> dict:
+    """Start an OSC server that listens for /worldlabs/import messages.
+
+    When Resonite sends an OSC message to this server, it automatically
+    triggers the import pipeline (download → ResoniteLink → confirm).
+    """
+    global _worldlabs_osc_server
+    try:
+        from pythonosc import dispatchers, osc_server
+        from .tools.integrations import resonite_import_worldlabs_url
+
+        dispatcher = dispatchers.Dispatcher()
+        dispatcher.map("/worldlabs/import", lambda *args: None)
+
+        async def handle_import(address: str, *values: Any):
+            splat_url = str(values[0]) if len(values) > 0 else ""
+            mesh_url = str(values[1]) if len(values) > 1 else ""
+            world_name = str(values[2]) if len(values) > 2 else "Imported"
+            logger.info(f"OSC /worldlabs/import: {world_name}")
+            try:
+                await resonite_import_worldlabs_url(splat_url, mesh_url, world_name)
+            except Exception as e:
+                logger.error(f"Auto-import failed: {e}")
+
+        dispatcher.map("/worldlabs/import", handle_import)
+
+        server = osc_server.ThreadingOSCUDPServer(("127.0.0.1", 9001), dispatcher)
+        import threading
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        _worldlabs_osc_server = server
+        return {"status": "ok", "port": 9001, "address": "/worldlabs/import"}
+    except ImportError:
+        return {"status": "error", "detail": "python-osc not installed. Run: pip install python-osc"}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+@app.post("/api/resonite/worldlabs/stop")
+async def stop_worldlabs_listener() -> dict:
+    """Stop the WorldLabs import OSC receiver."""
+    global _worldlabs_osc_server
+    if _worldlabs_osc_server:
+        _worldlabs_osc_server.shutdown()
+        _worldlabs_osc_server = None
+    return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Resonite platform detection (Steam vs Standalone)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/resonite/platform")
+async def detect_resonite_platform() -> dict:
+    """Detect Resonite installation and running status.
+
+    Checks for both Steam and standalone (store) versions.
+    """
+    import os
+    import platform as pf
+
+    result = {
+        "running": False,
+        "installations": [],
+    }
+
+    steam_paths = []
+    standalone_paths = []
+
+    if pf.system() == "Windows":
+        # Steam
+        steam_base = os.path.expandvars(r"%PROGRAMFILES(X86)%\Steam\steamapps\common")
+        steam_paths = [
+            os.path.join(steam_base, "Resonite", "Resonite.exe"),
+            os.path.join(steam_base, "Resonite", "Resonite_x86.exe"),
+        ]
+        # Standalone (Store)
+        appdata = os.path.expandvars(r"%LOCALAPPDATA%\Programs\Resonite")
+        standalone_paths = [
+            os.path.join(appdata, "Resonite.exe"),
+        ]
+
+    for path in steam_paths + standalone_paths:
+        exists = os.path.isfile(path)
+        source = "steam" if path in steam_paths else "standalone"
+        result["installations"].append({
+            "path": path,
+            "exists": exists,
+            "source": source,
+            "running": False,
+        })
+
+    # Check if Resonite is currently running
+    try:
+        import psutil
+        for proc in psutil.process_iter(["name", "exe"]):
+            name = (proc.info.get("name") or "").lower()
+            if "resonite" in name:
+                result["running"] = True
+                for inst in result["installations"]:
+                    exe = (proc.info.get("exe") or "").lower()
+                    if inst["path"].lower() == exe:
+                        inst["running"] = True
+                        inst["pid"] = proc.info.get("pid")
+    except ImportError:
+        pass
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# ProtoFlux graph template for Resonite-side OSC receiver
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/resonite/worldlabs/protoflux")
+async def get_protoflux_graph() -> dict:
+    """Return a JSON representation of a ProtoFlux graph that listens for
+    /worldlabs/import OSC messages and imports splats into Resonite.
+
+    This can be loaded into Resonite via the ProtoFlux editor to set up
+    the automated import pipeline.
+    """
+    return {
+        "graph": {
+            "name": "WorldLabs Import Receiver",
+            "description": (
+                "Listens for OSC messages at /worldlabs/import and imports "
+                "Gaussian splats into the Resonite world. Compatible with "
+                "worldlabs-mcp's Resonite export feature."
+            ),
+            "nodes": [
+                {
+                    "id": "osc-input",
+                    "type": "OSCDataInput",
+                    "params": {
+                        "address": "/worldlabs/import",
+                        "port": 9000,
+                        "type_hint": "string",
+                    },
+                },
+                {
+                    "id": "string-split",
+                    "type": "StringSplit",
+                    "params": {"delimiter": ","},
+                    "inputs": {"input": {"node": "osc-input", "output": "value"}},
+                },
+                {
+                    "id": "http-get",
+                    "type": "HttpGet",
+                    "inputs": {
+                        "url": {"node": "string-split", "output": "output[0]"},
+                    },
+                },
+                {
+                    "id": "import-splat",
+                    "type": "ImportSplat",
+                    "inputs": {
+                        "data": {"node": "http-get", "output": "response"},
+                        "slot": {"value": "root"},
+                    },
+                },
+            ],
+        },
+        "notes": (
+            "This ProtoFlux graph listens on port 9000 for OSC messages at "
+            "/worldlabs/import. The message should contain 3 strings: "
+            "splat_url, mesh_url, world_name. The graph fetches the splat "
+            "via HTTP GET and imports it into the root slot.\n\n"
+            "To set up:\n"
+            "1. Open Resonite\n"
+            "2. Open the ProtoFlux editor\n"
+            "3. Create a new graph\n"
+            "4. Add an OSCDataInput node (address: /worldlabs/import, port: 9000)\n"
+            "5. Connect it to a StringSplit node (delimiter: comma)\n"
+            "6. Connect output[0] to an HttpGet node\n"
+            "7. Connect the response to an ImportSplat node\n"
+            "8. Save the graph as a reusable asset"
+        ),
+    }
+

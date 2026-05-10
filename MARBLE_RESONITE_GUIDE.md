@@ -156,7 +156,35 @@ f 4 5 6
 
 ## Import to Resonite
 
-### 🛠️ Direct Import Method
+### 🚀 Automated Import (worldlabs-mcp + resonite-mcp)
+
+The recommended way to import Marble worlds into Resonite uses two MCP servers
+working together:
+
+```
+worldlabs-mcp (port 10865)            resonite-mcp (port 10715)
+┌─────────────────────────┐           ┌──────────────────────────┐
+│ Generate world          │           │ OSC receiver on 9001    │
+│ Download SPZ + GLB      │  ──►      │ Download from proxy     │
+│ Serve via local proxy   │           │ Import via ResoniteLink │
+│ Send OSC to Resonite    │           │ Return result           │
+└─────────────────────────┘           └──────────────────────────┘
+```
+
+**Setup:**
+1. Run both servers: `worldlabs-mcp` and `resonite-mcp`
+2. Start the OSC listener: `curl -X POST http://127.0.0.1:10715/api/resonite/worldlabs/listen`
+3. In Resonite, set up a ProtoFlux graph (see [ProtoFlux Guide](./PROTOFLUX_GUIDE.md))
+   or use ResoniteLink for automatic import
+
+**Usage:**
+1. Generate a world in worldlabs-mcp
+2. Click "Resonite" in the Asset Panel
+3. The bridge downloads the splat and triggers the import
+
+### 🛠️ Manual Import (Direct)
+
+If you prefer to import manually without the MCP servers:
 
 #### Step 1: Prepare Files
 1. **Extract ZIP** from Marble download

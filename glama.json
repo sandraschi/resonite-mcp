@@ -2,11 +2,11 @@
   "$schema": "https://glama.ai/mcp/schemas/server.json",
   "maintainers": ["sandraschi"],
   "name": "resonite-mcp",
-  "description": "Complete Resonite social VR platform control with avatar management, world building, ProtoFlux scripting, and real-time social interactions.",
+  "description": "Complete Resonite social VR platform control with avatar management, world building, ProtoFlux scripting, WorldLabs Marble import, and real-time social interactions.",
   "type": "mcp_server",
   "status": "beta",
   "framework": "FastMCP 2.13+",
-  "tools": 40,
+  "tools": 42,
   "transport": ["stdio", "http"],
   "keywords": [
     "resonite",
@@ -18,7 +18,10 @@
     "osc",
     "real-time",
     "fastmcp",
-    "immersive"
+    "immersive",
+    "worldlabs",
+    "marble",
+    "gaussian-splat"
   ],
   "features": {
     "avatar_control": {
@@ -44,6 +47,30 @@
     "osc_integration": {
       "enabled": true,
       "protocols": ["osc-control", "real-time-sync"]
+    },
+    "worldlabs_import": {
+      "enabled": true,
+      "description": "Download SPZ/GLB from worldlabs-mcp proxy, import via ResoniteLink + OSC. No mocks."
+    },
+    "worldlabs_osc_receiver": {
+      "enabled": true,
+      "description": "Background OSC server on port 9001 listening for /worldlabs/import. Auto-triggers download + import."
+    },
+    "worldlabs_protoflux_graph": {
+      "enabled": true,
+      "description": "JSON ProtoFlux graph template for OSC → StringSplit → HttpGet → ImportSplat pipeline."
+    },
+    "resonite_platform_detection": {
+      "enabled": true,
+      "description": "Detect Steam/Standalone Resonite installations and running status via psutil."
+    },
+    "blender_import": {
+      "enabled": true,
+      "description": "Export from blender-mcp, download, import into Resonite via ResoniteLink."
+    },
+    "unity_avatar_sync": {
+      "enabled": true,
+      "description": "Download avatar model from unity3d-mcp, import into Resonite via ResoniteLink."
     }
   }
 }

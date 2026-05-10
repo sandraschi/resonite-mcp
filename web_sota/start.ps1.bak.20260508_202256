@@ -1,5 +1,4 @@
-Param([switch]$Headless)
-$SkipFrontend = $Headless
+﻿Param([switch]$Headless)
 
 # --- SOTA Headless Standard ---
 if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
@@ -18,7 +17,6 @@ $ProjectRoot = Split-Path -Parent $PSScriptRoot
 
 function Clear-Port {
     param([int]$Port)
-$SkipFrontend = $Headless
     $conns = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
     if (-not $conns) { return $false }
     $pids = $conns | Select-Object -ExpandProperty OwningProcess -Unique
@@ -81,7 +79,6 @@ $pollAndOpen = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequ
 Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
 
 Write-Host "Browser will open automatically when Vite is ready." -ForegroundColor Gray
-if ($SkipFrontend) { return }
 npm run dev -- --port $WebPort --host
 
 
