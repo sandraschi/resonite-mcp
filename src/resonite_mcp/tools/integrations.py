@@ -68,7 +68,6 @@ async def resonite_import_worldlabs_url(
             results["files"]["mesh_error"] = str(e)
 
     # 3. Try ResoniteLink import
-    rl_imported = False
     try:
         from ..resonite_link import ResoniteLinkClient
 
@@ -85,19 +84,20 @@ async def resonite_import_worldlabs_url(
             }
             resp = await client._send(payload)
             results[f"rl_import_{kind}"] = resp
-            rl_imported = True
     except Exception as e:
         logger.info(f"ResoniteLink not available, falling back to OSC: {e}")
         results["rl_import"] = f"ResoniteLink unavailable: {e}"
 
     # 4. Always send OSC as well (for Resonite-side receivers)
     try:
-        from .osc import send_osc_message
+        from ..models import OSCMessageInput
+        from .osc import send_osc
 
-        await send_osc_message(
-            "127.0.0.1", 9000, "/worldlabs/import",
-            [splat_url, mesh_url, world_name],
+        msg = OSCMessageInput(
+            host="127.0.0.1", port=9000, address="/worldlabs/import",
+            values=[splat_url, mesh_url, world_name],
         )
+        await send_osc(msg)
         results["osc"] = "sent"
     except Exception as e:
         results["osc"] = f"OSC failed: {e}"
@@ -109,22 +109,38 @@ async def resonite_import_worldlabs_url(
 async def resonite_import_blender(object_name: str, export_format: str = "glb") -> dict[str, Any]:
     """Export an object from Blender and import it into Resonite.
 
-    Calls blender-mcp's export endpoint, downloads the result, and
+    Calls blender-mcp's tool endpoint at port 10849, downloads the result, and
     imports into Resonite via ResoniteLink.
     """
     results: dict[str, Any] = {"object_name": object_name}
 
-    # 1. Call blender-mcp to export
+    # 1. Call blender-mcp to export via /tool bridge
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             resp = await client.post(
-                f"http://127.0.0.1:10700/api/export/file",
-                json={"object_name": object_name, "format": export_format},
+                "http://127.0.0.1:10849/tool",
+                json={
+                    "tool": "blender_export_presets",
+                    "params": {
+                        "operation": "export_with_preset",
+                        "platform": "RESONITE",
+                        "target_objects": [object_name],
+                        "output_path": f"//{object_name}_resonite.glb",
+                    },
+                },
             )
             resp.raise_for_status()
-            export_data = resp.json()
-            file_url = export_data.get("url") or export_data.get("file_path", "")
-            results["blender_export"] = "ok" if file_url else "no_url"
+            tool_result = resp.json()
+            if tool_result.get("success") and tool_result.get("data"):
+                export_data = tool_result["data"]
+                file_url = (
+                    export_data.get("url")
+                    or export_data.get("file_path", "")
+                    or str(export_data)
+                )
+            else:
+                file_url = ""
+            results["blender_export"] = "ok" if file_url else "no_file_path"
     except Exception as e:
         results["blender_export"] = f"Blender MCP not available: {e}"
         return results

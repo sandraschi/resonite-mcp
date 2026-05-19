@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "resonite-mcp"
-version = "0.1.1"
+version = "0.2.0"
 description = "Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting"
 authors = [
     {name = "Sandra Schipal", email = "sandra@example.com"}
@@ -17,22 +17,24 @@ classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: Multimedia :: Graphics :: 3D Modeling",
     "Topic :: Communications :: Chat",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "fastmcp>=3.1.0",
+    "fastmcp>=3.2.0",
     "fastapi>=0.100.0",
     "httpx>=0.25.0",
     "python-osc>=1.8.0",
     "psutil>=5.9.0",
+    "lancedb>=0.17.0",
+    "sentence-transformers>=3.0.0",
+    "websockets>=12.0",
+    "starlette>=0.40.0",
+    "uvicorn>=0.30.0",
 ]
 
 [project.optional-dependencies]
@@ -76,14 +78,14 @@ resonite_mcp = ["assets/**/*", "templates/**/*"]
 
 [tool.black]
 line-length = 100
-target-version = ['py38']
+target-version = ['py312']
 
 [tool.isort]
 profile = "black"
 line_length = 100
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

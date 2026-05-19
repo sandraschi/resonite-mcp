@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [0.2.0] — 2026-05-19 — Fleet Pipeline Fixes 🔗
+
+### Fixed
+- **Blender import port**: `resonite_import_blender` was hardcoded to port 10700 (virtualization-mcp). Fixed to call blender-mcp's actual `/tool` endpoint on port 10849 using `blender_export_presets` with the Resonite GLTF preset.
+- **Version consistency**: `pyproject.toml` and `__init__.py` now both read `0.2.0` (previously mismatched at 0.1.1 / 0.1.0).
+
+### Changed
+- `resonite_import_blender` now uses the canonical `/tool` MCP bridge endpoint instead of a non-existent `/api/export/file` path.
+
+---
+
 ## [0.4.0] — 2026-03-08 — Presence Awareness & Onboarding 🛡️
 
 ### Added
@@ -104,7 +115,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 #### Documentation
 - **WorldLabs import section** added to `PROTOFLUX_GUIDE.md` — step-by-step graph setup for OSC → import pipeline.
 - **MARBLE_RESONITE_GUIDE.md** — updated with automated import flow using resonite-mcp + worldlabs-mcp.
-- **Cross-server flow** documented: worldlabs-mcp (10865) → resonite-mcp (10715) → Resonite (OSC/ResoniteLink).
+- **Cross-server flow** documented: worldlabs-mcp (10865) → resonite-mcp (10979) → Resonite (OSC/ResoniteLink).
 
 ### Changed
 - **`WorldLabsImportRequest`** model changed from `splat_id: str` to `splat_url: str, mesh_url: str, world_name: str` — accepts real URLs instead of fake IDs.
