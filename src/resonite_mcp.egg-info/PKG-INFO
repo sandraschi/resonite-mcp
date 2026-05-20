@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: resonite-mcp
-Version: 0.1.1
+Version: 0.2.0
 Summary: Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting
 Author-email: Sandra Schipal <sandra@example.com>
 License: MIT
@@ -13,22 +13,24 @@ Classifier: Development Status :: 3 - Alpha
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.8
-Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
-Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
 Classifier: Topic :: Multimedia :: Graphics :: 3D Modeling
 Classifier: Topic :: Communications :: Chat
 Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
 Requires-Python: >=3.12
 Description-Content-Type: text/markdown
-Requires-Dist: fastmcp>=3.1.0
+Requires-Dist: fastmcp>=3.2.0
 Requires-Dist: fastapi>=0.100.0
 Requires-Dist: httpx>=0.25.0
 Requires-Dist: python-osc>=1.8.0
 Requires-Dist: psutil>=5.9.0
+Requires-Dist: lancedb>=0.17.0
+Requires-Dist: sentence-transformers>=3.0.0
+Requires-Dist: websockets>=12.0
+Requires-Dist: starlette>=0.40.0
+Requires-Dist: uvicorn>=0.30.0
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
@@ -158,14 +160,14 @@ pip install resonite-mcp
 resonite-mcp --stdio
 ```
 
-##  Webapp (port 10714)
+##  Webapp (port 10978)
 
 A premium dark-mode control panel ships alongside the MCP server:
 
 ```powershell
 # Start frontend + backend
 .\web_sota\start.ps1
-# Opens http://localhost:10714
+# Opens http://localhost:10978
 ```
 
 | Page | Description |

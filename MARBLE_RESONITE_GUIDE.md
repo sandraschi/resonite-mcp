@@ -162,7 +162,7 @@ The recommended way to import Marble worlds into Resonite uses two MCP servers
 working together:
 
 ```
-worldlabs-mcp (port 10865)            resonite-mcp (port 10715)
+worldlabs-mcp (port 10865)            resonite-mcp (port 10979)
 ┌─────────────────────────┐           ┌──────────────────────────┐
 │ Generate world          │           │ OSC receiver on 9001    │
 │ Download SPZ + GLB      │  ──►      │ Download from proxy     │
@@ -173,7 +173,7 @@ worldlabs-mcp (port 10865)            resonite-mcp (port 10715)
 
 **Setup:**
 1. Run both servers: `worldlabs-mcp` and `resonite-mcp`
-2. Start the OSC listener: `curl -X POST http://127.0.0.1:10715/api/resonite/worldlabs/listen`
+2. Start the OSC listener: `curl -X POST http://127.0.0.1:10979/api/resonite/worldlabs/listen`
 3. In Resonite, set up a ProtoFlux graph (see [ProtoFlux Guide](./PROTOFLUX_GUIDE.md))
    or use ResoniteLink for automatic import
 

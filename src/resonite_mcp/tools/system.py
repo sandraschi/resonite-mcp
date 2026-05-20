@@ -7,14 +7,13 @@ system-level operations for the Resonite MCP server.
 import asyncio
 import logging
 import platform
-from typing import Optional
 
 import psutil
 
 logger = logging.getLogger(__name__)
 
 
-async def help(level: str = "basic", topic: Optional[str] = None) -> str:
+async def help(level: str = "basic", topic: str | None = None) -> str:
     """Get help and documentation for the Resonite MCP server.
 
     Provides contextual assistance and documentation for Resonite MCP server features,
@@ -39,8 +38,8 @@ async def help(level: str = "basic", topic: Optional[str] = None) -> str:
 **FastMCP 2.13.1+ compliant server for natural language control of Resonite social VR platform.**
 
 ## Server Status
-- **Version:** 0.1.0
-- **FastMCP:** 2.13.1 (SOTA compliant)
+- **Version:** 0.1.1
+- **FastMCP:** 3.1+ (SOTA compliant)
 - **Transport:** STDIO
 - **Plugins:** 2 loaded
 """
@@ -303,7 +302,7 @@ resonite-mcp/
         return f"Unknown help level: {level}. Use 'basic', 'intermediate', or 'advanced'."
 
 
-async def status(level: str = "basic", focus: Optional[str] = None) -> str:
+async def status(level: str = "basic", focus: str | None = None) -> str:
     """Get comprehensive server status and diagnostic information.
 
     Provides detailed information about server health, plugin status,
@@ -323,34 +322,68 @@ async def status(level: str = "basic", focus: Optional[str] = None) -> str:
         status("basic", "plugins")  # Plugin-specific status
     """
     # Basic system information
+    from ..server import is_resonite_running, plugin_manager, resonite_link_client
+    from ..server import server as mcp_server
+
+    try:
+        import fastmcp
+        fm_version = fastmcp.__version__
+    except (ImportError, AttributeError):
+        fm_version = ">=3.1.0"
+
     system_info = {
         "server_name": "Resonite MCP Server",
-        "version": "0.1.0",
-        "fastmcp_version": "2.13.1",
+        "version": mcp_server.version if hasattr(mcp_server, 'version') else "0.1.1",
+        "fastmcp_version": fm_version,
         "platform": platform.platform(),
         "python_version": platform.python_version(),
         "timestamp": asyncio.get_event_loop().time(),
     }
 
-    # Plugin status
-    plugin_status = {
-        "total_plugins": 4,
-        "loaded_plugins": ["osc_extensions", "protoflux_helpers"],
-        "plugin_types": ["osc", "protoflux", "avatar", "world"],
-    }
+    # Plugin status — query real PluginManager
+    if plugin_manager:
+        plugin_status = {
+            "total_plugins": len(plugin_manager.loaded_plugins),
+            "loaded_plugins": list(plugin_manager.loaded_plugins.keys()),
+            "plugin_types": list(plugin_manager.plugin_types.keys()),
+            "discovered_plugins": len(plugin_manager.discovered_plugins or []),
+        }
+    else:
+        plugin_status = {
+            "total_plugins": 0,
+            "loaded_plugins": [],
+            "plugin_types": [],
+            "note": "PluginManager not available",
+        }
 
-    # OSC status
-    osc_status = {
-        "default_host": "127.0.0.1",
-        "default_port": 9000,
-        "active_clients": 0,
-        "active_servers": 0,
-    }
+    # OSC status — query real osc module data
+    try:
+        from .osc import osc_clients, osc_recordings, osc_servers
 
-    # Session status
+        osc_status = {
+            "default_host": "127.0.0.1",
+            "default_port": 9000,
+            "active_clients": len(osc_clients),
+            "active_servers": len(osc_servers),
+            "server_ports": list(osc_servers.keys()),
+            "total_recorded_messages": sum(len(rec) for rec in osc_recordings.values()),
+        }
+    except ImportError:
+        osc_status = {
+            "active_clients": 0, "active_servers": 0,
+            "default_host": "127.0.0.1", "default_port": 9000,
+            "total_recorded_messages": 0,
+        }
+
+    # Session status — probe reality
+    res_running = is_resonite_running()
+    rl_connected = resonite_link_client.running if resonite_link_client else False
     session_status = {
-        "active_sessions": 1,
-        "osc_connected": True,
+        "resonite_running": res_running,
+        "resonite_link_connected": rl_connected,
+        "osc_available": len(osc_status.get("active_servers", [])) > 0
+        if isinstance(osc_status.get("active_servers"), list)
+        else osc_status.get("active_servers", 0) > 0,
     }
 
     if level == "basic":
@@ -366,7 +399,7 @@ async def status(level: str = "basic", focus: Optional[str] = None) -> str:
 - **Plugins:** {plugin_status["total_plugins"]} total ({len(plugin_status["loaded_plugins"])} loaded)
 - **OSC Clients:** {osc_status["active_clients"]} active
 - **OSC Servers:** {osc_status["active_servers"]} active
-- **Session:** {"Active" if session_status["osc_connected"] else "Inactive"}
+- **Session:** {"Running" if session_status["resonite_running"] else "Not running"}
 
 **Status:** ✅ Operational (SOTA Compliant)
 """
@@ -408,9 +441,10 @@ async def status(level: str = "basic", focus: Optional[str] = None) -> str:
 - **Active Clients:** {osc_status["active_clients"]}
 - **Active Servers:** {osc_status["active_servers"]}
 
-## Session Status
-- **Active Sessions:** {session_status["active_sessions"]}
-- **OSC Connection:** {"✅ Connected" if session_status["osc_connected"] else "❌ Disconnected"}
+## Resonite Status
+- **Resonite Process:** {"✅ Running" if session_status["resonite_running"] else "❌ Not Running"}
+- **ResoniteLink:** {"✅ Connected" if session_status["resonite_link_connected"] else "❌ Disconnected"}
+- **OSC Available:** {"✅ Yes" if session_status["osc_available"] else "❌ No"}
 
 ## Recent Activity
 - Server initialized successfully

@@ -3,7 +3,7 @@ import nipplejs from 'nipplejs';
 import { Gamepad2, Eye, EyeOff, Info } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 
-const API_BASE = 'http://localhost:10720';
+const API_BASE = '';
 
 export function Control() {
     const [viewType, setViewType] = useState<'first-person' | 'third-person'>('first-person');

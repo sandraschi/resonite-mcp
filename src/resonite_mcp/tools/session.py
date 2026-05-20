@@ -7,16 +7,16 @@ including session initialization, world loading, and session lifecycle managemen
 import logging
 import uuid
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from ..models import OSCMessageInput, ResoniteSessionInput
 from ..server import server
-from .osc import send_osc
+from .osc import osc_clients, osc_servers, send_osc
 
 logger = logging.getLogger(__name__)
 
 
-async def resonite_session_start(input_data: ResoniteSessionInput) -> Dict[str, Any]:
+async def resonite_session_start(input_data: ResoniteSessionInput) -> dict[str, Any]:
     """Start a new Resonite session with optional world and avatar setup.
 
     This initializes OSC communication with Resonite and sets up a session
@@ -95,14 +95,14 @@ async def resonite_session_start(input_data: ResoniteSessionInput) -> Dict[str, 
         logger.error(f"Failed to start Resonite session: {e}")
         return {
             "status": "error",
-            "message": f"Failed to start Resonite session: {str(e)}",
+            "message": f"Failed to start Resonite session: {e!s}",
         }
 
 
 server.tool()(resonite_session_start)
 
 
-async def resonite_session_status() -> Dict[str, Any]:
+async def resonite_session_status() -> dict[str, Any]:
     """Get the current status of the active Resonite session.
 
     Returns:
@@ -112,32 +112,37 @@ async def resonite_session_status() -> Dict[str, Any]:
         Check session status: resonite_session_status()
     """
     try:
-        # In a real implementation, this would query the actual Resonite session
-        # For now, we'll return mock status information
+        from ..server import is_resonite_running, resonite_link_client
+
+        res_running = is_resonite_running()
+        link_connected = resonite_link_client.running if resonite_link_client else False
+        osc_active = len(osc_servers) > 0
 
         session_status = {
-            "session_active": True,
-            "session_name": "Active Session",
-            "world_loaded": "resonite://TutorialWorld",
-            "avatar_loaded": True,
-            "avatar_slot": 0,
-            "osc_connected": True,
-            "uptime_seconds": 3600,
-            "active_plugins": ["osc_extensions", "protoflux_helpers"],
-            "connection_quality": "good",
+            "resonite_running": res_running,
+            "osc_servers_active": osc_active,
+            "osc_ports": list(osc_servers.keys()),
+            "resonite_link_connected": link_connected,
+            "mcp_server": "healthy",
         }
+
+        if not res_running:
+            session_status["note"] = (
+                "Resonite.exe is not detected as running. "
+                "Start Resonite and enable OSC input before using session tools."
+            )
 
         return {"status": "success", "session_status": session_status}
 
     except Exception as e:
         logger.error(f"Failed to get session status: {e}")
-        return {"status": "error", "message": f"Failed to get session status: {str(e)}"}
+        return {"status": "error", "message": f"Failed to get session status: {e!s}"}
 
 
 server.tool()(resonite_session_status)
 
 
-async def resonite_world_load(world_path: str) -> Dict[str, Any]:
+async def resonite_world_load(world_path: str) -> dict[str, Any]:
     """Load a world in the current Resonite session.
 
     Args:
@@ -161,21 +166,32 @@ async def resonite_world_load(world_path: str) -> Dict[str, Any]:
                 "world_path": world_path,
             }
 
-        # Simulate world loading
+        from ..server import is_resonite_running
+
+        if not is_resonite_running():
+            return {
+                "status": "error",
+                "message": "Resonite is not running. Start Resonite first, then retry.",
+                "world_path": world_path,
+            }
+
+        # Send OSC command to load the world
+        osc_input = OSCMessageInput(
+            host="127.0.0.1", port=9000, address="/resonite/world/load", values=[world_path]
+        )
+        osc_result = await send_osc(osc_input)
+
         world_info = {
             "world_path": world_path,
             "world_name": world_path.split("/")[-1],
-            "load_status": "success",
-            "load_time_seconds": 2.5,
+            "osc_status": osc_result["status"],
             "world_type": "public" if world_path.startswith("resonite://") else "private",
-            "permissions": ["read", "write", "spawn"],
-            "user_count": 1,
         }
 
-        logger.info(f"Loaded world: {world_path}")
+        logger.info(f"World load command sent: {world_path} (OSC={osc_result['status']})")
         return {
-            "status": "success",
-            "message": f"World '{world_info['world_name']}' loaded successfully",
+            "status": osc_result["status"],
+            "message": f"World load command sent for '{world_info['world_name']}': {osc_result['message']}",
             "world": world_info,
         }
 
@@ -183,7 +199,7 @@ async def resonite_world_load(world_path: str) -> Dict[str, Any]:
         logger.error(f"Failed to load world {world_path}: {e}")
         return {
             "status": "error",
-            "message": f"Failed to load world: {str(e)}",
+            "message": f"Failed to load world: {e!s}",
             "world_path": world_path,
         }
 
@@ -191,7 +207,7 @@ async def resonite_world_load(world_path: str) -> Dict[str, Any]:
 server.tool()(resonite_world_load)
 
 
-async def resonite_session_end() -> Dict[str, Any]:
+async def resonite_session_end() -> dict[str, Any]:
     """End the current Resonite session and clean up resources.
 
     Returns:
@@ -201,29 +217,42 @@ async def resonite_session_end() -> Dict[str, Any]:
         End session: resonite_session_end()
     """
     try:
-        # Simulate session cleanup
-        cleanup_info = {
-            "session_ended": True,
-            "resources_cleaned": ["osc_connections", "world_cache", "avatar_state"],
-            "cleanup_time_seconds": 1.2,
-            "final_stats": {
-                "total_uptime": 3600,
-                "worlds_loaded": 3,
-                "avatars_used": 2,
-                "protoflux_scripts_run": 5,
-            },
-        }
+        from ..server import resonite_link_client
 
-        logger.info("Resonite session ended successfully")
+        cleaned = []
+        errors = []
+
+        # Close OSC servers
+        for port, srv in list(osc_servers.items()):
+            try:
+                srv.shutdown()
+                del osc_servers[port]
+                cleaned.append(f"osc_server:{port}")
+            except Exception as e:
+                errors.append(f"osc_server:{port}:{e}")
+
+        # Clear OSC client cache
+        osc_clients.clear()
+        cleaned.append("osc_clients")
+
+        # Disconnect ResoniteLink
+        if resonite_link_client and resonite_link_client.running:
+            try:
+                await resonite_link_client.disconnect()
+                cleaned.append("resonite_link")
+            except Exception as e:
+                errors.append(f"resonite_link:{e}")
+
+        logger.info(f"Resonite session ended: cleaned={cleaned}, errors={len(errors)}")
         return {
-            "status": "success",
-            "message": "Resonite session ended successfully",
-            "cleanup": cleanup_info,
+            "status": "success" if not errors else "partial",
+            "message": f"Session cleanup: {len(cleaned)} resources closed, {len(errors)} errors",
+            "cleanup": {"cleaned": cleaned, "errors": errors},
         }
 
     except Exception as e:
         logger.error(f"Failed to end session: {e}")
-        return {"status": "error", "message": f"Failed to end session: {str(e)}"}
+        return {"status": "error", "message": f"Failed to end session: {e!s}"}
 
 
 server.tool()(resonite_session_end)

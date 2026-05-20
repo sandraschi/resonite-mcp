@@ -763,7 +763,7 @@ To receive and import splats automatically:
 If you don't want to set up ProtoFlux, start the **resonite-mcp** listener:
 
 ```powershell
-curl -X POST http://127.0.0.1:10715/api/resonite/worldlabs/listen
+curl -X POST http://127.0.0.1:10979/api/resonite/worldlabs/listen
 ```
 
 This starts an OSC receiver on port 9001 that automatically downloads and

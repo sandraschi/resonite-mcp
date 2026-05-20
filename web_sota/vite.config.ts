@@ -10,19 +10,20 @@ export default defineConfig({
     },
   },
   server: {
-    port: 10714,
+    port: 10978,
+    strictPort: true,
     host: "127.0.0.1",
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:10715',
+        target: 'http://127.0.0.1:10979',
         changeOrigin: true,
       },
       '/resonite': {
-        target: 'http://127.0.0.1:10715',
+        target: 'http://127.0.0.1:10979',
         changeOrigin: true,
       },
       '/rl': {
-        target: 'http://127.0.0.1:10715',
+        target: 'http://127.0.0.1:10979',
         changeOrigin: true,
       }
     }

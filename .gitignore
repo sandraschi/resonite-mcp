@@ -45,3 +45,4 @@ Thumbs.db
 
 # Build Artifacts
 target/
+_dashboard/

@@ -8,7 +8,7 @@ import asyncio
 import logging
 import os
 import time
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..models import (
     InventoryDeleteInput,
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 async def _wait_for_osc_response(
     address_pattern: str, timeout: float = 5.0, port: int = 9001
-) -> Optional[Dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Wait for an OSC message matching the pattern in the recordings buffer.
 
     Args:
@@ -53,7 +53,7 @@ async def _wait_for_osc_response(
     return None
 
 
-async def resonite_inventory_list(input_data: InventoryListInput) -> Dict[str, Any]:
+async def resonite_inventory_list(input_data: InventoryListInput) -> dict[str, Any]:
     """List items in the user's Resonite inventory.
 
     Args:
@@ -113,12 +113,12 @@ async def resonite_inventory_list(input_data: InventoryListInput) -> Dict[str, A
         else:
             return {
                 "status": "warning",
-                "message": "Timed out waiting for Resonite inventory response. Returning mock data for safety.",
-                "items": [
-                    {"id": "mock_id_1", "name": "Default Avatar", "type": "avatar"},
-                    {"id": "mock_id_2", "name": "Tutorial World", "type": "world"},
-                ],
-                "total_count": 2,
+                "message": (
+                    "Timed out waiting for Resonite inventory response. "
+                    "Ensure Resonite is running with OSC output enabled."
+                ),
+                "items": [],
+                "total_count": 0,
                 "pagination": {"limit": limit, "offset": offset, "has_more": False},
             }
 
@@ -131,7 +131,7 @@ async def resonite_inventory_list(input_data: InventoryListInput) -> Dict[str, A
 server.tool()(resonite_inventory_list)
 
 
-async def resonite_inventory_search(query: str, item_type: Optional[str] = None) -> Dict[str, Any]:
+async def resonite_inventory_search(query: str, item_type: str | None = None) -> dict[str, Any]:
     """Search for items in the user's Resonite inventory."""
     try:
         input_data = InventoryListInput(item_type=item_type, search_query=query, limit=100)
@@ -152,7 +152,7 @@ async def resonite_inventory_search(query: str, item_type: Optional[str] = None)
 server.tool()(resonite_inventory_search)
 
 
-async def resonite_inventory_spawn(input_data: InventorySpawnInput) -> Dict[str, Any]:
+async def resonite_inventory_spawn(input_data: InventorySpawnInput) -> dict[str, Any]:
     """Spawn an item from inventory into the current world."""
     item_id = input_data.item_id
     position = input_data.position
@@ -188,7 +188,7 @@ async def resonite_inventory_spawn(input_data: InventorySpawnInput) -> Dict[str,
 server.tool()(resonite_inventory_spawn)
 
 
-async def resonite_inventory_upload(input_data: InventoryUploadInput) -> Dict[str, Any]:
+async def resonite_inventory_upload(input_data: InventoryUploadInput) -> dict[str, Any]:
     """Upload a local file to Resonite inventory."""
     item_path = input_data.item_path
     item_name = input_data.item_name
@@ -228,7 +228,7 @@ async def resonite_inventory_upload(input_data: InventoryUploadInput) -> Dict[st
 server.tool()(resonite_inventory_upload)
 
 
-async def resonite_inventory_delete(input_data: InventoryDeleteInput) -> Dict[str, Any]:
+async def resonite_inventory_delete(input_data: InventoryDeleteInput) -> dict[str, Any]:
     """Delete an item from the user's Resonite inventory."""
     item_id = input_data.item_id
     confirm_deletion = input_data.confirm_deletion
@@ -256,7 +256,7 @@ async def resonite_inventory_delete(input_data: InventoryDeleteInput) -> Dict[st
 server.tool()(resonite_inventory_delete)
 
 
-async def resonite_inventory_share(input_data: InventoryShareInput) -> Dict[str, Any]:
+async def resonite_inventory_share(input_data: InventoryShareInput) -> dict[str, Any]:
     """Share an inventory item with another user."""
     item_id = input_data.item_id
     share_with = input_data.share_with
@@ -287,7 +287,7 @@ async def resonite_inventory_share(input_data: InventoryShareInput) -> Dict[str,
 server.tool()(resonite_inventory_share)
 
 
-async def resonite_inventory_info(item_id: str) -> Dict[str, Any]:
+async def resonite_inventory_info(item_id: str) -> dict[str, Any]:
     """Get detailed information about an inventory item."""
     try:
         osc_input = OSCMessageInput(
@@ -308,13 +308,11 @@ async def resonite_inventory_info(item_id: str) -> Dict[str, Any]:
         else:
             return {
                 "status": "warning",
-                "message": f"Timed out waiting for Resonite info response for item {item_id}. Returning mock info.",
-                "item_info": {
-                    "id": item_id,
-                    "name": f"Item {item_id}",
-                    "description": "Information could not be retrieved from Resonite.",
-                    "created_at": "2025-01-01T00:00:00Z",
-                },
+                "message": (
+                    f"Timed out waiting for Resonite info response for item {item_id}. "
+                    "Ensure Resonite is running with OSC output enabled."
+                ),
+                "item_info": {"id": item_id, "name": f"Item {item_id}", "available": False},
             }
     except Exception as e:
         error = f"Failed to get item info: {e}"

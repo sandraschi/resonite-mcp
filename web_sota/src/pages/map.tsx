@@ -10,7 +10,7 @@ interface Node {
     type: 'avatar' | 'object';
 }
 
-const API_BASE = 'http://localhost:10720';
+const API_BASE = '';
 
 export function Map() {
     const [zoom, setZoom] = useState(1.0);

@@ -1,22 +1,13 @@
 Param([switch]$Headless)
-$SkipFrontend = $Headless
 
-# --- SOTA Headless Standard ---
-if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
-    Start-Process pwsh -ArgumentList '-NoProfile', '-File', $PSCommandPath, '-Headless' -WindowStyle Hidden
-    exit
+# resonite-mcp Start — delegates to full SOTA startup in web_sota/
+$ScriptDir = Split-Path -Parent $PSCommandPath
+$WebSotaStart = Join-Path $ScriptDir "web_sota\start.ps1"
+
+if (-not (Test-Path -LiteralPath $WebSotaStart)) {
+    Write-Host "[ERROR] web_sota\start.ps1 not found." -ForegroundColor Red
+    exit 1
 }
-$WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
-# ------------------------------
 
-$env:FASTMCP_LOG_LEVEL = 'WARNING'
-# resonite-mcp Start - Standards-Compliant SOTA
-Write-Host 'Starting resonite-mcp...' -ForegroundColor Cyan
-
-Set-Location $PSScriptRoot
-Write-Host 'Starting Standardized Fullstack Hybrid...' -ForegroundColor Green
-# Launch backend Hidden by default to prevent console spam
-Start-Process pwsh -ArgumentList '-NoProfile', '-Command', 'uv run -m resonite_mcp' -WindowStyle Hidden
-Set-Location web_sota
-if ($SkipFrontend) { return }
-npm run dev
+$Args = if ($Headless) { @('-Headless') } else { @() }
+& $WebSotaStart @Args

@@ -9,16 +9,15 @@ if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
 $WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
 # ------------------------------
 
-# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
-# Backend: 10715, Frontend: 10714 (proxy /api to backend). No manual uv/uvicorn.
+# Resonite MCP SOTA — Backend (HTTP MCP + SOTA API) + Vite frontend
+# Backend: 10979, Frontend: 10978 (proxy /api to backend). No manual uv/uvicorn.
 
-$WebPort = 10714
-$BackendPort = 10715
+$WebPort = 10978
+$BackendPort = 10979
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 
 function Clear-Port {
     param([int]$Port)
-$SkipFrontend = $Headless
     $conns = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
     if (-not $conns) { return $false }
     $pids = $conns | Select-Object -ExpandProperty OwningProcess -Unique
@@ -59,15 +58,31 @@ $env:MCP_TRANSPORT = "http"
 $env:MCP_PORT = [string]$BackendPort
 $env:MCP_HOST = "127.0.0.1"
 
-# 3. Start Python backend (HTTP mode; SOTA API via on_app_init)
+# 3. Start Python backend (HTTP mode via cli entry point)
 Write-Host "[RESONITE-MCP] Starting backend on port $BackendPort ..." -ForegroundColor Green
-$serverArgs = @("run", "python", "-m", "resonite_mcp.server", "--http", "--port", [string]$BackendPort)
-Start-Process -FilePath "uv" -ArgumentList $serverArgs -WorkingDirectory $ProjectRoot -NoNewWindow -PassThru
+$serverArgs = @("run", "python", "-m", "resonite_mcp", "--port", [string]$BackendPort)
+$backendProc = Start-Process -FilePath "uv" -ArgumentList $serverArgs -WorkingDirectory $ProjectRoot -NoNewWindow -PassThru
 Pop-Location
 
-Start-Sleep -Seconds 2
+# 4. Health-check backend before starting frontend
+$backendUrl = "http://127.0.0.1:$BackendPort/health"
+Write-Host "[RESONITE-MCP] Waiting for backend at $backendUrl ..." -ForegroundColor Gray
+$ready = $false
+for ($i = 0; $i -lt 30; $i++) {
+    try {
+        $null = Invoke-WebRequest -Uri $backendUrl -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop
+        $ready = $true
+        Write-Host "[RESONITE-MCP] Backend is ready." -ForegroundColor Green
+        break
+    } catch {
+        Start-Sleep -Seconds 1
+    }
+}
+if (-not $ready) {
+    Write-Host "[WARNING] Backend did not respond within 30s. Starting frontend anyway..." -ForegroundColor Yellow
+}
 
-# 4. Frontend from web_sota
+# 5. Frontend from web_sota
 Set-Location $PSScriptRoot
 if (-not (Test-Path "node_modules")) {
     Write-Host "[RESONITE-MCP] Installing frontend deps..." -ForegroundColor Yellow
@@ -75,7 +90,7 @@ if (-not (Test-Path "node_modules")) {
 }
 Write-Host "[RESONITE-MCP] Starting Vite on port $WebPort ..." -ForegroundColor Green
 
-# 4b. Launch background task to open browser once frontend is ready (Auto-opened by Antigravity)
+# 6. Launch background task to open browser once frontend is ready
 $frontendUrl = "http://127.0.0.1:$WebPort/"
 $pollAndOpen = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
 Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
@@ -83,6 +98,3 @@ Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "
 Write-Host "Browser will open automatically when Vite is ready." -ForegroundColor Gray
 if ($SkipFrontend) { return }
 npm run dev -- --port $WebPort --host
-
-
-

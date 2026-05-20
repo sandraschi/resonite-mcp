@@ -1,6 +1,11 @@
 # Resonite MCP Server
 
-[![FastMCP Version](https://img.shields.io/badge/FastMCP-3.1.0-blue?style=flat-square&logo=python&logoColor=white)](https://github.com/sandraschi/fastmcp) [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![Linted with Biome](https://img.shields.io/badge/Linted_with-Biome-60a5fa?style=flat-square&logo=biome&logoColor=white)](https://biomejs.dev/) [![Built with Just](https://img.shields.io/badge/Built_with-Just-000000?style=flat-square&logo=gnu-bash&logoColor=white)](https://github.com/casey/just)
+<p align="center">
+  <a href="https://github.com/casey/just"><img src="https://img.shields.io/badge/just-ready_to_go-7c5cfc?style=flat-square&logo=just&logoColor=white" alt="Just"></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
+  <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://github.com/PrefectHQ/fastmcp"><img src="https://img.shields.io/badge/FastMCP-3.2-7c5cfc?style=flat-square" alt="FastMCP"></a>
+</p>
 
 **FastMCP 3.1.0+ compliant server for natural language control of Resonite social VR platform.**
 
@@ -103,21 +108,29 @@ pip install resonite-mcp
 
 ## Quick Start
 
-### 1. Start the MCP Server
-
-**For Claude Desktop (stdio mode):**
-```bash
-resonite-mcp --stdio
+```powershell
+git clone https://github.com/sandraschi/resonite-mcp
+cd resonite-mcp
+just
 ```
 
-##  Webapp (port 10714)
+This opens an interactive dashboard showing all available commands. Run `just bootstrap` to install dependencies, then `just serve` or `just dev` to start.
+
+### Manual Setup
+
+If you don't have `just` installed:
+### 1. Start the MCP Server
+**For Claude Desktop (stdio mode):**
+resonite-mcp --stdio
+
+##  Webapp (port 10978)
 
 A premium dark-mode control panel ships alongside the MCP server:
 
 ```powershell
 # Start frontend + backend
 .\web_sota\start.ps1
-# Opens http://localhost:10714
+# Opens http://localhost:10978
 ```
 
 | Page | Description |

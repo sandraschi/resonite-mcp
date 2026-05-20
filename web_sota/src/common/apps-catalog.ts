@@ -74,57 +74,21 @@ export const APPS_CATALOG: AppEntry[] = [
         tags: ['media', 'audio']
     },
     {
-        id: 'openfang',
-        label: 'OpenFang',
-        description: 'Fleet supervisor and modular agentic node controller.',
-        icon: LayoutGrid,
-        url: 'http://localhost:10870',
-        port: 10870,
-        tags: ['infra', 'admin']
-    },
-    {
-        id: 'osc-mcp',
-        label: 'OSC Control',
-        description: 'Real-time control protocol bridge for high-end gear.',
-        icon: Activity,
-        url: 'http://localhost:10766',
-        port: 10766,
-        tags: ['control', 'media']
-    },
-    {
-        id: 'rustdesk-mcp',
-        label: 'RustDesk MCP',
-        description: 'Secure remote access and fleet management.',
-        icon: MonitorPlay,
-        url: 'http://localhost:10804',
-        port: 10804,
-        tags: ['infra', 'remote']
-    },
-    {
-        id: 'vroidstudio-mcp',
-        label: 'VroidStudio MCP',
-        description: 'Avatar creation and VR character pipeline.',
-        icon: Bot,
-        url: 'http://localhost:10880',
-        port: 10880,
-        tags: ['creative', 'avatar']
-    },
-    {
-        id: 'obsidian-mcp',
-        label: 'Obsidian MCP',
-        description: 'Knowledge graph and second brain integration.',
-        icon: Brain,
-        url: 'http://localhost:10704',
-        port: 10704,
-        tags: ['knowledge', 'ai']
-    },
-    {
         id: 'mcp-central-docs',
         label: 'Docs MCP',
         description: 'Standardized MCP documentation and fleet registry.',
         icon: Activity,
-        url: 'http://localhost:10720',
-        port: 10720,
+        url: 'http://localhost:10794',
+        port: 10794,
         tags: ['knowledge', 'admin']
+    },
+    {
+        id: 'openfang',
+        label: 'OpenFang',
+        description: 'Fleet supervisor and modular agentic node controller.',
+        icon: LayoutGrid,
+        url: 'http://localhost:10956',
+        port: 10956,
+        tags: ['infra', 'admin']
     }
 ];

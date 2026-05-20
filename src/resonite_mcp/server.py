@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Resonite MCP Server - FastMCP 2.13.1+ implementation for Resonite social VR platform.
+"""Resonite MCP Server - FastMCP 3.1+ implementation for Resonite social VR platform.
 
 This server provides natural language control over Resonite through OSC protocol,
 enabling avatar control, world management, ProtoFlux scripting, and social interactions.
@@ -11,12 +11,14 @@ import os
 import subprocess
 import sys
 import webbrowser
-from typing import Any, Dict
+from typing import Any
 
-from fastmcp import FastMCP
+from fastmcp import Context, FastMCP
+from fastmcp.server import create_proxy
 from starlette.responses import JSONResponse
-from .transport import run_server_async
+
 from .llm import detect_local_llms, get_best_substrate, synthesize_answer
+from .transport import run_server_async
 
 # Windows binary mode setup for stdin/stdout
 # Commented out as it interferes with MCP stdio protocol
@@ -75,7 +77,7 @@ _is_stdio_mode = (
 
 server = FastMCP(
     name="Resonite MCP",
-    version="1.1.0-SOTA",
+    version="0.1.1",
     instructions="""You are a Resonite social VR platform assistant. You can help users control avatars, manage worlds, execute ProtoFlux scripts, and handle social interactions through natural language commands.
 
 Key capabilities:
@@ -88,8 +90,25 @@ Key capabilities:
 Always use OSC protocol for real-time control and provide clear feedback on actions taken.""",
 )
 
+# MCP Bridge: ProxyProvider for multi-server federation
+_bridge_proxies = []
+bridge_urls = os.getenv("MCP_BRIDGE_URLS", "")
+if bridge_urls:
+    for url in bridge_urls.split(","):
+        url = url.strip()
+        if url:
+            try:
+                server.add_provider(create_proxy(url))
+                _bridge_proxies.append(url)
+            except Exception:
+                pass
+
 # Import tools after server exists to avoid circular import (tools need server for @server.tool())
-from . import tools  # noqa: F401
+# Register FastMCP 3.2+ prompt templates
+from . import (
+    prompts,  # noqa: F401
+    tools,  # noqa: F401
+)
 
 # Import plugin system
 try:
@@ -105,7 +124,7 @@ resonite_link_client = None
 
 
 @server.tool()
-async def search_guides(query: str, limit: int = 5) -> Dict[str, Any]:
+async def search_guides(query: str, limit: int = 5) -> dict[str, Any]:
     """Perform a semantic search over the Resonite technical guides and documentation."""
     try:
         from .rag import rag_engine
@@ -138,7 +157,7 @@ async def ask_resonite(question: str) -> str:
         )
         return f"Synthesized via {substrate.provider} ({substrate.name}):\n\n{answer}"
     except Exception as e:
-        return f"Error querying documentation: {str(e)}"
+        return f"Error querying documentation: {e!s}"
 
 
 def is_resonite_installed() -> bool:
@@ -159,7 +178,7 @@ def is_resonite_installed() -> bool:
                 key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
                 winreg.CloseKey(key)
                 return True
-            except WindowsError:
+            except OSError:
                 continue
 
         # Check for standalone or common paths
@@ -193,7 +212,7 @@ def is_resonite_running() -> bool:
 
 
 @server.tool()
-async def health_check() -> Dict[str, Any]:
+async def health_check() -> dict[str, Any]:
     """Check the health status of the Resonite MCP server and its components."""
     installed = is_resonite_installed()
     running = is_resonite_running()
@@ -201,7 +220,7 @@ async def health_check() -> Dict[str, Any]:
     return {
         "status": "success",
         "message": "Resonite MCP server is healthy",
-        "version": "1.1.0-SOTA",
+        "version": "0.1.1",
         "plugins_loaded": list(plugin_manager.loaded_plugins.keys())
         if plugin_manager
         else [],
@@ -216,6 +235,48 @@ async def health_check() -> Dict[str, Any]:
         "resonite_installed": installed,
         "resonite_running": running,
     }
+
+
+@server.tool()
+async def agentic_plan_execute(
+    goal: str,
+    ctx: Context = None,
+) -> dict[str, Any]:
+    """Plan and execute a multi-step Resonite task using LLM reasoning.
+
+    Uses FastMCP 3.2+ ctx.sample() to autonomously plan and execute
+    complex Resonite workflows (avatar setup, world loading, asset import).
+
+    ## Return Format
+    {"success": bool, "message": str, "data": {"plan": str, "reasoning": str}}
+
+    ## Examples
+    agentic_plan_execute("Load the TutorialWorld and set up my avatar")
+    """
+    try:
+        from .agentic import agentic_execute, agentic_plan
+
+        tool_names = [
+            "resonite_session_start", "resonite_world_load", "resonite_avatar_load",
+            "resonite_parameter_set", "resonite_inventory_list", "resonite_inventory_spawn",
+            "resonite_rest_get_sessions", "send_osc",
+        ]
+
+        plan = await agentic_plan(ctx, goal, tool_names)
+        result = await agentic_execute(ctx, plan, {"available_tools": tool_names})
+
+        return {
+            "success": True,
+            "message": f"Agentic plan generated and executed for: {goal[:80]}",
+            "data": {
+                "goal": goal,
+                "plan": plan,
+                "reasoning": result.get("reasoning", ""),
+            },
+        }
+    except Exception as e:
+        logger.error(f"Agentic workflow failed: {e}")
+        return {"success": False, "message": str(e), "data": {}}
 
 
 @server.custom_route("/api/resonite/launch", methods=["POST"])

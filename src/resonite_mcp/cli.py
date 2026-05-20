@@ -8,6 +8,19 @@ import logging
 from .server import initialize_server, server
 
 
+def _enable_agentic_mode():
+    """Enable CodeMode BM25 agentic discovery (FastMCP 3.2+ experimental)."""
+    try:
+        from fastmcp.experimental.transforms import CodeMode
+
+        server.add_transforms(CodeMode())
+        logging.getLogger(__name__).info("CodeMode agentic discovery enabled")
+    except ImportError:
+        logging.getLogger(__name__).warning(
+            "CodeMode not available (FastMCP >=3.2.0 required)"
+        )
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -23,8 +36,8 @@ def main():
     parser.add_argument(
         "--port",
         type=int,
-        default=10715,
-        help="Port to bind the HTTP server to (default: 10715)",
+        default=10979,
+        help="Port to bind the HTTP server to (default: 10979)",
     )
 
     parser.add_argument(
@@ -40,6 +53,12 @@ def main():
         help="Run in stdio mode for MCP protocol (default: HTTP server mode)",
     )
 
+    parser.add_argument(
+        "--agentic",
+        action="store_true",
+        help="Enable CodeMode BM25 agentic skill discovery (FastMCP 3.2+)",
+    )
+
     parser.add_argument("--version", action="version", version="%(prog)s 0.1.1")
 
     args = parser.parse_args()
@@ -52,15 +71,16 @@ def main():
 
     logger = logging.getLogger(__name__)
 
+    if args.agentic:
+        _enable_agentic_mode()
+
     if args.stdio:
-        # Stdio: start immediately so Cursor gets tool list; RAG/plugins init on first use
         logger.info("Starting Resonite MCP server in stdio mode (deferred init)")
         server.run(transport="stdio")
         return
 
     # HTTP mode: full init before starting server
     asyncio.run(initialize_server())
-    # Run HTTP server mode
     logger.info(f"Starting Resonite MCP server on {args.host}:{args.port}")
     import uvicorn
 

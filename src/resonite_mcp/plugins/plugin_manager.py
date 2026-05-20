@@ -25,32 +25,53 @@ class PluginManager:
         self.plugins_dir = Path(plugins_dir) if plugins_dir else Path(__file__).parent
         self.loaded_plugins: Dict[str, BasePlugin] = {}
         self.plugin_types: Dict[str, List[str]] = {}
+        self.discovered_plugins: List[dict] = []
         self.logger = logging.getLogger(f"{__name__}.PluginManager")
 
-    async def discover_plugins(self) -> List[str]:
+    async def discover_plugins(self) -> List[dict]:
         """Discover available plugins in the plugins directory.
 
         Returns:
-            List of discovered plugin names
+            List of discovered plugin info dicts with name, path, type keys
         """
-        discovered = []
+        self.discovered_plugins = []
 
         # Scan for Python files in plugins directory
         if self.plugins_dir.exists():
             for item in self.plugins_dir.iterdir():
                 if item.is_file() and item.suffix == ".py" and not item.name.startswith("__"):
                     plugin_name = item.stem
-                    discovered.append(plugin_name)
+                    self.discovered_plugins.append({
+                        "name": plugin_name,
+                        "path": str(item),
+                        "type": self._infer_type(plugin_name),
+                    })
                     self.logger.debug(f"Discovered plugin: {plugin_name}")
 
         # Also scan for plugin subdirectories with __init__.py
         for item in self.plugins_dir.iterdir():
             if item.is_dir() and (item / "__init__.py").exists():
                 plugin_name = item.name
-                discovered.append(plugin_name)
+                self.discovered_plugins.append({
+                    "name": plugin_name,
+                    "path": str(item),
+                    "type": self._infer_type(plugin_name),
+                })
                 self.logger.debug(f"Discovered plugin package: {plugin_name}")
 
-        return discovered
+        return self.discovered_plugins
+
+    @staticmethod
+    def _infer_type(plugin_name: str) -> str:
+        if "osc" in plugin_name:
+            return "osc"
+        if "protoflux" in plugin_name:
+            return "protoflux"
+        if "avatar" in plugin_name:
+            return "avatar"
+        if "world" in plugin_name:
+            return "world"
+        return "general"
 
     async def load_plugin(self, plugin_name: str) -> Optional[BasePlugin]:
         """Load a specific plugin by name.
