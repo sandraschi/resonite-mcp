@@ -69,6 +69,29 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
         )
         steps.append({"name": "offline_run_fleet_pipeline", "success": bool(pipeline.get("success")), "detail": pipeline})
 
+        marble_dir = work_dir / "marble"
+        marble_dir.mkdir(parents=True, exist_ok=True)
+        (marble_dir / "offline.ply").write_text("ply", encoding="utf-8")
+        marble_list = await resonite_fleet("list_marble_staging", marble_dir=str(marble_dir))
+        steps.append({"name": "offline_list_marble_staging", "success": bool(marble_list.get("success")), "detail": marble_list})
+
+        with patch(
+            "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
+            new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
+        ):
+            marble_import = await resonite_fleet("import_worldlabs_batch", marble_dir=str(marble_dir))
+        steps.append(
+            {"name": "offline_import_worldlabs_batch", "success": bool(marble_import.get("success")), "detail": marble_import},
+        )
+
+        inventory = await resonite_fleet("inventory_status")
+        steps.append({"name": "offline_inventory_status", "success": bool(inventory.get("success")), "detail": inventory})
+
+        from resonite_mcp.tools.voice_tools import resonite_voice
+
+        voice = await resonite_voice("parse_command", command_text="wave")
+        steps.append({"name": "offline_voice_parse", "success": bool(voice.get("success")), "detail": voice})
+
     return {
         "success": all(bool(s.get("success")) for s in steps),
         "mode": "offline",

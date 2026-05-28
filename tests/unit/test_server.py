@@ -1,6 +1,6 @@
 """Unit tests for Resonite MCP server tools."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -118,11 +118,15 @@ class TestResoniteTools:
     @pytest.mark.asyncio
     async def test_resonite_world_load_success(self):
         """Test successful world loading."""
-        result = await resonite_world_load(world_path="resonite://TestWorld")
+        with patch("resonite_mcp.server.is_resonite_running", return_value=True), patch(
+            "resonite_mcp.tools.session.send_osc",
+            new=AsyncMock(return_value={"status": "success", "message": "sent"}),
+        ):
+            result = await resonite_world_load(world_path="resonite://TestWorld")
 
         assert result["status"] == "success"
         assert result["world"]["world_path"] == "resonite://TestWorld"
-        assert "loaded successfully" in result["message"]
+        assert "World load command sent" in result["message"]
 
     @pytest.mark.asyncio
     async def test_resonite_world_load_invalid_path(self):

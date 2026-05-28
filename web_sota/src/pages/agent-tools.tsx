@@ -2,7 +2,9 @@ import {
   Bot,
   FlaskConical,
   GitPullRequest,
+  Globe,
   Layers,
+  Mic,
   Package,
   Server,
   User,
@@ -17,7 +19,7 @@ import {
   type StagingRecord,
 } from "@/api/mcp";
 
-type TabId = "runtime" | "fleet" | "staging" | "vrm" | "pipeline";
+type TabId = "runtime" | "fleet" | "staging" | "vrm" | "marble" | "voice" | "pipeline";
 
 function ResultBox({ text }: { text: string | null }) {
   if (!text) return null;
@@ -48,12 +50,19 @@ export function AgentTools() {
   const [avatarUrl, setAvatarUrl] = useState("http://127.0.0.1:10793");
   const [exportFormat, setExportFormat] = useState("vrm");
   const [protofluxPreset, setProtofluxPreset] = useState("vrm_blink");
+  const [marbleDir, setMarbleDir] = useState("D:/Temp/fleet_pipeline/resonite_marble");
+  const [fabDir, setFabDir] = useState("D:/Temp/fleet_pipeline/inkscape_fab_art");
+  const [skipMarble, setSkipMarble] = useState(true);
+  const [voiceCommand, setVoiceCommand] = useState("wave hello");
+  const [voiceMacro, setVoiceMacro] = useState("wave");
 
   const tabs: { id: TabId; label: string; icon: typeof Bot }[] = [
     { id: "runtime", label: "Runtime", icon: Server },
     { id: "fleet", label: "Fleet", icon: GitPullRequest },
     { id: "staging", label: "Staging", icon: Layers },
     { id: "vrm", label: "VRM", icon: User },
+    { id: "marble", label: "Marble", icon: Globe },
+    { id: "voice", label: "Voice", icon: Mic },
     { id: "pipeline", label: "Pipeline", icon: Package },
   ];
 
@@ -102,7 +111,7 @@ export function AgentTools() {
             Agent Lab
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            Phase 1–4: execution mode, fleet handoff, VRM pipeline, Prometheus metrics.
+            Phase 1–6: fleet handoff, VRM, Marble worlds, voice macros, strict E2E.
           </p>
         </div>
         <button
@@ -403,6 +412,163 @@ export function AgentTools() {
           </>
         )}
 
+        {tab === "marble" && (
+          <>
+            <h3 className="font-semibold text-white">Marble / World Labs pipeline</h3>
+            <label className="block text-sm text-slate-300">
+              Marble staging dir
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={marbleDir}
+                onChange={(e) => setMarbleDir(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm text-slate-300">
+              Inkscape fab staging dir
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={fabDir}
+                onChange={(e) => setFabDir(e.target.value)}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "list_marble_staging",
+                    marble_dir: marbleDir,
+                    fab_staging_dir: fabDir,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                List marble staging
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "import_worldlabs_batch",
+                    marble_dir: marbleDir,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                Import World Labs batch
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "pull_inkscape_fab",
+                    input_dir: inputDir,
+                    marble_dir: marbleDir,
+                    fab_staging_dir: fabDir,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                Pull inkscape fab
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "run_marble_pipeline",
+                    input_dir: inputDir,
+                    marble_dir: marbleDir,
+                    fab_staging_dir: fabDir,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                Run marble pipeline
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() => run("resonite_fleet", { operation: "inventory_status" })}
+              >
+                Inventory status
+              </button>
+            </div>
+          </>
+        )}
+
+        {tab === "voice" && (
+          <>
+            <h3 className="font-semibold text-white">Voice macros (OSC)</h3>
+            <label className="block text-sm text-slate-300">
+              Command text
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={voiceCommand}
+                onChange={(e) => setVoiceCommand(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm text-slate-300">
+              Macro id (send)
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={voiceMacro}
+                onChange={(e) => setVoiceMacro(e.target.value)}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() => run("resonite_voice", { operation: "list_macros" })}
+              >
+                List macros
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_voice", { operation: "parse_command", command_text: voiceCommand })
+                }
+              >
+                Parse command
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_voice", {
+                    operation: "send_macro",
+                    macro_id: voiceMacro,
+                    command_text: voiceCommand,
+                  })
+                }
+              >
+                Send macro
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() => run("resonite_voice", { operation: "execution_mode" })}
+              >
+                Voice execution mode
+              </button>
+            </div>
+          </>
+        )}
+
         {tab === "pipeline" && (
           <>
             <h3 className="font-semibold text-white">Full fleet pipeline</h3>
@@ -447,7 +613,39 @@ export function AgentTools() {
                 />
                 Skip VRM
               </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={skipMarble}
+                  onChange={(e) => setSkipMarble(e.target.checked)}
+                />
+                Skip marble
+              </label>
             </div>
+            <button
+              type="button"
+              disabled={loading}
+              className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm mr-2"
+              onClick={() =>
+                run("resonite_fleet", {
+                  operation: "run_strict_fleet_pipeline",
+                  input_dir: inputDir,
+                  staging_dir: stagingDir,
+                  vrm_dir: vrmDir,
+                  marble_dir: marbleDir,
+                  fab_staging_dir: fabDir,
+                  object_name: objectName,
+                  texture_path: texturePath,
+                  skip_blender: skipBlender,
+                  skip_gimp: skipGimp,
+                  skip_vrm: skipVrm,
+                  skip_marble: skipMarble,
+                  export_format: exportFormat,
+                })
+              }
+            >
+              Run strict fleet pipeline
+            </button>
             <button
               type="button"
               disabled={loading}
@@ -463,6 +661,7 @@ export function AgentTools() {
                   skip_blender: skipBlender,
                   skip_gimp: skipGimp,
                   skip_vrm: skipVrm,
+                  skip_marble: skipMarble,
                   export_format: exportFormat,
                 })
               }

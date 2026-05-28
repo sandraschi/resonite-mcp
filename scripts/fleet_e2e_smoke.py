@@ -10,6 +10,7 @@ from pathlib import Path
 
 from resonite_mcp.utils.fleet_e2e_live import run_live_smoke
 from resonite_mcp.utils.fleet_e2e_offline import run_offline_smoke
+from resonite_mcp.utils.fleet_e2e_strict import run_strict_offline_smoke
 from resonite_mcp.utils.fleet_http import (
     DEFAULT_INKSCAPE_URL,
     DEFAULT_RESONITE_URL,
@@ -27,9 +28,14 @@ async def run_e2e_smoke(
     *,
     offline: bool = False,
     live: bool = False,
+    strict_fleet: bool = False,
     offline_work_dir: Path | None = None,
     live_work_dir: Path | None = None,
 ) -> dict[str, object]:
+    if strict_fleet:
+        work = offline_work_dir or Path("D:/Temp/fleet_pipeline/resonite_e2e_strict")
+        return await run_strict_offline_smoke(work_dir=work)
+
     if offline:
         work = offline_work_dir or Path("D:/Temp/fleet_pipeline/resonite_e2e_offline")
         return await run_offline_smoke(work_dir=work)
@@ -73,6 +79,7 @@ async def run_e2e_smoke(
 def main() -> None:
     parser = argparse.ArgumentParser(description="Resonite fleet E2E smoke")
     parser.add_argument("--offline", action="store_true")
+    parser.add_argument("--strict-fleet", action="store_true", help="Full inkscape->gimp->blender chain offline")
     parser.add_argument("--live", action="store_true", help="Force live inkscape->resonite HTTP chain")
     parser.add_argument("--offline-work-dir", default="")
     parser.add_argument("--live-work-dir", default="")
@@ -86,6 +93,7 @@ def main() -> None:
         run_e2e_smoke(
             offline=args.offline,
             live=args.live,
+            strict_fleet=args.strict_fleet,
             offline_work_dir=offline_work,
             live_work_dir=live_work,
         ),

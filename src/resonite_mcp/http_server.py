@@ -200,8 +200,8 @@ async def health_check():
     return {
         "status": "ok",
         "server": "resonite-mcp-sota",
-        "version": "0.8.0",
-        "agent_lab_phase": 4,
+        "version": "1.0.0",
+        "agent_lab_phase": 6,
         "metrics_enabled": metrics_enabled(),
         "capabilities": [
             "osc_communication",
@@ -212,6 +212,9 @@ async def health_check():
             "integrations",
             "fleet_orchestration",
             "agent_lab_tools",
+            "marble_world_import",
+            "voice_macros",
+            "inventory_adapter",
         ],
     }
 
@@ -229,6 +232,18 @@ async def api_v1_tool(body: MCPToolRequest) -> Dict[str, Any]:
             if not operation:
                 raise HTTPException(status_code=400, detail="operation required for resonite_fleet")
             result = await resonite_fleet(operation, **params)
+            return {
+                "success": bool(result.get("success")),
+                "data": result,
+                "error": result.get("error") or None,
+            }
+        if tool == "resonite_voice":
+            from .tools.voice_tools import resonite_voice
+
+            operation = params.pop("operation", None)
+            if not operation:
+                raise HTTPException(status_code=400, detail="operation required for resonite_voice")
+            result = await resonite_voice(operation, **params)
             return {
                 "success": bool(result.get("success")),
                 "data": result,

@@ -72,7 +72,7 @@ async def test_resonite_inventory_list_timeout():
 
         assert result["status"] == "warning"
         assert "Timed out" in result["message"]
-        assert len(result["items"]) > 0  # Should return mock data
+        assert result["items"] == []
 
 
 @pytest.mark.asyncio

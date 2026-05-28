@@ -76,19 +76,38 @@ uv run python scripts/fleet_e2e_smoke.py --live --strict
 
 ## Phase 5 — World Labs and Marble worlds (0.9.0)
 
+**Status: complete (v0.9.0)**
+
 | Item | Tool / module |
 |------|----------------|
-| Marble splat batch import | extend `resonite_import_worldlabs_url` |
-| Gazebo schematic overlays | inkscape fab art → resonite UI slots |
-| Robotics fab path visualization | staged DXF references |
+| Marble splat batch import | `resonite_fleet` → `import_worldlabs_batch` |
+| Marble staging scan | `resonite_fleet` → `list_marble_staging` |
+| Inkscape fab art overlays | `resonite_fleet` → `pull_inkscape_fab` |
+| Robotics DXF references | staged via `pull_inkscape_fab` → `marble/dxf` |
+| Marble pipeline | `resonite_fleet` → `run_marble_pipeline` |
+| Staging helpers | `utils/marble_staging.py` |
+| Agent Lab Marble tab | webapp `/agent-tools` |
+| Phase 5 tests | `tests/unit/test_phase5_tools.py` |
 
 ## Phase 6 — Social VR polish (1.0.0)
 
+**Status: complete (v1.0.0)**
+
 | Item | Tool / module |
 |------|----------------|
-| Inventory mock → live API | when Resonite exposes stable inventory HTTP |
-| Voice command hooks | local LLM + OSC macro portmanteau |
-| Strict fleet E2E in CI | inkscape → gimp → blender → resonite chain |
+| Inventory mock → live adapter | `utils/inventory_adapter.py`, `inventory_status` |
+| Voice command hooks | `resonite_voice` portmanteau (`list_macros`, `parse_command`, `send_macro`) |
+| Strict fleet E2E in CI | `utils/fleet_e2e_strict.py`, `--strict-fleet` smoke flag |
+| HTTP bridge voice tool | `POST /api/v1/tool` → `resonite_voice` |
+| Phase 6 tests | `tests/unit/test_phase6_tools.py` |
+
+### CI strict fleet smoke
+
+```powershell
+cd D:\Dev\repos\resonite-mcp
+$Env:PYTHONPATH = "src"
+uv run python scripts/fleet_e2e_smoke.py --strict-fleet --strict
+```
 
 ## Fleet pipeline role
 

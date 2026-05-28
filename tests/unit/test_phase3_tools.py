@@ -101,8 +101,8 @@ class TestApiV1ToolPhase3:
         response = api_client.get("/api/v1/health")
         assert response.status_code == 200
         body = response.json()
-        assert body["version"] == "0.8.0"
-        assert body["agent_lab_phase"] == 4
+        assert body["version"] == "1.0.0"
+        assert body["agent_lab_phase"] == 6
 
     def test_list_vrm_staging_via_api(self, api_client: TestClient, tmp_path: Path):
         models = tmp_path / "models"

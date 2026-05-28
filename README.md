@@ -510,7 +510,18 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 | 2 (0.6.0) | **done** | Webapp Agent Lab, live HTTP E2E |
 | 3 (0.7.0) | **done** | VRM/avatar pipeline, ProtoFlux presets |
 | 4 (0.8.0) | **done** | Prometheus, Docker, JSON fleet audit logs |
-| 5–6 | planned | Marble, 1.0 polish |
+| 5 (0.9.0) | **done** | Marble/World Labs batch import, fab art overlays |
+| 6 (1.0.0) | **done** | Inventory adapter, voice macros, strict fleet E2E CI |
+
+### v1.0.0 (2026-05-28) — Agent Lab Phase 6
+- **Inventory adapter**: mock/live/auto via `RESONITE_INVENTORY_MODE`, `inventory_status`
+- **Voice macros**: `resonite_voice` portmanteau + HTTP bridge
+- **Strict fleet E2E**: `fleet_e2e_strict.py`, CI `--strict-fleet`
+
+### v0.9.0 (2026-05-28) — Agent Lab Phase 5
+- **Marble pipeline**: `list_marble_staging`, `import_worldlabs_batch`, `run_marble_pipeline`
+- **Fab art pull**: inkscape DXF/SVG overlays via `pull_inkscape_fab`
+- **Agent Lab Marble + Voice tabs** on `/agent-tools`
 
 ### v0.8.0 (2026-05-28) — Agent Lab Phase 4
 - **Prometheus**: `/metrics`, `/api/metrics`, sidecar port 9079
@@ -524,7 +535,7 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 
 ### v0.6.0 (2026-05-28) — Agent Lab Phase 2
 - **Webapp `/agent-tools`**: runtime, fleet handoff, staging gallery, pipeline tabs
-- **`POST /api/v1/tool`**: HTTP bridge for `resonite_fleet` and `health_check`
+- **`POST /api/v1/tool`**: HTTP bridge for `resonite_fleet`, `resonite_voice`, and `health_check`
 - **Live E2E**: `scripts/fleet_e2e_smoke.py --live` inkscape → resonite HTTP chain
 
 ### v0.5.0 (2026-05-28) — Agent Lab Phase 1

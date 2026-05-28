@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "resonite-mcp"
-version = "0.8.0"
+version = "1.0.0"
 description = "Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting"
 authors = [
     {name = "Sandra Schipal", email = "sandra@example.com"}

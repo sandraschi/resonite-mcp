@@ -61,8 +61,8 @@ class TestMetricsRoutes:
         response = client.get("/api/v1/health")
         assert response.status_code == 200
         body = response.json()
-        assert body["version"] == "0.8.0"
-        assert body["agent_lab_phase"] == 4
+        assert body["version"] == "1.0.0"
+        assert body["agent_lab_phase"] == 6
         assert "metrics_enabled" in body
 
     def test_metrics_endpoint(self):

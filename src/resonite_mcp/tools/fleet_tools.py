@@ -32,6 +32,12 @@ from ..utils.protoflux_avatar_presets import get_protoflux_preset
 from ..utils.protoflux_avatar_presets import list_protoflux_presets
 
 from ..utils.fleet_audit import log_fleet_operation
+from ..utils.inventory_adapter import get_inventory_mode
+from ..utils.inventory_adapter import list_inventory_items
+from ..utils.marble_staging import DEFAULT_FAB_STAGING
+from ..utils.marble_staging import DEFAULT_MARBLE_STAGING
+from ..utils.marble_staging import DEFAULT_WORLDLABS_URL
+from ..utils.marble_staging import list_marble_files
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +54,13 @@ FleetOperation = Literal[
     "pull_blender_vrm",
     "pull_avatar_vrm",
     "list_protoflux_presets",
+    "list_marble_staging",
+    "import_worldlabs_batch",
+    "pull_inkscape_fab",
+    "run_marble_pipeline",
+    "inventory_status",
     "run_fleet_pipeline",
+    "run_strict_fleet_pipeline",
 ]
 
 
@@ -72,6 +84,10 @@ def _finalize(operation: str, start: float, payload: dict[str, Any]) -> dict[str
         "pull_avatar_vrm",
         "pull_blender_vrm",
         "run_fleet_pipeline",
+        "run_strict_fleet_pipeline",
+        "run_marble_pipeline",
+        "import_worldlabs_batch",
+        "pull_inkscape_fab",
         "import_blender_asset",
         "import_gimp_texture",
     }
@@ -223,6 +239,11 @@ async def resonite_fleet(
     skip_blender: bool = True,
     skip_gimp: bool = True,
     skip_vrm: bool = True,
+    skip_marble: bool = True,
+    marble_dir: str = "",
+    fab_staging_dir: str = "",
+    worldlabs_url: str = "",
+    manifest: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Cross-fleet asset pipeline into Resonite (inkscape UI, blender GLB, gimp textures)."""
     start = time.time()
@@ -233,6 +254,9 @@ async def resonite_fleet(
     burl = blender_url or DEFAULT_BLENDER_URL
     gurl = gimp_url or DEFAULT_GIMP_URL
     aurl = avatar_url or DEFAULT_AVATAR_URL
+    wurl = worldlabs_url or DEFAULT_WORLDLABS_URL
+    marble_stage = Path(marble_dir) if marble_dir else DEFAULT_MARBLE_STAGING
+    fab_stage = Path(fab_staging_dir) if fab_staging_dir else DEFAULT_FAB_STAGING
 
     try:
         if operation == "list_presets":
@@ -246,9 +270,12 @@ async def resonite_fleet(
                     "blender_url": burl,
                     "gimp_url": gurl,
                     "avatar_url": aurl,
+                    "worldlabs_url": wurl,
                     "default_staging": str(DEFAULT_FLEET_STAGING),
                     "inkscape_ui_staging": str(DEFAULT_INKSCAPE_UI_STAGING),
                     "vrm_staging": str(DEFAULT_VRM_STAGING),
+                    "marble_staging": str(DEFAULT_MARBLE_STAGING),
+                    "fab_staging": str(DEFAULT_FAB_STAGING),
                     "avatar_vrm_dir": str(DEFAULT_AVATAR_VRM_DIR),
                     "supported_ui_suffixes": [".svg", ".png", ".webp"],
                     "supported_model_suffixes": [".glb", ".gltf", ".vrm", ".fbx"],
@@ -515,6 +542,136 @@ async def resonite_fleet(
                 data=catalog,
             ).model_dump()
 
+        if operation == "list_marble_staging":
+            listing = list_marble_files(marble_stage, fab_stage, stage)
+            files = list(listing.get("files") or [])
+            return FleetResult(
+                success=True,
+                operation=operation,
+                message=f"Found {len(files)} marble/fab file(s)",
+                data={**listing, "scan_roots": [str(marble_stage), str(fab_stage), str(stage)]},
+                files=files,
+            ).model_dump()
+
+        if operation == "import_worldlabs_batch":
+            from .integrations import resonite_import_worldlabs_batch
+
+            entries: list[dict[str, Any]] = list(manifest or [])
+            if not entries:
+                local = list_marble_files(marble_stage)
+                for path in local.get("splats") or []:
+                    entries.append({"splat_url": f"file://{path}", "world_name": Path(path).stem})
+            if not entries:
+                return FleetResult(
+                    success=False,
+                    operation=operation,
+                    message="No manifest entries or staged splats",
+                    error="FileNotFoundError",
+                ).model_dump()
+            batch = await resonite_import_worldlabs_batch(entries, target_slot=target_slot)
+            success = batch.get("status") in {"ok", "partial"} and int(batch.get("imported") or 0) > 0
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message=f"Imported {batch.get('imported')}/{batch.get('total')} marble world(s)",
+                    data=batch,
+                    error="" if success else "WorldLabsBatchError",
+                ).model_dump(),
+            )
+
+        if operation == "pull_inkscape_fab":
+            inkscape_online = await check_http_health(iurl)
+            handoff: dict[str, Any] = {"inkscape_reachable": inkscape_online, "fab_staging": str(fab_stage)}
+            staged_files: list[str] = []
+
+            if inkscape_online:
+                fab_resp = await call_http_tool(
+                    iurl,
+                    "inkscape_fab_art",
+                    {
+                        "operation": "run_fab_pipeline",
+                        "input_dir": str(fab_stage / "svg_pack"),
+                        "staging_dir": str(fab_stage),
+                    },
+                )
+                handoff["inkscape_fab"] = fab_resp
+                if fab_resp.get("files"):
+                    staged_files.extend(list(fab_resp["files"]))
+
+            listing = list_marble_files(fab_stage, marble_stage)
+            for path in listing.get("dxf_refs") or []:
+                staged = await stage_file(source_path=path, staging_dir=marble_stage, subdir="dxf")
+                if staged.get("staged_path"):
+                    staged_files.append(str(staged["staged_path"]))
+
+            ui_pull = await resonite_fleet(
+                "pull_inkscape_ui",
+                staging_dir=str(stage),
+                input_dir=str(inkscape_stage),
+                inkscape_url=iurl,
+                target_slot=target_slot,
+                skip_inkscape=not inkscape_online,
+            )
+            success = bool(staged_files) or bool(ui_pull.get("success"))
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message="Inkscape fab pull complete" if success else "Fab pull partial",
+                    data={"handoff": handoff, "ui_pull": ui_pull.get("data"), "dxf_staged": staged_files},
+                    files=staged_files,
+                    error="" if success else "FabPullError",
+                ).model_dump(),
+            )
+
+        if operation == "run_marble_pipeline":
+            steps: list[dict[str, Any]] = []
+            fab = await resonite_fleet(
+                "pull_inkscape_fab",
+                staging_dir=str(stage),
+                input_dir=str(inkscape_stage),
+                marble_dir=str(marble_stage),
+                fab_staging_dir=str(fab_stage),
+                inkscape_url=iurl,
+                target_slot=target_slot,
+            )
+            steps.append({"name": "pull_inkscape_fab", "success": bool(fab.get("success")), "detail": fab})
+
+            batch = await resonite_fleet(
+                "import_worldlabs_batch",
+                marble_dir=str(marble_stage),
+                target_slot=target_slot,
+                manifest=manifest,
+            )
+            steps.append({"name": "import_worldlabs_batch", "success": bool(batch.get("success")), "detail": batch})
+
+            success = all(bool(s.get("success")) for s in steps)
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message="Marble pipeline complete" if success else "Marble pipeline partial",
+                    data={"steps": steps},
+                ).model_dump(),
+            )
+
+        if operation == "inventory_status":
+            mode = get_inventory_mode()
+            listing = await list_inventory_items(limit=25)
+            return FleetResult(
+                success=bool(listing.get("success")),
+                operation=operation,
+                message="Inventory adapter status",
+                data={"configured_mode": mode, **listing},
+            ).model_dump()
+
         if operation == "import_gimp_texture":
             if not texture_path:
                 return FleetResult(
@@ -604,6 +761,19 @@ async def resonite_fleet(
                     {"name": "import_vrm_batch", "success": bool(vrm_import.get("success")), "detail": vrm_import}
                 )
 
+            if not skip_marble:
+                marble = await resonite_fleet(
+                    "run_marble_pipeline",
+                    staging_dir=str(stage),
+                    input_dir=str(inkscape_stage),
+                    marble_dir=str(marble_stage),
+                    fab_staging_dir=str(fab_stage),
+                    inkscape_url=iurl,
+                    target_slot=target_slot,
+                    manifest=manifest,
+                )
+                steps.append({"name": "run_marble_pipeline", "success": bool(marble.get("success")), "detail": marble})
+
             success = all(bool(s.get("success")) for s in steps) if steps else False
             return _finalize(
                 operation,
@@ -613,6 +783,76 @@ async def resonite_fleet(
                     operation=operation,
                     message="Fleet pipeline complete" if success else "Fleet pipeline partial failure",
                     data={"steps": steps},
+                ).model_dump(),
+            )
+
+        if operation == "run_strict_fleet_pipeline":
+            steps: list[dict[str, Any]] = []
+
+            pull = await resonite_fleet(
+                "pull_inkscape_ui",
+                staging_dir=str(stage),
+                input_dir=str(inkscape_stage),
+                inkscape_url=iurl,
+                target_slot=target_slot,
+                skip_inkscape=skip_inkscape,
+            )
+            steps.append({"name": "pull_inkscape_ui", "success": bool(pull.get("success")), "detail": pull})
+
+            if texture_path:
+                gimp = await resonite_fleet(
+                    "import_gimp_texture",
+                    texture_path=texture_path,
+                    target_slot=target_slot,
+                    gimp_url=gurl,
+                )
+                steps.append({"name": "import_gimp_texture", "success": bool(gimp.get("success")), "detail": gimp})
+
+            if object_name and not skip_blender:
+                blender = await resonite_fleet("import_blender_asset", object_name=object_name, blender_url=burl)
+                steps.append(
+                    {"name": "import_blender_asset", "success": bool(blender.get("success")), "detail": blender}
+                )
+
+            if not skip_vrm:
+                vrm_import = await resonite_fleet(
+                    "import_vrm_batch",
+                    staging_dir=str(stage),
+                    vrm_dir=str(vrm_stage),
+                    target_slot=target_slot,
+                )
+                steps.append(
+                    {"name": "import_vrm_batch", "success": bool(vrm_import.get("success")), "detail": vrm_import}
+                )
+
+            if not skip_marble:
+                marble = await resonite_fleet(
+                    "import_worldlabs_batch",
+                    marble_dir=str(marble_stage),
+                    target_slot=target_slot,
+                    manifest=manifest,
+                )
+                steps.append(
+                    {"name": "import_worldlabs_batch", "success": bool(marble.get("success")), "detail": marble}
+                )
+
+            inventory = await resonite_fleet("inventory_status")
+            steps.append({"name": "inventory_status", "success": bool(inventory.get("success")), "detail": inventory})
+
+            from .voice_tools import resonite_voice
+
+            voice = await resonite_voice("parse_command", command_text="wave hello")
+            steps.append({"name": "voice_parse_command", "success": bool(voice.get("success")), "detail": voice})
+
+            success = all(bool(s.get("success")) for s in steps) if steps else False
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message="Strict fleet pipeline complete" if success else "Strict fleet pipeline partial failure",
+                    data={"steps": steps, "chain": "inkscape->gimp->blender->resonite+marble+inventory+voice"},
                 ).model_dump(),
             )
 

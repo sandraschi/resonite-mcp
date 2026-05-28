@@ -106,6 +106,37 @@ async def resonite_import_worldlabs_url(
     return results
 
 
+async def resonite_import_worldlabs_batch(
+    manifest: list[dict[str, Any]],
+    *,
+    target_slot: str = "root",
+) -> dict[str, Any]:
+    """Import multiple World Labs / Marble splats from a manifest."""
+    imports: list[dict[str, Any]] = []
+    ok = 0
+    for entry in manifest:
+        splat_url = str(entry.get("splat_url") or entry.get("url") or "")
+        if not splat_url:
+            imports.append({"success": False, "error": "missing splat_url", "entry": entry})
+            continue
+        result = await resonite_import_worldlabs_url(
+            splat_url=splat_url,
+            mesh_url=str(entry.get("mesh_url") or ""),
+            world_name=str(entry.get("world_name") or entry.get("name") or "Marble_World"),
+            target_slot=str(entry.get("target_slot") or target_slot),
+        )
+        success = result.get("status") == "ok"
+        imports.append({"success": success, "entry": entry, "detail": result})
+        if success:
+            ok += 1
+    return {
+        "status": "ok" if ok == len(manifest) and manifest else ("partial" if ok else "error"),
+        "imported": ok,
+        "total": len(manifest),
+        "imports": imports,
+    }
+
+
 async def resonite_import_blender(object_name: str, export_format: str = "glb") -> dict[str, Any]:
     """Export an object from Blender and import it into Resonite.
 

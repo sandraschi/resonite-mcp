@@ -28,6 +28,26 @@ async def main() -> int:
         return 1
     print(f"OK protoflux presets: {pf.get('data', {}).get('count')}")
 
+    marble = await resonite_fleet("list_marble_staging")
+    if not marble.get("success"):
+        print(f"FAIL list_marble_staging: {marble}")
+        return 1
+    print("OK list_marble_staging")
+
+    inventory = await resonite_fleet("inventory_status")
+    if not inventory.get("success"):
+        print(f"FAIL inventory_status: {inventory}")
+        return 1
+    print(f"OK inventory_status mode={inventory.get('data', {}).get('mode')}")
+
+    from resonite_mcp.tools.voice_tools import resonite_voice
+
+    voice = await resonite_voice("list_macros")
+    if not voice.get("success"):
+        print(f"FAIL resonite_voice list_macros: {voice}")
+        return 1
+    print("OK resonite_voice list_macros")
+
     paths = {getattr(r, "path", None) for r in app.routes}
     for route in ("/api/metrics", "/metrics", "/api/v1/health"):
         if route not in paths:
