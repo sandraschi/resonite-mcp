@@ -102,7 +102,7 @@ export function AgentTools() {
             Agent Lab
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            Phase 1–3: execution mode, fleet handoff, VRM/avatar pipeline, ProtoFlux presets.
+            Phase 1–4: execution mode, fleet handoff, VRM pipeline, Prometheus metrics.
           </p>
         </div>
         <button

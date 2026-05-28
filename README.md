@@ -509,7 +509,13 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 | 1 (0.5.0) | **done** | `resonite_fleet` handoff, execution_mode, offline E2E |
 | 2 (0.6.0) | **done** | Webapp Agent Lab, live HTTP E2E |
 | 3 (0.7.0) | **done** | VRM/avatar pipeline, ProtoFlux presets |
-| 4–6 | planned | Docker, Marble, 1.0 polish |
+| 4 (0.8.0) | **done** | Prometheus, Docker, JSON fleet audit logs |
+| 5–6 | planned | Marble, 1.0 polish |
+
+### v0.8.0 (2026-05-28) — Agent Lab Phase 4
+- **Prometheus**: `/metrics`, `/api/metrics`, sidecar port 9079
+- **Docker**: GHCR image, compose monitoring profile (9093/3003/3103)
+- **JSON fleet audit logs** for import operations (Loki-ready)
 
 ### v0.7.0 (2026-05-28) — Agent Lab Phase 3
 - **VRM fleet ops**: `list_vrm_staging`, `import_vrm_batch`, `pull_blender_vrm`, `pull_avatar_vrm`

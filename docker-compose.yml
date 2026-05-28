@@ -1,0 +1,110 @@
+# resonite-mcp Docker + optional monitoring stack.
+#
+# MCP only:
+#   docker compose up resonite-mcp
+#
+# MCP + Prometheus/Grafana/Loki:
+#   docker compose --profile monitoring up -d
+#
+# Resonite + ResoniteLink run on the HOST; container reaches via host.docker.internal.
+
+services:
+  resonite-mcp:
+    build:
+      context: .
+      target: production
+    image: ghcr.io/sandraschi/resonite-mcp:latest
+    container_name: resonite-mcp
+    ports:
+      - "10979:10979"
+      - "9079:9079"
+    environment:
+      MCP_HOST: 0.0.0.0
+      MCP_PORT: "10979"
+      RESONITE_MCP_METRICS_ENABLED: "true"
+      PROMETHEUS_PORT: "9079"
+      RESONITE_MCP_LOG_FORMAT: json
+      RESONITE_MCP_LOG_LEVEL: INFO
+      RESONITE_MCP_LOG_DIR: /app/logs
+      RESONITE_LINK_HOST: host.docker.internal
+      RESONITE_LINK_PORT: "4242"
+    volumes:
+      - resonite-mcp-logs:/app/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    labels:
+      promtail.job: resonite-mcp
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:10979/api/health', timeout=5)\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  prometheus:
+    profiles: ["monitoring"]
+    image: prom/prometheus:v3.11.3
+    container_name: resonite-mcp-prometheus
+    ports:
+      - "9093:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    restart: unless-stopped
+
+  loki:
+    profiles: ["monitoring"]
+    image: grafana/loki:3.7.1
+    container_name: resonite-mcp-loki
+    ports:
+      - "3103:3100"
+    volumes:
+      - ./monitoring/loki/loki.yml:/etc/loki/local-config.yaml:ro
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  promtail:
+    profiles: ["monitoring"]
+    image: grafana/promtail:3.7.1
+    container_name: resonite-mcp-promtail
+    volumes:
+      - ./monitoring/promtail/promtail.yml:/etc/promtail/config.yml:ro
+      - resonite-mcp-logs:/app/logs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+    restart: unless-stopped
+
+  grafana:
+    profiles: ["monitoring"]
+    image: grafana/grafana:13.0.1
+    container_name: resonite-mcp-grafana
+    ports:
+      - "3003:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+      - loki
+    restart: unless-stopped
+
+volumes:
+  resonite-mcp-logs:
+  prometheus-data:
+  loki-data:
+  grafana-data:
+
+networks:
+  default:
+    name: resonite-mcp-net

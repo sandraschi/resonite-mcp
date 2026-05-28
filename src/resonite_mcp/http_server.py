@@ -16,7 +16,24 @@ import subprocess
 
 # Functions will be imported inside endpoints to avoid tool wrapping
 
-# Configure logging
+# Configure logging and telemetry
+import os
+
+from .utils.structured_logging import configure_file_logging
+from .utils.structured_logging import configure_json_logging_if_enabled
+from .utils.telemetry import init_metrics
+from .utils.telemetry import metrics_enabled
+from .utils.telemetry import register_metrics_routes
+from .utils.telemetry import start_metrics_server
+
+configure_json_logging_if_enabled()
+if os.getenv("RESONITE_MCP_LOG_DIR"):
+    configure_file_logging()
+
+init_metrics()
+if metrics_enabled():
+    start_metrics_server()
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -24,10 +41,12 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Resonite MCP Server",
     description="HTTP API for Resonite social VR platform control",
-    version="0.7.0",
+    version="0.8.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+register_metrics_routes(app)
 
 # Add CORS middleware
 app.add_middleware(
@@ -181,8 +200,9 @@ async def health_check():
     return {
         "status": "ok",
         "server": "resonite-mcp-sota",
-        "version": "0.7.0",
-        "agent_lab_phase": 3,
+        "version": "0.8.0",
+        "agent_lab_phase": 4,
+        "metrics_enabled": metrics_enabled(),
         "capabilities": [
             "osc_communication",
             "avatar_control",

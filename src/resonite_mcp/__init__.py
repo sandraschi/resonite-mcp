@@ -11,7 +11,7 @@ The server supports both MCP stdio protocol for Claude Desktop integration
 and FastAPI HTTP interface for web-based control.
 """
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __author__ = "Sandra Schipal"
 __email__ = "sandra@example.com"
 

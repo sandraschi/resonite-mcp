@@ -61,11 +61,18 @@ uv run python scripts/fleet_e2e_smoke.py --live --strict
 
 ## Phase 4 — Telemetry, Docker, monitoring (0.8.0)
 
+**Status: complete (v0.8.0)**
+
 | Item | Tool / module |
 |------|----------------|
-| Prometheus metrics | HTTP `/metrics` |
-| Docker + GHCR image | headless ResoniteLink sidecar pattern |
-| Structured JSON logs | fleet import audit trail |
+| Prometheus metrics | `GET /metrics`, `GET /api/metrics`, sidecar `:9079` |
+| Tool + fleet counters | `utils/telemetry.py` |
+| Structured JSON logs | `utils/structured_logging.py` |
+| Fleet import audit trail | `utils/fleet_audit.py`, `fleet_tools._finalize` |
+| Docker + GHCR | `Dockerfile`, `docker-compose.yml` |
+| Monitoring stack | `monitoring/` (Prometheus 9093, Grafana 3003, Loki 3103) |
+| Smoke test | `scripts/smoke_test.py` |
+| Phase 4 tests | `tests/unit/test_phase4_tools.py` |
 
 ## Phase 5 — World Labs and Marble worlds (0.9.0)
 

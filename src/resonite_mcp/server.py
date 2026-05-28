@@ -77,7 +77,7 @@ _is_stdio_mode = (
 
 server = FastMCP(
     name="Resonite MCP",
-    version="0.7.0",
+    version="0.8.0",
     instructions="""You are a Resonite social VR platform assistant. You can help users control avatars, manage worlds, execute ProtoFlux scripts, and handle social interactions through natural language commands.
 
 Key capabilities:
@@ -220,8 +220,8 @@ async def health_check() -> dict[str, Any]:
     return {
         "status": "success",
         "message": "Resonite MCP server is healthy",
-        "version": "0.7.0",
-        "agent_lab_phase": 3,
+        "version": "0.8.0",
+        "agent_lab_phase": 4,
         "plugins_loaded": list(plugin_manager.loaded_plugins.keys())
         if plugin_manager
         else [],
@@ -368,6 +368,25 @@ async def initialize_server():
         logger.warning("Plugin system not available - running without plugins")
 
     logger.info("Resonite MCP server initialization complete")
+
+    try:
+        from .utils.telemetry import (
+            init_metrics,
+            install_tool_call_wrapper,
+            metrics_enabled,
+            register_metrics_routes,
+            start_metrics_server,
+            update_runtime_gauges,
+        )
+
+        init_metrics()
+        install_tool_call_wrapper(server)
+        register_metrics_routes(server)
+        if metrics_enabled():
+            start_metrics_server()
+        update_runtime_gauges()
+    except Exception as exc:
+        logger.warning("Telemetry setup failed: %s", exc)
 
 
 if __name__ == "__main__":

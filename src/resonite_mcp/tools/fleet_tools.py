@@ -31,6 +31,8 @@ from ..utils.fleet_staging import stage_file
 from ..utils.protoflux_avatar_presets import get_protoflux_preset
 from ..utils.protoflux_avatar_presets import list_protoflux_presets
 
+from ..utils.fleet_audit import log_fleet_operation
+
 logger = logging.getLogger(__name__)
 
 FleetOperation = Literal[
@@ -58,6 +60,31 @@ class FleetResult(BaseModel):
     files: list[str] = Field(default_factory=list)
     execution_time_ms: float = 0.0
     error: str = ""
+
+
+def _finalize(operation: str, start: float, payload: dict[str, Any]) -> dict[str, Any]:
+    elapsed = (time.time() - start) * 1000
+    payload["execution_time_ms"] = elapsed
+    audit_ops = {
+        "import_staged_assets",
+        "import_vrm_batch",
+        "pull_inkscape_ui",
+        "pull_avatar_vrm",
+        "pull_blender_vrm",
+        "run_fleet_pipeline",
+        "import_blender_asset",
+        "import_gimp_texture",
+    }
+    if operation in audit_ops:
+        data = payload.get("data") if isinstance(payload.get("data"), dict) else {}
+        log_fleet_operation(
+            operation,
+            status="ok" if payload.get("success") else "error",
+            duration_ms=elapsed,
+            imported=data.get("imported"),
+            total=data.get("total"),
+        )
+    return payload
 
 
 async def _import_local_file(path: str, *, target_slot: str = "root") -> dict[str, Any]:
@@ -105,6 +132,13 @@ async def _import_local_file(path: str, *, target_slot: str = "root") -> dict[st
 
     if not result.get("success"):
         result["error"] = result.get("error") or "Import failed (ResoniteLink and OSC)"
+    log_fleet_operation(
+        "import_local_file",
+        status="ok" if result.get("success") else "error",
+        duration_ms=0.0,
+        path=path,
+        target_slot=target_slot,
+    )
     return result
 
 
@@ -273,14 +307,18 @@ async def resonite_fleet(
                     ok += 1
 
             success = ok == len(ui_files)
-            return FleetResult(
-                success=success,
-                operation=operation,
-                message=f"Imported {ok}/{len(ui_files)} staged asset(s)",
-                data={"imports": imports, "imported": ok, "total": len(ui_files)},
-                files=[p for p in ui_files if Path(p).is_file()],
-                error="" if success else "PartialImport",
-            ).model_dump()
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message=f"Imported {ok}/{len(ui_files)} staged asset(s)",
+                    data={"imports": imports, "imported": ok, "total": len(ui_files)},
+                    files=[p for p in ui_files if Path(p).is_file()],
+                    error="" if success else "PartialImport",
+                ).model_dump(),
+            )
 
         if operation == "pull_inkscape_ui":
             staged_local = list_staging_files(inkscape_stage)
@@ -379,14 +417,18 @@ async def resonite_fleet(
                     ok += 1
 
             success = ok == len(files)
-            return FleetResult(
-                success=success,
-                operation=operation,
-                message=f"Imported {ok}/{len(files)} VRM/model file(s)",
-                data={"imports": imports, "imported": ok, "total": len(files)},
-                files=files,
-                error="" if success else "PartialImport",
-            ).model_dump()
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message=f"Imported {ok}/{len(files)} VRM/model file(s)",
+                    data={"imports": imports, "imported": ok, "total": len(files)},
+                    files=files,
+                    error="" if success else "PartialImport",
+                ).model_dump(),
+            )
 
         if operation == "pull_blender_vrm":
             if not object_name:
@@ -563,12 +605,16 @@ async def resonite_fleet(
                 )
 
             success = all(bool(s.get("success")) for s in steps) if steps else False
-            return FleetResult(
-                success=success,
-                operation=operation,
-                message="Fleet pipeline complete" if success else "Fleet pipeline partial failure",
-                data={"steps": steps},
-            ).model_dump()
+            return _finalize(
+                operation,
+                start,
+                FleetResult(
+                    success=success,
+                    operation=operation,
+                    message="Fleet pipeline complete" if success else "Fleet pipeline partial failure",
+                    data={"steps": steps},
+                ).model_dump(),
+            )
 
         return FleetResult(
             success=False,
