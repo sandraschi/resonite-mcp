@@ -1,9 +1,9 @@
 /**
  * MCP API client for Resonite MCP webapp Agent Lab.
- * Backend: POST /api/v1/tool on port 10979 (proxied via Vite /api).
+ * Backend: POST /api/v1/tool on port 10979 (proxied via Vite /api in dev).
  */
 
-const API_BASE = "/api";
+import { API_BASE } from "@/lib/api-base";
 
 export async function getBackendHealth(): Promise<{ ok: boolean; error?: string }> {
   try {

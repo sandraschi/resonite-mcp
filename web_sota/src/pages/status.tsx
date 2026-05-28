@@ -3,6 +3,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { apiUrl } from '@/lib/api-base';
 
 interface Session {
     id: string;
@@ -11,19 +12,19 @@ interface Session {
 }
 
 async function fetchPlatform() {
-    const r = await fetch('/api/platform');
+    const r = await fetch(apiUrl('/api/platform'));
     if (!r.ok) throw new Error('Failed to fetch platform');
     return r.json();
 }
 
 async function fetchSessions() {
-    const r = await fetch('/api/sessions');
+    const r = await fetch(apiUrl('/api/sessions'));
     if (!r.ok) throw new Error('Failed to fetch sessions');
     return r.json();
 }
 
 async function startResoniteAPI() {
-    const r = await fetch('/api/start', { method: 'POST' });
+    const r = await fetch(apiUrl('/api/start'), { method: 'POST' });
     if (!r.ok) throw new Error('Failed to start Resonite');
     return r.json();
 }

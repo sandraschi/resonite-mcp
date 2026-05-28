@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/common/utils';
+import { apiUrl } from '@/lib/api-base';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -74,31 +75,31 @@ function depthClass(d: number) {
 // ---------------------------------------------------------------------------
 
 async function fetchRLStatus(): Promise<RLStatus> {
-    const r = await fetch('/rl/status');
+    const r = await fetch(apiUrl('/rl/status'));
     if (!r.ok) throw new Error('Status check failed');
     return r.json() as Promise<RLStatus>;
 }
 
 async function fetchRootChildren(): Promise<{ slot_id: string; children: SlotChild[] }> {
-    const r = await fetch('/rl/world/children/Root');
+    const r = await fetch(apiUrl('/rl/world/children/Root'));
     if (!r.ok) throw new Error(await r.text());
     return r.json() as Promise<{ slot_id: string; children: SlotChild[] }>;
 }
 
 async function fetchChildren(refId: string): Promise<{ slot_id: string; children: SlotChild[] }> {
-    const r = await fetch(`/rl/world/children/${refId}`);
+    const r = await fetch(apiUrl(`/rl/world/children/${refId}`));
     if (!r.ok) throw new Error(await r.text());
     return r.json() as Promise<{ slot_id: string; children: SlotChild[] }>;
 }
 
 async function fetchNode(refId: string): Promise<SlotNode> {
-    const r = await fetch(`/rl/world/node/${refId}`);
+    const r = await fetch(apiUrl(`/rl/world/node/${refId}`));
     if (!r.ok) throw new Error(await r.text());
     return r.json() as Promise<SlotNode>;
 }
 
 async function fetchAssets(category: AssetCategory): Promise<AssetListResponse> {
-    const r = await fetch(`/rl/world/asset-files?category=${category}`);
+    const r = await fetch(apiUrl(`/rl/world/asset-files?category=${category}`));
     if (!r.ok) throw new Error('Asset list failed');
     return r.json() as Promise<AssetListResponse>;
 }
@@ -108,7 +109,7 @@ async function writeField(payload: {
     field_path: string;
     value: unknown;
 }) {
-    const r = await fetch('/rl/world/write-field', {
+    const r = await fetch(apiUrl('/rl/world/write-field'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -118,7 +119,7 @@ async function writeField(payload: {
 }
 
 async function injectFile(formData: FormData) {
-    const r = await fetch('/rl/world/inject-file', {
+    const r = await fetch(apiUrl('/rl/world/inject-file'), {
         method: 'POST',
         body: formData,
     });
@@ -131,7 +132,7 @@ async function importAsset(payload: {
     target_slot: string;
     position: { x: number; y: number; z: number };
 }) {
-    const r = await fetch('/rl/world/import-vrm', {
+    const r = await fetch(apiUrl('/rl/world/import-vrm'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

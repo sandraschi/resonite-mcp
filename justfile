@@ -87,10 +87,41 @@ build-fe:
 build-zed:
     ./build.ps1
 
-# Sync src into mcp-server and pack MCPB bundle -> dist/
+# Build MCPB bundle
 mcpb-pack:
     uv run python tools/sync_mcpb_src.py
     uv run python tools/pack_mcpb.py
+
+# PyInstaller sidecar for Tauri -> native/binaries/
+build-sidecar:
+    pwsh -NoLogo -File '{{justfile_directory()}}\native\build-sidecar.ps1'
+
+# Tauri desktop app (requires sidecar for release)
+build-native:
+    pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
+    Set-Location '{{justfile_directory()}}\native'
+    $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+    npm install
+    npx @tauri-apps/cli build
+
+# Full release: web_sota + sidecar + NSIS installer
+build-all:
+    pwsh -NoLogo -File '{{justfile_directory()}}\native\build.ps1'
+
+# Tauri dev (start backend separately or build-sidecar first)
+tauri-dev:
+    pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
+    Set-Location '{{justfile_directory()}}\native'
+    $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+    npm install
+    npx @tauri-apps/cli dev
+
+build-native-debug:
+    pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
+    Set-Location '{{justfile_directory()}}\native'
+    $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
+    npm install
+    npx @tauri-apps/cli build --debug
 
 # ── Cleanup ────────────────────────────────────────────────────────────────────
 

@@ -19,6 +19,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { apiUrl } from '@/lib/api-base';
 
 interface OSCServerStats {
     port: number;
@@ -34,13 +35,13 @@ interface OSCMessage {
 }
 
 async function fetchOSCStatus() {
-    const resp = await fetch('/api/osc/status');
+    const resp = await fetch(apiUrl('/api/osc/status'));
     if (!resp.ok) throw new Error('Failed to fetch OSC status');
     return resp.json();
 }
 
 async function fetchReceivedMessages(port: number) {
-    const resp = await fetch(`/api/osc/received?port=${port}&limit=50`);
+    const resp = await fetch(apiUrl(`/api/osc/received?port=${port}&limit=50`));
     if (!resp.ok) throw new Error('Failed to fetch messages');
     return resp.json();
 }
@@ -75,7 +76,7 @@ export function OSCPage() {
 
     const sendMutation = useMutation({
         mutationFn: async (payload: { host: string; port: number; address: string; values: (string | number | boolean)[] }) => {
-            const resp = await fetch('/api/osc/send', {
+            const resp = await fetch(apiUrl('/api/osc/send'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -87,7 +88,7 @@ export function OSCPage() {
 
     const startMutation = useMutation({
         mutationFn: async (payload: { port: number; address: string }) => {
-            const resp = await fetch('/api/osc/server/start', {
+            const resp = await fetch(apiUrl('/api/osc/server/start'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -100,7 +101,7 @@ export function OSCPage() {
 
     const stopMutation = useMutation({
         mutationFn: async (port: number) => {
-            const resp = await fetch('/api/osc/server/stop', {
+            const resp = await fetch(apiUrl('/api/osc/server/stop'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ port }),
@@ -116,7 +117,7 @@ export function OSCPage() {
 
     const clearMutation = useMutation({
         mutationFn: async (port: number) => {
-            const resp = await fetch(`/api/osc/clear?port=${port}`, {
+            const resp = await fetch(apiUrl(`/api/osc/clear?port=${port}`), {
                 method: 'POST',
             });
             if (!resp.ok) throw new Error('Clear failed');

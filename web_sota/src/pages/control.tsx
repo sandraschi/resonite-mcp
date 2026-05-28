@@ -2,8 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import nipplejs from 'nipplejs';
 import { Gamepad2, Eye, EyeOff, Info } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-
-const API_BASE = '';
+import { apiUrl } from '@/lib/api-base';
 
 export function Control() {
     const [viewType, setViewType] = useState<'first-person' | 'third-person'>('first-person');
@@ -13,7 +12,7 @@ export function Control() {
 
     const moveMutation = useMutation({
         mutationFn: async (move: { x: number; y: number }) => {
-            const resp = await fetch(`${API_BASE}/api/control/move`, {
+            const resp = await fetch(apiUrl('/api/control/move'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(move),
@@ -24,7 +23,7 @@ export function Control() {
 
     const viewMutation = useMutation({
         mutationFn: async (type: string) => {
-            const resp = await fetch(`${API_BASE}/api/control/view`, {
+            const resp = await fetch(apiUrl('/api/control/view'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ view_type: type }),

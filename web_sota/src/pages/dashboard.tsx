@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, Shield, Network, Cpu, HardDrive, RefreshCcw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { apiUrl } from "@/lib/api-base";
 
 interface Status {
     authenticated: boolean;
@@ -34,9 +35,9 @@ export function Dashboard() {
         setLoading(true);
         try {
             const [statusRes, llmsRes, statsRes] = await Promise.all([
-                fetch('/api/status'),
-                fetch('/api/llm-discovery'),
-                fetch('/api/stats')
+                fetch(apiUrl("/api/status")),
+                fetch(apiUrl("/api/llm-discovery")),
+                fetch(apiUrl("/api/stats")),
             ]);
 
             const [statusData, llmsData, statsData] = await Promise.all([
@@ -102,7 +103,7 @@ export function Dashboard() {
                             variant="secondary"
                             size="sm"
                             onClick={async () => {
-                                await fetch('/api/resonite/launch', { method: 'POST' });
+                                await fetch(apiUrl("/api/resonite/launch"), { method: "POST" });
                                 fetchData();
                             }}
                             className="bg-orange-500 text-white hover:bg-orange-400 font-bold"

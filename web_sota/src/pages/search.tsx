@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search as SearchIcon, FileText, ExternalLink, Loader2 } from "lucide-react";
+import { apiUrl } from "@/lib/api-base";
 
 interface SearchResult {
     text: string;
@@ -25,7 +26,7 @@ export function SearchPage() {
             // In a real SOTA setup, we'd use the MCP tool, but for the webapp 
             // we expose a dedicated endpoint or wrap the tool call.
             // For now, we mock the search behavior through a direct API feel.
-            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const response = await fetch(apiUrl(`/api/search?q=${encodeURIComponent(query)}`));
             const data = await response.json();
             setResults(data.results || []);
         } catch (error) {

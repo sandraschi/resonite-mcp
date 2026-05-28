@@ -1,6 +1,7 @@
 import { Terminal, Code2, Play, Zap, Save, History, ChevronRight, Cpu, BookOpen, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { apiUrl } from '@/lib/api-base';
 
 interface ScriptResult {
     status: 'success' | 'error';
@@ -14,7 +15,7 @@ export function ScriptingPage() {
 
     const executeMutation = useMutation({
         mutationFn: async (code: string) => {
-            const r = await fetch('/api/resonite/scripting/execute', {
+            const r = await fetch(apiUrl('/api/resonite/scripting/execute'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ script: code })

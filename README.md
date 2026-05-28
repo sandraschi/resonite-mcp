@@ -546,6 +546,11 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 - Claude Desktop bundle: `just mcpb-pack` → `dist/resonite-mcp-v1.0.0.mcpb`
 - See [docs/MCPB.md](docs/MCPB.md)
 
+### Native desktop (Tauri 2.0)
+- Agent Lab installer: `just build-all` → NSIS setup.exe
+- Dev: `just tauri-dev` (+ `just start-be` in another terminal)
+- See [docs/NATIVE.md](docs/NATIVE.md)
+
 ### v0.4.0 (2026-03-08) — Presence Awareness & Onboarding
 - [x] Resonite installation detection (Registry/Filesystem)
 - [x] Process monitoring and launch orchestration

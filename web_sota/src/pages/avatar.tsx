@@ -2,6 +2,7 @@ import { User, Sliders, RefreshCw, Zap, Camera, Move, Wand2, Activity, Eye, Shie
 import { useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { cn } from '../common/utils';
+import { apiUrl } from '@/lib/api-base';
 
 interface AvatarInfo {
     name?: string;
@@ -17,7 +18,7 @@ export function AvatarPage() {
     const { data: avatarInfo, isLoading, refetch, isRefetching } = useQuery({
         queryKey: ['avatar'],
         queryFn: async (): Promise<AvatarInfo> => {
-            const r = await fetch('/api/resonite/avatar/info');
+            const r = await fetch(apiUrl('/api/resonite/avatar/info'));
             if (!r.ok) {
                 // Mock data for simulation if API fails
                 return {
@@ -40,7 +41,7 @@ export function AvatarPage() {
 
     const setParamMutation = useMutation({
         mutationFn: async ({ param, value }: { param: string, value: string | number | boolean }) => {
-            const r = await fetch('/api/resonite/avatar/set_parameter', {
+            const r = await fetch(apiUrl('/api/resonite/avatar/set_parameter'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ parameter: param, value })
@@ -52,14 +53,14 @@ export function AvatarPage() {
 
     const resetPoseMutation = useMutation({
         mutationFn: async () => {
-            const r = await fetch('/api/resonite/avatar/reset_pose', { method: 'POST' });
+            const r = await fetch(apiUrl('/api/resonite/avatar/reset_pose'), { method: 'POST' });
             return r.json();
         }
     });
 
     const locomotionMutation = useMutation({
         mutationFn: async (type: string) => {
-            const r = await fetch('/api/resonite/avatar/locomotion', {
+            const r = await fetch(apiUrl('/api/resonite/avatar/locomotion'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type })
@@ -70,7 +71,7 @@ export function AvatarPage() {
 
     const killSequencesMutation = useMutation({
         mutationFn: async () => {
-            const r = await fetch('/api/resonite/avatar/kill_sequences', { method: 'POST' });
+            const r = await fetch(apiUrl('/api/resonite/avatar/kill_sequences'), { method: 'POST' });
             return r.json();
         }
     });

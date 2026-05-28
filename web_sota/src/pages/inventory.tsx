@@ -3,6 +3,7 @@ import { Package, Search, Folder, File, ChevronRight, LayoutGrid, List as ListIc
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cn } from '../common/utils';
 import { Card, CardContent } from "@/components/ui/card";
+import { apiUrl } from '@/lib/api-base';
 
 interface Record {
     id: string;
@@ -15,7 +16,7 @@ interface Record {
 
 async function fetchRecords(path: string): Promise<Record[]> {
     const params = new URLSearchParams({ path: path || 'Inventory' });
-    const r = await fetch(`/api/records?${params}`);
+    const r = await fetch(apiUrl(`/api/records?${params}`));
     if (!r.ok) {
         if (r.status === 401) throw new Error('AUTH_REQUIRED');
         throw new Error(`Failed: ${r.status}`);
@@ -38,7 +39,7 @@ export function Inventory() {
 
     const spawnMutation = useMutation({
         mutationFn: async (record: Record) => {
-            const r = await fetch('/api/resonite/inventory/spawn', {
+            const r = await fetch(apiUrl('/api/resonite/inventory/spawn'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_path: record.path || `${path}/${record.name}` })
@@ -50,7 +51,7 @@ export function Inventory() {
 
     const deleteMutation = useMutation({
         mutationFn: async (record: Record) => {
-            const r = await fetch('/api/resonite/inventory/delete', {
+            const r = await fetch(apiUrl('/api/resonite/inventory/delete'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_path: record.path || `${path}/${record.name}` })

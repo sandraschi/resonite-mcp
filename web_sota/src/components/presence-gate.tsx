@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Play, Download, ExternalLink, AlertTriangle, Loader2 } from 'lucide-react';
+import { apiUrl } from '@/lib/api-base';
 
 interface PresenceStatus {
     resonite_installed: boolean;
@@ -20,7 +21,7 @@ export function PresenceGate({ children }: PresenceGateProps) {
 
     const fetchStatus = async () => {
         try {
-            const res = await fetch('/api/status');
+            const res = await fetch(apiUrl("/api/status"));
             const data = await res.json();
             setStatus({
                 resonite_installed: data.resonite_installed,
@@ -44,7 +45,7 @@ export function PresenceGate({ children }: PresenceGateProps) {
     const handleLaunch = async () => {
         setLaunching(true);
         try {
-            await fetch('/api/resonite/launch', { method: 'POST' });
+            await fetch(apiUrl("/api/resonite/launch"), { method: "POST" });
             // Keep launching state for a bit to show feedback
             setTimeout(() => setLaunching(false), 3000);
         } catch (error) {

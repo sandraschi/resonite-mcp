@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Users, Search, MessageCircle, Globe2, UserCheck, UserX } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/common/utils';
+import { apiUrl } from '@/lib/api-base';
 
 interface Contact {
     id: string;
@@ -20,7 +21,7 @@ interface Contact {
 }
 
 async function fetchContacts(): Promise<Contact[]> {
-    const r = await fetch('/api/contacts');
+    const r = await fetch(apiUrl('/api/contacts'));
     if (!r.ok) throw new Error(`${r.status}: ${r.statusText}`);
     return r.json() as Promise<Contact[]>;
 }

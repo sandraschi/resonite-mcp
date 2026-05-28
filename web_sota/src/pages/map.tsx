@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Navigation, Users, RefreshCw, Layers, ZoomIn, ZoomOut } from 'lucide-react';
 import { cn } from '@/common/utils';
+import { apiUrl } from '@/lib/api-base';
 
 interface Node {
     id: string;
@@ -10,14 +11,13 @@ interface Node {
     type: 'avatar' | 'object';
 }
 
-const API_BASE = '';
 
 export function Map() {
     const [zoom, setZoom] = useState(1.0);
     const { data, isLoading, refetch, isFetching } = useQuery({
         queryKey: ['world-map'],
         queryFn: async () => {
-            const resp = await fetch(`${API_BASE}/api/world/map-data`);
+            const resp = await fetch(apiUrl('/api/world/map-data'));
             return resp.json();
         },
         refetchInterval: 3000, // Poll every 3 seconds

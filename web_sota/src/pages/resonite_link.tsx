@@ -6,17 +6,18 @@ import {
     ChevronRight, ChevronDown, Send, Eye, Loader2, AlertTriangle, CheckCircle2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { apiUrl } from '@/lib/api-base';
 
 // ---- API helpers -------------------------------------------------------
 
 async function fetchRLStatus() {
-    const r = await fetch('/rl/status');
+    const r = await fetch(apiUrl('/rl/status'));
     if (!r.ok) throw new Error('status fetch failed');
     return r.json() as Promise<{ connected: boolean; uri: string; session_info: Record<string, unknown> | null }>;
 }
 
 async function connectRL(host: string, port: number) {
-    const r = await fetch('/rl/connect', {
+    const r = await fetch(apiUrl('/rl/connect'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ host, port }),
@@ -26,25 +27,25 @@ async function connectRL(host: string, port: number) {
 }
 
 async function disconnectRL() {
-    const r = await fetch('/rl/disconnect', { method: 'POST' });
+    const r = await fetch(apiUrl('/rl/disconnect'), { method: 'POST' });
     if (!r.ok) throw new Error('disconnect failed');
     return r.json();
 }
 
 async function readField(refId: string) {
-    const r = await fetch(`/rl/field/${encodeURIComponent(refId)}`);
+    const r = await fetch(apiUrl(`/rl/field/${encodeURIComponent(refId)}`));
     if (!r.ok) throw new Error(await r.text());
     return r.json() as Promise<{ ref_id: string; value: unknown }>;
 }
 
 async function getChildren(slotId: string) {
-    const r = await fetch(`/rl/children/${encodeURIComponent(slotId)}`);
+    const r = await fetch(apiUrl(`/rl/children/${encodeURIComponent(slotId)}`));
     if (!r.ok) throw new Error(await r.text());
     return r.json() as Promise<{ slot_id: string; children: unknown[] }>;
 }
 
 async function reflectTypes(componentType?: string) {
-    const r = await fetch('/rl/reflect', {
+    const r = await fetch(apiUrl('/rl/reflect'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ component_type: componentType || null }),

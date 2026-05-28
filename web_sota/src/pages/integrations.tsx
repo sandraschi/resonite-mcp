@@ -2,6 +2,7 @@ import { Box, Globe2, Cpu, ArrowRight, RefreshCw, CheckCircle2, AlertCircle, Use
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { cn } from '@/common/utils';
+import { apiUrl } from '@/lib/api-base';
 
 interface IntegrationCardProps {
     title: string;
@@ -88,7 +89,7 @@ export function Integrations() {
 
     const worldlabsMutation = useMutation({
         mutationFn: async () => {
-            const resp = await fetch('/api/integrations/worldlabs/import', { method: 'POST' });
+            const resp = await fetch(apiUrl('/api/integrations/worldlabs/import'), { method: 'POST' });
             if (!resp.ok) throw new Error(await resp.text());
             return resp.json();
         },
@@ -98,7 +99,7 @@ export function Integrations() {
 
     const blenderMutation = useMutation({
         mutationFn: async () => {
-            const resp = await fetch('/api/integrations/blender/import', { method: 'POST' });
+            const resp = await fetch(apiUrl('/api/integrations/blender/import'), { method: 'POST' });
             if (!resp.ok) throw new Error(await resp.text());
             return resp.json();
         },
@@ -108,7 +109,7 @@ export function Integrations() {
 
     const unityMutation = useMutation({
         mutationFn: async () => {
-            const resp = await fetch('/api/integrations/unity/avatar', { method: 'POST' });
+            const resp = await fetch(apiUrl('/api/integrations/unity/avatar'), { method: 'POST' });
             if (!resp.ok) throw new Error(await resp.text());
             return resp.json();
         },

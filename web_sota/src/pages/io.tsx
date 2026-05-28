@@ -1,6 +1,7 @@
 import { Box, Search, Upload, Download, Trash2, Share2, FolderOpen, MoreVertical, Plus, LayoutGrid, List as ListIcon, HardDrive, Package, ShieldCheck, Globe2 } from 'lucide-react';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiUrl } from '@/lib/api-base';
 
 interface InventoryItem {
     name: string;
@@ -20,7 +21,7 @@ export function IoPage() {
     const { data: inventory, isLoading } = useQuery({
         queryKey: ['inventory', currentPath],
         queryFn: async () => {
-            const r = await fetch(`/api/resonite/inventory/list?path=${encodeURIComponent(currentPath)}`);
+            const r = await fetch(apiUrl(`/api/resonite/inventory/list?path=${encodeURIComponent(currentPath)}`));
             if (!r.ok) throw new Error('Failed to fetch inventory');
             return r.json();
         }
@@ -28,7 +29,7 @@ export function IoPage() {
 
     const spawnMutation = useMutation({
         mutationFn: async (item: InventoryItem) => {
-            const r = await fetch('/api/resonite/inventory/spawn', {
+            const r = await fetch(apiUrl('/api/resonite/inventory/spawn'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_path: item.path })
@@ -39,7 +40,7 @@ export function IoPage() {
 
     const deleteMutation = useMutation({
         mutationFn: async (item: InventoryItem) => {
-            const r = await fetch('/api/resonite/inventory/delete', {
+            const r = await fetch(apiUrl('/api/resonite/inventory/delete'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ item_path: item.path })

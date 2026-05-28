@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Globe2, Search, Users, Lock, Unlock, Loader2, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/common/utils';
+import { apiUrl } from '@/lib/api-base';
 
 interface Session {
     sessionId: string;
@@ -16,7 +17,7 @@ interface Session {
 async function fetchSessions(name: string): Promise<Session[]> {
     const params = new URLSearchParams();
     if (name) params.set('name', name);
-    const r = await fetch(`/api/sessions?${params}`);
+    const r = await fetch(apiUrl(`/api/sessions?${params}`));
     if (!r.ok) throw new Error('Failed to fetch sessions');
     return r.json() as Promise<Session[]>;
 }

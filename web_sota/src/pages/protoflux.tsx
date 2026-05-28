@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiUrl } from '@/lib/api-base';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -83,20 +84,20 @@ export function ProtoFluxPage() {
     // ResoniteLink status
     const { data: rlStatus, isLoading: rlLoading } = useQuery<RLStatus>({
         queryKey: ['rl-status'],
-        queryFn: () => fetch('/rl/status').then(r => r.json()),
+        queryFn: () => fetch(apiUrl('/rl/status')).then(r => r.json()),
         refetchInterval: 5000,
     });
 
     // Connect mutation
     const connectMut = useMutation({
         mutationFn: (f: ConnectForm) =>
-            fetch('/rl/connect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ host: f.host, port: f.port }) }).then(r => r.json()),
+            fetch(apiUrl('/rl/connect'), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ host: f.host, port: f.port }) }).then(r => r.json()),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['rl-status'] }),
     });
 
     // Disconnect mutation
     const disconnectMut = useMutation({
-        mutationFn: () => fetch('/rl/disconnect', { method: 'POST' }).then(r => r.json()),
+        mutationFn: () => fetch(apiUrl('/rl/disconnect'), { method: 'POST' }).then(r => r.json()),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['rl-status'] }),
     });
 
@@ -363,7 +364,7 @@ function FieldPanel() {
 
     const readMut = useMutation({
         mutationFn: async (id: string) => {
-            const r = await fetch(`/rl/field/${encodeURIComponent(id)}`);
+            const r = await fetch(apiUrl(`/rl/field/${encodeURIComponent(id)}`));
             if (!r.ok) throw new Error(await r.text());
             return r.json();
         },
@@ -375,7 +376,7 @@ function FieldPanel() {
         mutationFn: async ({ id, value }: { id: string; value: string }) => {
             let parsed: unknown = value;
             try { parsed = JSON.parse(value); } catch { /* keep as string */ }
-            const r = await fetch('/rl/field', {
+            const r = await fetch(apiUrl('/rl/field'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ref_id: id, value: parsed }),
@@ -450,7 +451,7 @@ function ReflectPanel() {
 
     const reflectMut = useMutation({
         mutationFn: async () => {
-            const r = await fetch('/rl/reflect', {
+            const r = await fetch(apiUrl('/rl/reflect'), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ component_type: componentType || null }),

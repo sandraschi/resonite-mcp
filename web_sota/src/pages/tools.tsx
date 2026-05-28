@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo } from 'react';
 import { cn } from '@/common/utils';
 import { Card } from '@/components/ui/card';
+import { apiUrl } from '@/lib/api-base';
 
 interface ToolParam {
     type: string;
@@ -17,7 +18,7 @@ interface Tool {
 
 async function fetchTools(): Promise<Tool[]> {
     try {
-        const r = await fetch('/api/system');
+        const r = await fetch(apiUrl('/api/system'));
         if (!r.ok) throw new Error('Failed to load tools');
         const data = await r.json() as { result?: { tools?: Tool[] } };
         // Handle different API response structures

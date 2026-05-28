@@ -1,6 +1,7 @@
 import { Cloud, Search, Globe2, Shield, Info, ExternalLink, RefreshCw, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { apiUrl } from '@/lib/api-base';
 
 
 interface ResoniteSession {
@@ -18,7 +19,7 @@ export function RestApiPage() {
     const { data: platformData } = useQuery({
         queryKey: ['platform'],
         queryFn: async () => {
-            const r = await fetch('/api/platform');
+            const r = await fetch(apiUrl('/api/platform'));
             return r.json();
         }
     });
@@ -26,7 +27,7 @@ export function RestApiPage() {
     const { data: sessionData, isLoading: sessLoading, refetch: refetchSessions } = useQuery({
         queryKey: ['sessions'],
         queryFn: async () => {
-            const r = await fetch('/api/sessions');
+            const r = await fetch(apiUrl('/api/sessions'));
             return r.json();
         }
     });
