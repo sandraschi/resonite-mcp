@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppLayout } from '@/components/layout/app-layout';
+import { AgentTools } from '@/pages/agent-tools';
 import { Dashboard } from '@/pages/dashboard';
 import { Status } from '@/pages/status';
 import { Sessions } from '@/pages/sessions';
@@ -39,6 +40,7 @@ function App() {
         <AppLayout>
           <Routes>
             <Route path="/" element={<Dashboard />} />
+            <Route path="/agent-tools" element={<AgentTools />} />
             <Route path="/status" element={<Status />} />
             <Route
               path="*"

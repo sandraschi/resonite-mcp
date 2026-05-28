@@ -165,7 +165,8 @@ class PluginManager:
         self.logger.info(f"Discovered {len(available_plugins)} plugins")
 
         # Load and initialize each plugin
-        for plugin_name in available_plugins:
+        for plugin_info in available_plugins:
+            plugin_name = plugin_info["name"] if isinstance(plugin_info, dict) else str(plugin_info)
             plugin = await self.load_plugin(plugin_name)
             if plugin:
                 success = await self.initialize_plugin(plugin, server)

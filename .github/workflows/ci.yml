@@ -30,7 +30,7 @@ jobs:
       - name: Type check (Mypy)
         run: uv run mypy src/resonite_mcp/
 
-      - name: Fleet E2E offline smoke (Phase 1)
+      - name: Fleet E2E offline smoke (Phase 2)
         env:
           PYTHONPATH: src
         run: uv run python scripts/fleet_e2e_smoke.py --offline --strict

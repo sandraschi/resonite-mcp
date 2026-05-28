@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/common/utils';
 import {
+    FlaskConical,
     LayoutDashboard,
     Activity,
     Globe2,
@@ -55,6 +56,7 @@ const navItems = [
     { href: '/contacts', label: 'Contacts', icon: Users, section: 'social' },
     { href: '/chat', label: 'Chat', icon: MessageCircle, section: 'social' },
     { href: '/apps', label: 'App Hub', icon: Grid, section: 'social' },
+    { href: '/agent-tools', label: 'Agent Lab', icon: FlaskConical, section: 'dev' },
     { href: '/tools', label: 'Dev Tools', icon: Wrench, section: 'dev' },
     { href: '/help', label: 'Reference', icon: HelpCircle, section: 'dev' },
     { href: '/settings', label: 'Settings', icon: Settings, section: 'dev' },

@@ -507,8 +507,13 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 | Phase | Version | Theme |
 |-------|---------|-------|
 | 1 (0.5.0) | **done** | `resonite_fleet` handoff, execution_mode, offline E2E |
-| 2 (0.6.0) | planned | Webapp Agent Lab |
+| 2 (0.6.0) | **done** | Webapp Agent Lab, live HTTP E2E |
 | 3–6 | planned | VRM, Docker, Marble, 1.0 polish |
+
+### v0.6.0 (2026-05-28) — Agent Lab Phase 2
+- **Webapp `/agent-tools`**: runtime, fleet handoff, staging gallery, pipeline tabs
+- **`POST /api/v1/tool`**: HTTP bridge for `resonite_fleet` and `health_check`
+- **Live E2E**: `scripts/fleet_e2e_smoke.py --live` inkscape → resonite HTTP chain
 
 ### v0.5.0 (2026-05-28) — Agent Lab Phase 1
 - **resonite_fleet** portmanteau: inkscape UI import, blender/gimp bridge, execution_mode

@@ -27,11 +27,23 @@ uv run python scripts/fleet_e2e_smoke.py --offline --strict
 
 ## Phase 2 — Webapp Agent Lab (0.6.0)
 
+**Status: complete (v0.6.0)**
+
 | Item | Tool / module |
 |------|----------------|
-| `/agent-tools` tabbed UI | mirror inkscape/gimp fleet pages |
-| Fleet pipeline controls | inkscape pull + import buttons |
-| Staging gallery | localStorage preview of staged UI assets |
+| Webapp `/agent-tools` page | tabbed Agent Lab UI (runtime, fleet, staging, pipeline) |
+| `POST /api/v1/tool` proxy | `http_server.py` REST bridge |
+| Staging gallery | localStorage snapshots from `list_staging` |
+| Live inkscape → resonite HTTP E2E | `utils/fleet_e2e_live.py`, `--live` smoke flag |
+| Phase 2 tests | `tests/unit/test_phase2_tools.py` |
+
+### Live HTTP smoke (both servers on localhost)
+
+```powershell
+cd D:\Dev\repos\resonite-mcp
+$Env:PYTHONPATH = "src"
+uv run python scripts/fleet_e2e_smoke.py --live --strict
+```
 
 ## Phase 3 — Avatar and VRM pipeline (0.7.0)
 

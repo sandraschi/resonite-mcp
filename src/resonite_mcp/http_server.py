@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Resonite MCP Server",
     description="HTTP API for Resonite social VR platform control",
-    version="0.1.1",
+    version="0.6.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -167,15 +167,22 @@ class FleetLaunchResponse(BaseModel):
     message: str
 
 
+class MCPToolRequest(BaseModel):
+    tool: str
+    params: Dict[str, Any] = Field(default_factory=dict)
+
+
 # API Routes
 @app.get("/api/v1/health")
+@app.get("/api/health")
 @app.get("/health")
 async def health_check():
     """Health check endpoint."""
     return {
         "status": "ok",
         "server": "resonite-mcp-sota",
-        "version": "2026.2.17",
+        "version": "0.6.0",
+        "agent_lab_phase": 2,
         "capabilities": [
             "osc_communication",
             "avatar_control",
@@ -184,8 +191,41 @@ async def health_check():
             "session_management",
             "integrations",
             "fleet_orchestration",
+            "agent_lab_tools",
         ],
     }
+
+
+@app.post("/api/v1/tool")
+async def api_v1_tool(body: MCPToolRequest) -> Dict[str, Any]:
+    """Bridge endpoint for webapp Agent Lab to invoke MCP tools over HTTP."""
+    tool = body.tool
+    params = dict(body.params or {})
+    try:
+        if tool == "resonite_fleet":
+            from .tools.fleet_tools import resonite_fleet
+
+            operation = params.pop("operation", None)
+            if not operation:
+                raise HTTPException(status_code=400, detail="operation required for resonite_fleet")
+            result = await resonite_fleet(operation, **params)
+            return {
+                "success": bool(result.get("success")),
+                "data": result,
+                "error": result.get("error") or None,
+            }
+        if tool == "health_check":
+            from .server import health_check as mcp_health_check
+
+            result = await mcp_health_check()
+            ok = result.get("status") == "success"
+            return {"success": ok, "data": result, "error": None if ok else result.get("message")}
+        raise HTTPException(status_code=404, detail=f"Unknown tool: {tool}")
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Tool %s failed", tool)
+        return {"success": False, "error": str(exc), "data": None}
 
 
 @app.post("/api/v1/fleet/launch", response_model=FleetLaunchResponse)
