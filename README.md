@@ -508,7 +508,13 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 |-------|---------|-------|
 | 1 (0.5.0) | **done** | `resonite_fleet` handoff, execution_mode, offline E2E |
 | 2 (0.6.0) | **done** | Webapp Agent Lab, live HTTP E2E |
-| 3–6 | planned | VRM, Docker, Marble, 1.0 polish |
+| 3 (0.7.0) | **done** | VRM/avatar pipeline, ProtoFlux presets |
+| 4–6 | planned | Docker, Marble, 1.0 polish |
+
+### v0.7.0 (2026-05-28) — Agent Lab Phase 3
+- **VRM fleet ops**: `list_vrm_staging`, `import_vrm_batch`, `pull_blender_vrm`, `pull_avatar_vrm`
+- **ProtoFlux presets**: `list_protoflux_presets` + manifest catalog
+- **Agent Lab VRM tab** on `/agent-tools`
 
 ### v0.6.0 (2026-05-28) — Agent Lab Phase 2
 - **Webapp `/agent-tools`**: runtime, fleet handoff, staging gallery, pipeline tabs

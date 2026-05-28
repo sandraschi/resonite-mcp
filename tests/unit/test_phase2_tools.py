@@ -22,8 +22,8 @@ class TestApiV1Tool:
         response = api_client.get("/api/v1/health")
         assert response.status_code == 200
         body = response.json()
-        assert body["version"] == "0.6.0"
-        assert body["agent_lab_phase"] == 2
+        assert body["version"] == "0.7.0"
+        assert body["agent_lab_phase"] == 3
 
     def test_resonite_fleet_list_presets(self, api_client: TestClient):
         response = api_client.post(

@@ -5,6 +5,7 @@ import {
   Layers,
   Package,
   Server,
+  User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
@@ -16,7 +17,7 @@ import {
   type StagingRecord,
 } from "@/api/mcp";
 
-type TabId = "runtime" | "fleet" | "staging" | "pipeline";
+type TabId = "runtime" | "fleet" | "staging" | "vrm" | "pipeline";
 
 function ResultBox({ text }: { text: string | null }) {
   if (!text) return null;
@@ -42,11 +43,17 @@ export function AgentTools() {
   const [texturePath, setTexturePath] = useState("D:/Temp/fleet_pipeline/textures/albedo.png");
   const [skipBlender, setSkipBlender] = useState(true);
   const [skipGimp, setSkipGimp] = useState(true);
+  const [skipVrm, setSkipVrm] = useState(true);
+  const [vrmDir, setVrmDir] = useState("D:/Temp/fleet_pipeline/resonite_fleet/models");
+  const [avatarUrl, setAvatarUrl] = useState("http://127.0.0.1:10793");
+  const [exportFormat, setExportFormat] = useState("vrm");
+  const [protofluxPreset, setProtofluxPreset] = useState("vrm_blink");
 
   const tabs: { id: TabId; label: string; icon: typeof Bot }[] = [
     { id: "runtime", label: "Runtime", icon: Server },
     { id: "fleet", label: "Fleet", icon: GitPullRequest },
     { id: "staging", label: "Staging", icon: Layers },
+    { id: "vrm", label: "VRM", icon: User },
     { id: "pipeline", label: "Pipeline", icon: Package },
   ];
 
@@ -95,7 +102,7 @@ export function AgentTools() {
             Agent Lab
           </h2>
           <p className="text-sm text-slate-400 mt-1">
-            Phase 1–2: execution mode, fleet handoff, inkscape UI import, staging gallery.
+            Phase 1–3: execution mode, fleet handoff, VRM/avatar pipeline, ProtoFlux presets.
           </p>
         </div>
         <button
@@ -274,6 +281,128 @@ export function AgentTools() {
           </>
         )}
 
+        {tab === "vrm" && (
+          <>
+            <h3 className="font-semibold text-white">VRM &amp; avatar pipeline</h3>
+            <label className="block text-sm text-slate-300">
+              VRM staging dir
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={vrmDir}
+                onChange={(e) => setVrmDir(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm text-slate-300">
+              Avatar-mcp URL
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={avatarUrl}
+                onChange={(e) => setAvatarUrl(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm text-slate-300">
+              Blender object (VRM export)
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={objectName}
+                onChange={(e) => setObjectName(e.target.value)}
+              />
+            </label>
+            <label className="block text-sm text-slate-300">
+              Export format
+              <select
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={exportFormat}
+                onChange={(e) => setExportFormat(e.target.value)}
+              >
+                <option value="vrm">vrm</option>
+                <option value="glb">glb</option>
+              </select>
+            </label>
+            <label className="block text-sm text-slate-300">
+              ProtoFlux preset
+              <input
+                className="mt-1 w-full px-3 py-2 bg-slate-900 border border-slate-800 rounded-md text-sm text-white"
+                value={protofluxPreset}
+                onChange={(e) => setProtofluxPreset(e.target.value)}
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "list_vrm_staging",
+                    vrm_dir: vrmDir,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                List VRM staging
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "import_vrm_batch",
+                    vrm_dir: vrmDir,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                Import VRM batch
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "pull_avatar_vrm",
+                    vrm_dir: vrmDir,
+                    avatar_url: avatarUrl,
+                    staging_dir: stagingDir,
+                  })
+                }
+              >
+                Pull avatar VRM
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "pull_blender_vrm",
+                    object_name: objectName,
+                    vrm_dir: vrmDir,
+                    export_format: exportFormat,
+                  })
+                }
+              >
+                Pull blender VRM
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                className="px-4 py-2 bg-slate-800 text-slate-200 rounded-md text-sm"
+                onClick={() =>
+                  run("resonite_fleet", {
+                    operation: "list_protoflux_presets",
+                    protoflux_preset: protofluxPreset,
+                  })
+                }
+              >
+                ProtoFlux preset
+              </button>
+            </div>
+          </>
+        )}
+
         {tab === "pipeline" && (
           <>
             <h3 className="font-semibold text-white">Full fleet pipeline</h3>
@@ -310,6 +439,14 @@ export function AgentTools() {
                 />
                 Skip gimp
               </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={skipVrm}
+                  onChange={(e) => setSkipVrm(e.target.checked)}
+                />
+                Skip VRM
+              </label>
             </div>
             <button
               type="button"
@@ -320,10 +457,13 @@ export function AgentTools() {
                   operation: "run_fleet_pipeline",
                   input_dir: inputDir,
                   staging_dir: stagingDir,
+                  vrm_dir: vrmDir,
                   object_name: objectName,
                   texture_path: texturePath,
                   skip_blender: skipBlender,
                   skip_gimp: skipGimp,
+                  skip_vrm: skipVrm,
+                  export_format: exportFormat,
                 })
               }
             >

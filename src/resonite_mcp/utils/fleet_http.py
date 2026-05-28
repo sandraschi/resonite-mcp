@@ -13,9 +13,11 @@ DEFAULT_BLENDER_URL = "http://127.0.0.1:10849"
 DEFAULT_GIMP_URL = "http://127.0.0.1:10773"
 DEFAULT_INKSCAPE_URL = "http://127.0.0.1:10900"
 DEFAULT_RESONITE_URL = "http://127.0.0.1:10979"
+DEFAULT_AVATAR_URL = "http://127.0.0.1:10793"
 
 _HEALTH_PATHS = ("/api/v1/health", "/api/health", "/health", "/v1/health")
 _TOOL_PATHS = ("/api/v1/tool", "/v1/tool", "/tool")
+_AVATAR_HEALTH_PATHS = ("/api/v1/health", "/api/health", "/health")
 
 
 async def check_http_health(base_url: str) -> bool:
@@ -28,6 +30,53 @@ async def check_http_health(base_url: str) -> bool:
         except httpx.HTTPError:
             continue
     return False
+
+
+async def check_avatar_http_health(base_url: str) -> bool:
+    for path in _AVATAR_HEALTH_PATHS:
+        try:
+            async with httpx.AsyncClient(timeout=5.0) as client:
+                response = await client.get(base_url.rstrip("/") + path)
+                if response.status_code == 200:
+                    return True
+        except httpx.HTTPError:
+            continue
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(base_url.rstrip("/") + "/api/v1/avatars")
+            if response.status_code == 200:
+                return True
+    except httpx.HTTPError:
+        pass
+    return False
+
+
+async def call_avatar_tool(
+    base_url: str,
+    tool_name: str,
+    arguments: dict[str, Any],
+    *,
+    timeout: float = 120.0,
+) -> dict[str, Any]:
+    """Call avatar-mcp execute endpoint ({tool_name, arguments})."""
+    url = base_url.rstrip("/") + "/api/v1/tools/execute"
+    try:
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            response = await client.post(
+                url,
+                json={"tool_name": tool_name, "arguments": arguments},
+            )
+            response.raise_for_status()
+            body = response.json()
+    except httpx.HTTPError as exc:
+        logger.warning("Avatar tool call failed tool=%s base=%s error=%s", tool_name, base_url, exc)
+        return {"success": False, "error": str(exc), "tool_name": tool_name}
+
+    if isinstance(body, dict):
+        if "success" not in body and body.get("result") is not None:
+            return {"success": True, "result": body.get("result"), **body}
+        return body
+    return {"success": False, "error": "Invalid avatar tool response", "tool_name": tool_name}
 
 
 async def call_http_tool(

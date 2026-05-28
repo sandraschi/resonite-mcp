@@ -23,6 +23,9 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
     )
     texture = work_dir / "albedo.png"
     texture.write_bytes(b"\x89PNG\r\n\x1a\n")
+    vrm_models = work_dir / "models"
+    vrm_models.mkdir(parents=True, exist_ok=True)
+    (vrm_models / "fleet_avatar.vrm").write_bytes(b"VRM1.0 offline stub")
 
     mock_import = AsyncMock(return_value={"success": True, "path": "mock", "osc": {"status": "success"}})
 
@@ -47,6 +50,15 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
 
         imported = await resonite_fleet("import_staged_assets", input_dir=str(ui_in.parent))
         steps.append({"name": "offline_import_staged", "success": bool(imported.get("success")), "detail": imported})
+
+        vrm_list = await resonite_fleet("list_vrm_staging", vrm_dir=str(vrm_models))
+        steps.append({"name": "offline_list_vrm_staging", "success": bool(vrm_list.get("success")), "detail": vrm_list})
+
+        vrm_import = await resonite_fleet("import_vrm_batch", vrm_dir=str(vrm_models))
+        steps.append({"name": "offline_import_vrm_batch", "success": bool(vrm_import.get("success")), "detail": vrm_import})
+
+        pf_presets = await resonite_fleet("list_protoflux_presets")
+        steps.append({"name": "offline_protoflux_presets", "success": bool(pf_presets.get("success")), "detail": pf_presets})
 
         pipeline = await resonite_fleet(
             "run_fleet_pipeline",

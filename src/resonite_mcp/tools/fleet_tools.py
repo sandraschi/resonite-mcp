@@ -12,15 +12,24 @@ from pydantic import BaseModel
 from pydantic import Field
 
 from ..utils.execution_mode import describe_execution_mode
+from ..utils.fleet_http import DEFAULT_AVATAR_URL
 from ..utils.fleet_http import DEFAULT_BLENDER_URL
 from ..utils.fleet_http import DEFAULT_GIMP_URL
 from ..utils.fleet_http import DEFAULT_INKSCAPE_URL
+from ..utils.fleet_http import call_avatar_tool
 from ..utils.fleet_http import call_http_tool
+from ..utils.fleet_http import check_avatar_http_health
 from ..utils.fleet_http import check_http_health
+from ..utils.fleet_staging import DEFAULT_AVATAR_VRM_DIR
 from ..utils.fleet_staging import DEFAULT_FLEET_STAGING
 from ..utils.fleet_staging import DEFAULT_INKSCAPE_UI_STAGING
+from ..utils.fleet_staging import DEFAULT_VRM_STAGING
 from ..utils.fleet_staging import classify_staged_assets
 from ..utils.fleet_staging import list_staging_files
+from ..utils.fleet_staging import list_vrm_files
+from ..utils.fleet_staging import stage_file
+from ..utils.protoflux_avatar_presets import get_protoflux_preset
+from ..utils.protoflux_avatar_presets import list_protoflux_presets
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +41,11 @@ FleetOperation = Literal[
     "pull_inkscape_ui",
     "import_blender_asset",
     "import_gimp_texture",
+    "list_vrm_staging",
+    "import_vrm_batch",
+    "pull_blender_vrm",
+    "pull_avatar_vrm",
+    "list_protoflux_presets",
     "run_fleet_pipeline",
 ]
 
@@ -94,31 +108,101 @@ async def _import_local_file(path: str, *, target_slot: str = "root") -> dict[st
     return result
 
 
+def _resolve_vrm_roots(vrm_dir: Path, stage: Path) -> list[Path]:
+    roots: list[Path] = []
+    for candidate in (vrm_dir, stage / "models"):
+        if candidate.is_dir() and candidate not in roots:
+            roots.append(candidate)
+    if vrm_dir.resolve() == DEFAULT_VRM_STAGING.resolve():
+        for candidate in (DEFAULT_VRM_STAGING, DEFAULT_AVATAR_VRM_DIR):
+            if candidate.is_dir() and candidate not in roots:
+                roots.append(candidate)
+    return roots
+
+
+async def _pull_blender_vrm_export(
+    *,
+    object_name: str,
+    blender_url: str,
+    vrm_stage: Path,
+    export_format: str,
+) -> dict[str, Any]:
+    handoff: dict[str, Any] = {"object_name": object_name, "export_format": export_format}
+    output_name = f"{object_name}_resonite"
+    if export_format.lower() == "vrm":
+        export_op = "export_vrm"
+        ext = ".vrm"
+    else:
+        export_op = "export_glb"
+        ext = ".glb"
+
+    export_resp = await call_http_tool(
+        blender_url,
+        "blender_export",
+        {
+            "operation": export_op,
+            "output_path": f"//{output_name}{ext}",
+            "object_names": [object_name],
+        },
+    )
+    handoff["blender_export"] = export_resp
+
+    export_path = ""
+    if isinstance(export_resp, dict):
+        export_path = str(
+            export_resp.get("output_path")
+            or export_resp.get("file_path")
+            or export_resp.get("path")
+            or ""
+        )
+
+    if export_path and Path(export_path).is_file():
+        staged = await stage_file(source_path=export_path, staging_dir=vrm_stage, subdir="blender")
+        handoff["stage"] = staged
+        handoff["success"] = bool(staged.get("success"))
+        handoff["files"] = [staged["staged_path"]] if staged.get("staged_path") else []
+        return handoff
+
+    handoff["success"] = bool(export_resp.get("success"))
+    handoff["files"] = []
+    if not handoff["success"]:
+        handoff["error"] = str(export_resp.get("error") or "Blender export did not produce a local file")
+    return handoff
+
+
 async def resonite_fleet(
     operation: FleetOperation,
     *,
     staging_dir: str = "",
     input_dir: str = "",
+    vrm_dir: str = "",
     object_name: str = "",
     texture_path: str = "",
     target_slot: str = "root",
     inkscape_url: str = "",
     blender_url: str = "",
     gimp_url: str = "",
+    avatar_url: str = "",
+    protoflux_preset: str = "",
+    export_format: str = "vrm",
     skip_inkscape: bool = False,
     skip_blender: bool = True,
     skip_gimp: bool = True,
+    skip_vrm: bool = True,
 ) -> dict[str, Any]:
     """Cross-fleet asset pipeline into Resonite (inkscape UI, blender GLB, gimp textures)."""
     start = time.time()
     stage = Path(staging_dir) if staging_dir else DEFAULT_FLEET_STAGING
     inkscape_stage = Path(input_dir) if input_dir else DEFAULT_INKSCAPE_UI_STAGING
+    vrm_stage = Path(vrm_dir) if vrm_dir else DEFAULT_VRM_STAGING
     iurl = inkscape_url or DEFAULT_INKSCAPE_URL
     burl = blender_url or DEFAULT_BLENDER_URL
     gurl = gimp_url or DEFAULT_GIMP_URL
+    aurl = avatar_url or DEFAULT_AVATAR_URL
 
     try:
         if operation == "list_presets":
+            pf = list_protoflux_presets()
             return FleetResult(
                 success=True,
                 operation=operation,
@@ -127,11 +211,16 @@ async def resonite_fleet(
                     "inkscape_url": iurl,
                     "blender_url": burl,
                     "gimp_url": gurl,
+                    "avatar_url": aurl,
                     "default_staging": str(DEFAULT_FLEET_STAGING),
                     "inkscape_ui_staging": str(DEFAULT_INKSCAPE_UI_STAGING),
+                    "vrm_staging": str(DEFAULT_VRM_STAGING),
+                    "avatar_vrm_dir": str(DEFAULT_AVATAR_VRM_DIR),
                     "supported_ui_suffixes": [".svg", ".png", ".webp"],
                     "supported_model_suffixes": [".glb", ".gltf", ".vrm", ".fbx"],
-                    "naming_hint": "Inkscape stage_resonite_ui -> icons/*.svg, sheets/*.svg",
+                    "supported_vrm_suffixes": [".vrm", ".glb", ".gltf"],
+                    "protoflux_presets": pf.get("presets") or [],
+                    "naming_hint": "Inkscape stage_resonite_ui -> icons/*.svg; VRM -> models/*.vrm",
                 },
             ).model_dump()
 
@@ -249,6 +338,141 @@ async def resonite_fleet(
                 error="" if success else str(result.get("blender_export") or "BlenderImportError"),
             ).model_dump()
 
+        if operation == "list_vrm_staging":
+            roots = _resolve_vrm_roots(vrm_stage, stage)
+            files = list_vrm_files(*roots)
+            classified = classify_staged_assets(files)
+            return FleetResult(
+                success=True,
+                operation=operation,
+                message=f"Found {len(files)} VRM/model file(s)",
+                data={
+                    "files": files,
+                    "vrm_files": [p for p in files if Path(p).suffix.lower() == ".vrm"],
+                    "classified": classified,
+                    "scan_roots": [str(r) for r in roots],
+                },
+                files=files,
+            ).model_dump()
+
+        if operation == "import_vrm_batch":
+            listing = await resonite_fleet(
+                "list_vrm_staging",
+                staging_dir=str(stage),
+                vrm_dir=str(vrm_stage),
+            )
+            files = list(listing.get("files") or [])
+            if not files:
+                return FleetResult(
+                    success=False,
+                    operation=operation,
+                    message="No VRM/model files to import",
+                    error="FileNotFoundError",
+                ).model_dump()
+
+            imports: list[dict[str, Any]] = []
+            ok = 0
+            for path in files:
+                item = await _import_local_file(path, target_slot=target_slot)
+                imports.append(item)
+                if item.get("success"):
+                    ok += 1
+
+            success = ok == len(files)
+            return FleetResult(
+                success=success,
+                operation=operation,
+                message=f"Imported {ok}/{len(files)} VRM/model file(s)",
+                data={"imports": imports, "imported": ok, "total": len(files)},
+                files=files,
+                error="" if success else "PartialImport",
+            ).model_dump()
+
+        if operation == "pull_blender_vrm":
+            if not object_name:
+                return FleetResult(
+                    success=False,
+                    operation=operation,
+                    message="object_name required",
+                    error="ValueError",
+                ).model_dump()
+            vrm_stage.mkdir(parents=True, exist_ok=True)
+            handoff = await _pull_blender_vrm_export(
+                object_name=object_name,
+                blender_url=burl,
+                vrm_stage=vrm_stage,
+                export_format=export_format,
+            )
+            success = bool(handoff.get("success"))
+            return FleetResult(
+                success=success,
+                operation=operation,
+                message="Blender VRM export staged" if success else "Blender VRM export incomplete",
+                data=handoff,
+                files=list(handoff.get("files") or []),
+                error="" if success else str(handoff.get("error") or "BlenderVrmError"),
+            ).model_dump()
+
+        if operation == "pull_avatar_vrm":
+            roots = _resolve_vrm_roots(vrm_stage, stage)
+            avatar_online = await check_avatar_http_health(aurl)
+            handoff: dict[str, Any] = {"avatar_reachable": avatar_online, "local_files_before": len(list_vrm_files(*roots))}
+
+            if avatar_online:
+                avatar_list = await call_avatar_tool(
+                    aurl,
+                    "avatar_manager",
+                    {"operation": "list"},
+                )
+                handoff["avatar_list"] = avatar_list
+
+            staged_files: list[str] = []
+            for path in list_vrm_files(DEFAULT_AVATAR_VRM_DIR):
+                staged = await stage_file(source_path=path, staging_dir=vrm_stage, subdir="avatar")
+                if staged.get("success") and staged.get("staged_path"):
+                    staged_files.append(str(staged["staged_path"]))
+
+            imported = await resonite_fleet(
+                "import_vrm_batch",
+                staging_dir=str(stage),
+                vrm_dir=str(vrm_stage),
+                target_slot=target_slot,
+            )
+            success = bool(imported.get("success")) or bool(staged_files)
+            return FleetResult(
+                success=success,
+                operation=operation,
+                message="Avatar VRM pull complete" if success else "Avatar VRM pull partial",
+                data={"handoff": handoff, "staged": staged_files, "import": imported.get("data")},
+                files=list(imported.get("files") or staged_files),
+                error="" if success else "AvatarPullError",
+            ).model_dump()
+
+        if operation == "list_protoflux_presets":
+            if protoflux_preset:
+                preset = get_protoflux_preset(protoflux_preset)
+                if not preset:
+                    return FleetResult(
+                        success=False,
+                        operation=operation,
+                        message=f"Unknown preset: {protoflux_preset}",
+                        error="ValueError",
+                    ).model_dump()
+                return FleetResult(
+                    success=True,
+                    operation=operation,
+                    message=f"ProtoFlux preset {protoflux_preset}",
+                    data={"preset": preset},
+                ).model_dump()
+
+            catalog = list_protoflux_presets()
+            return FleetResult(
+                success=True,
+                operation=operation,
+                message="ProtoFlux avatar preset catalog",
+                data=catalog,
+            ).model_dump()
+
         if operation == "import_gimp_texture":
             if not texture_path:
                 return FleetResult(
@@ -311,6 +535,32 @@ async def resonite_fleet(
                     gimp_url=gurl,
                 )
                 steps.append({"name": "import_gimp_texture", "success": bool(gimp.get("success")), "detail": gimp})
+
+            if not skip_vrm:
+                if object_name:
+                    blender_vrm = await resonite_fleet(
+                        "pull_blender_vrm",
+                        object_name=object_name,
+                        blender_url=burl,
+                        vrm_dir=str(vrm_stage),
+                        export_format=export_format,
+                    )
+                    steps.append(
+                        {
+                            "name": "pull_blender_vrm",
+                            "success": bool(blender_vrm.get("success")),
+                            "detail": blender_vrm,
+                        }
+                    )
+                vrm_import = await resonite_fleet(
+                    "import_vrm_batch",
+                    staging_dir=str(stage),
+                    vrm_dir=str(vrm_stage),
+                    target_slot=target_slot,
+                )
+                steps.append(
+                    {"name": "import_vrm_batch", "success": bool(vrm_import.get("success")), "detail": vrm_import}
+                )
 
             success = all(bool(s.get("success")) for s in steps) if steps else False
             return FleetResult(

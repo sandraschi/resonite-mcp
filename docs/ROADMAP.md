@@ -47,11 +47,17 @@ uv run python scripts/fleet_e2e_smoke.py --live --strict
 
 ## Phase 3 — Avatar and VRM pipeline (0.7.0)
 
+**Status: complete (v0.7.0)**
+
 | Item | Tool / module |
 |------|----------------|
-| avatar-mcp HTTP handoff | VRM/thumbnail import |
-| blender-mcp VRM export staging | `resonite_fleet` VRM batch |
-| ProtoFlux avatar parameter maps | preset manifests |
+| VRM staging scan | `resonite_fleet` → `list_vrm_staging` |
+| Batch VRM import | `resonite_fleet` → `import_vrm_batch` |
+| Blender VRM export staging | `resonite_fleet` → `pull_blender_vrm` |
+| avatar-mcp handoff | `resonite_fleet` → `pull_avatar_vrm` |
+| ProtoFlux parameter maps | `list_protoflux_presets`, `utils/protoflux_avatar_presets.py` |
+| Agent Lab VRM tab | webapp `/agent-tools` |
+| Phase 3 tests | `tests/unit/test_phase3_tools.py` |
 
 ## Phase 4 — Telemetry, Docker, monitoring (0.8.0)
 

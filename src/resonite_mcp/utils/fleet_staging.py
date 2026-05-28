@@ -11,9 +11,12 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_FLEET_STAGING = Path("D:/Temp/fleet_pipeline/resonite_fleet")
 DEFAULT_INKSCAPE_UI_STAGING = Path("D:/Temp/fleet_pipeline/inkscape_sim_art/resonite_ui")
+DEFAULT_VRM_STAGING = Path("D:/Temp/fleet_pipeline/resonite_fleet/models")
+DEFAULT_AVATAR_VRM_DIR = Path.home() / ".avatarmcp" / "models"
 
 _UI_SUFFIXES = {".svg", ".png", ".webp", ".jpg", ".jpeg"}
 _MODEL_SUFFIXES = {".glb", ".gltf", ".vrm", ".fbx", ".obj", ".spz"}
+_VRM_SUFFIXES = {".vrm", ".glb", ".gltf"}
 
 
 def list_staging_files(staging_dir: Path) -> dict[str, Any]:
@@ -37,6 +40,26 @@ def classify_staged_assets(files: list[str]) -> dict[str, list[str]]:
         else:
             other.append(raw)
     return {"ui": ui, "models": models, "other": other}
+
+
+def list_vrm_files(*roots: Path) -> list[str]:
+    """Collect VRM/GLB/GLTF model paths from one or more staging roots."""
+    found: list[str] = []
+    seen: set[str] = set()
+    for root in roots:
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            if path.suffix.lower() not in _VRM_SUFFIXES:
+                continue
+            resolved = str(path.resolve())
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            found.append(resolved)
+    return found
 
 
 async def stage_file(

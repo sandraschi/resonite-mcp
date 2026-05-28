@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Resonite MCP Server",
     description="HTTP API for Resonite social VR platform control",
-    version="0.6.0",
+    version="0.7.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
@@ -181,8 +181,8 @@ async def health_check():
     return {
         "status": "ok",
         "server": "resonite-mcp-sota",
-        "version": "0.6.0",
-        "agent_lab_phase": 2,
+        "version": "0.7.0",
+        "agent_lab_phase": 3,
         "capabilities": [
             "osc_communication",
             "avatar_control",
