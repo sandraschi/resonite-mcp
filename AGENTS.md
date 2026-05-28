@@ -66,3 +66,5 @@ Apps catalog provides cross-MCP navigation to 12+ fleet services. MCP Bridge (Pr
 - **Startup**: `Clear-Port` → `uv sync` → health check → Vite
 - **Lint**: Ruff (Python) + Biome (TypeScript)
 - **CI**: GitHub Actions (uv, ruff, mypy, pytest)
+
+Install docs: follow mcp-central-docs/standards/AGENT_INSTALL_REFERENCE.md
