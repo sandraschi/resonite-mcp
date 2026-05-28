@@ -60,7 +60,7 @@ def main():
         help="Enable CodeMode BM25 agentic skill discovery (FastMCP 3.2+)",
     )
 
-    parser.add_argument("--version", action="version", version="%(prog)s 0.8.0")
+    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
 
     args = parser.parse_args()
 

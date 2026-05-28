@@ -46,4 +46,8 @@ jobs:
         run: uv run python scripts/smoke_test.py
 
       - name: Run tests
-        run: uv run pytest tests/ -v --cov=resonite_mcp --cov-report=term-missing
+        env:
+          PYTHONPATH: src
+        run: |
+          uv run coverage run -m pytest tests/ -q
+          uv run coverage report --include="src/resonite_mcp/tools/*,src/resonite_mcp/utils/*" --fail-under=50

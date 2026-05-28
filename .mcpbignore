@@ -1,0 +1,31 @@
+# Logic / dev bloat
+.venv/
+node_modules/
+__pycache__/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+tests/
+
+# Discovery and fleet metadata (not for bundle)
+glama.json
+llms.txt
+llms-full.txt
+.git/
+.github/
+.vscode/
+.cursor/
+
+# Build artifacts
+dist/
+build/
+*.mcpb
+
+# Resonite repo-local (HTTP dashboard, not MCP stdio bundle)
+webapp/
+web_sota/
+zed-extension/
+monitoring/
+docker-compose.yml
+Dockerfile

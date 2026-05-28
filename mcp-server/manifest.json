@@ -1,0 +1,76 @@
+{
+  "manifest_version": "0.2",
+  "name": "resonite-mcp",
+  "version": "1.0.0",
+  "display_name": "Resonite MCP",
+  "description": "Resonite social VR MCP server: OSC, ResoniteLink, avatar/session control, Agent Lab fleet handoffs (FastMCP 3.2+).",
+  "author": {
+    "name": "Sandra Schipal",
+    "email": "sandra@example.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sandraschi/resonite-mcp"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "src/resonite_mcp/__main__.py",
+    "mcp_config": {
+      "command": "python",
+      "args": ["-m", "resonite_mcp", "--stdio"],
+      "env": {
+        "PYTHONPATH": "${PWD}/src",
+        "PYTHONUNBUFFERED": "1",
+        "RESONITE_OSC_HOST": "${user_config.osc_host}",
+        "RESONITE_OSC_PORT": "${user_config.osc_port}"
+      }
+    }
+  },
+  "user_config": {
+    "osc_host": {
+      "type": "string",
+      "title": "Resonite OSC Host",
+      "description": "OSC target host when Resonite runs locally",
+      "default": "127.0.0.1",
+      "required": false
+    },
+    "osc_port": {
+      "type": "string",
+      "title": "Resonite OSC Send Port",
+      "description": "OSC port configured in Resonite (default 9000)",
+      "default": "9000",
+      "required": false
+    }
+  },
+  "tools": [
+    {
+      "name": "resonite_fleet",
+      "description": "Fleet handoffs: inkscape UI, blender/gimp assets, VRM, marble worlds, strict pipeline"
+    },
+    {
+      "name": "resonite_voice",
+      "description": "Parse voice commands and send OSC avatar/world macros"
+    },
+    {
+      "name": "resonite_session_start",
+      "description": "Start or configure a Resonite session"
+    },
+    {
+      "name": "resonite_world_load",
+      "description": "Load a world by resonite://, file://, or inventory:// path"
+    },
+    {
+      "name": "resonite_avatar_load",
+      "description": "Load avatar and apply ProtoFlux parameters"
+    },
+    {
+      "name": "send_osc",
+      "description": "Send raw OSC messages to Resonite"
+    },
+    {
+      "name": "health_check",
+      "description": "Server and Resonite presence health"
+    }
+  ]
+}

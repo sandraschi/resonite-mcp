@@ -1,0 +1,159 @@
+{
+  "examples": [
+    {
+      "title": "Fleet preset catalog",
+      "user_input": "What fleet integrations does resonite-mcp support?",
+      "tool_call": "resonite_fleet",
+      "parameters": { "operation": "list_presets" }
+    },
+    {
+      "title": "Execution mode check",
+      "user_input": "Can I import into Resonite right now?",
+      "tool_call": "resonite_fleet",
+      "parameters": { "operation": "execution_mode" }
+    },
+    {
+      "title": "List staged UI assets",
+      "user_input": "Show staged SVG and PNG files for Resonite UI",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "list_staging",
+        "input_dir": "D:/Temp/fleet_pipeline/inkscape_sim_art/resonite_ui"
+      }
+    },
+    {
+      "title": "Import staged assets",
+      "user_input": "Import all staged UI files into Resonite",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "import_staged_assets",
+        "input_dir": "D:/Temp/fleet_pipeline/inkscape_sim_art/resonite_ui"
+      }
+    },
+    {
+      "title": "Pull inkscape UI over HTTP",
+      "user_input": "Stage inkscape UI and import to Resonite",
+      "tool_call": "resonite_fleet",
+      "parameters": { "operation": "pull_inkscape_ui" }
+    },
+    {
+      "title": "Import blender GLB",
+      "user_input": "Export Cube from blender and import to Resonite",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "import_blender_asset",
+        "object_name": "Cube"
+      }
+    },
+    {
+      "title": "GIMP texture import",
+      "user_input": "Audit and import albedo texture for Resonite",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "import_gimp_texture",
+        "texture_path": "D:/Temp/fleet_pipeline/textures/albedo.png"
+      }
+    },
+    {
+      "title": "VRM batch import",
+      "user_input": "Import all VRM files from models staging",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "import_vrm_batch",
+        "vrm_dir": "D:/Temp/fleet_pipeline/resonite_fleet/models"
+      }
+    },
+    {
+      "title": "Marble world batch",
+      "user_input": "Import staged marble splats",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "import_worldlabs_batch",
+        "marble_dir": "D:/Temp/fleet_pipeline/resonite_marble"
+      }
+    },
+    {
+      "title": "Inventory adapter status",
+      "user_input": "Show inventory catalog mode and items",
+      "tool_call": "resonite_fleet",
+      "parameters": { "operation": "inventory_status" }
+    },
+    {
+      "title": "Parse voice command",
+      "user_input": "User said wave hello in VR",
+      "tool_call": "resonite_voice",
+      "parameters": {
+        "operation": "parse_command",
+        "command_text": "wave hello"
+      }
+    },
+    {
+      "title": "Send OSC macro",
+      "user_input": "Trigger wave gesture in Resonite",
+      "tool_call": "resonite_voice",
+      "parameters": { "operation": "send_macro", "macro_id": "wave" }
+    },
+    {
+      "title": "Run fleet pipeline",
+      "user_input": "Run default fleet import pipeline",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "run_fleet_pipeline",
+        "skip_blender": true,
+        "skip_gimp": true,
+        "skip_vrm": true,
+        "skip_marble": true
+      }
+    },
+    {
+      "title": "Strict fleet pipeline",
+      "user_input": "Run full strict fleet chain for CI validation",
+      "tool_call": "resonite_fleet",
+      "parameters": {
+        "operation": "run_strict_fleet_pipeline",
+        "skip_inkscape": true
+      }
+    },
+    {
+      "title": "Load built-in world",
+      "user_input": "Load TutorialWorld in Resonite",
+      "tool_call": "resonite_world_load",
+      "parameters": { "world_path": "resonite://TutorialWorld" }
+    },
+    {
+      "title": "Start session",
+      "user_input": "Start a new Resonite session",
+      "tool_call": "resonite_session_start",
+      "parameters": { "session_name": "agent_lab_session" }
+    },
+    {
+      "title": "Raw OSC",
+      "user_input": "Send custom OSC to avatar parameter",
+      "tool_call": "send_osc",
+      "parameters": {
+        "host": "127.0.0.1",
+        "port": 9000,
+        "address": "/avatar/gesture/wave",
+        "values": [1.0]
+      }
+    },
+    {
+      "title": "Health check",
+      "user_input": "Is the MCP server and Resonite healthy?",
+      "tool_call": "health_check",
+      "parameters": {}
+    },
+    {
+      "title": "ProtoFlux presets",
+      "user_input": "List avatar ProtoFlux driver presets",
+      "tool_call": "resonite_fleet",
+      "parameters": { "operation": "list_protoflux_presets" }
+    },
+    {
+      "title": "Fab art pull",
+      "user_input": "Pull inkscape fab overlays and DXF refs",
+      "tool_call": "resonite_fleet",
+      "parameters": { "operation": "pull_inkscape_fab" }
+    }
+  ]
+}

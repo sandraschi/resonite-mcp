@@ -8,6 +8,7 @@ env/
 build/
 develop-eggs/
 dist/
+mcp-server/src/
 downloads/
 eggs/
 .eggs/

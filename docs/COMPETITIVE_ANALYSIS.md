@@ -1,6 +1,6 @@
 # Competitive Analysis — Resonite MCP Ecosystem
 
-Last updated: 2026-05-28 (Agent Lab planning)
+Last updated: 2026-05-28 (Agent Lab v1.0.0)
 
 Compares **sandraschi/resonite-mcp** with other social VR / world-building MCP and automation projects.
 
@@ -11,29 +11,36 @@ Compares **sandraschi/resonite-mcp** with other social VR / world-building MCP a
 | ResoniteLink + OSC (official) | Native | WebSocket + UDP | Live slot/component control |
 | Generic VRChat MCP servers | Various | OSC-only | Platform-specific, no Resonite depth |
 | Manual Resonite GUI | Human | In-world editing | Precision, no agent loop |
-| **sandraschi/resonite-mcp** | 31+ tools | FastMCP 3.2 + dual transport | RAG guides, presence gate, fleet integrations |
+| **sandraschi/resonite-mcp** | 31+ tools | FastMCP 3.2 + dual transport | RAG guides, presence gate, Agent Lab fleet |
 
 ## Where we lead
 
 - **Dual protocol** — ResoniteLink WebSocket + OSC fallback
 - **Presence awareness** — install detection, launch orchestration, webapp gate
-- **Cross-MCP integrations** — WorldLabs, Blender, Unity (existing) + fleet portmanteau (Phase 1)
-- **RAG + local LLM** — `ask_resonite`, `search_guides`
-- **Fleet webapp** — dashboard on :10978/:10979
+- **Agent Lab fleet** — inkscape → blender → gimp → avatar → marble → resonite orchestration
+- **RAG + local LLM** — `ask_resonite`, `search_guides`, voice command refine
+- **Fleet webapp** — Agent Lab on :10978/:10979, Prometheus sidecar :9079
+- **MCPB bundle** — stdio Claude Desktop package via `just mcpb-pack`
 
-## Gaps we are closing (roadmap)
+## Roadmap gaps — status
 
-See [ROADMAP.md](ROADMAP.md).
+See [ROADMAP.md](ROADMAP.md). Agent Lab Phases 1–6 are **complete**.
 
-| Gap | Our response | Phase |
-|-----|--------------|-------|
-| Inkscape UI vector handoff | `resonite_fleet` + inkscape `stage_resonite_ui` | 1 (done) |
-| Agent execution mode guidance | `resonite_fleet` → `execution_mode` | 1 (done) |
-| Webapp Agent Lab page | `/agent-tools` tabs | 2 |
-| avatar-mcp VRM HTTP handoff | fleet VRM batch | 3 |
-| Docker / Prometheus / smoke | telemetry + GHCR | 4 |
-| Marble / fab art overlays | worldlabs + inkscape fab | 5 |
-| Inventory live API + voice | polish for 1.0.0 | 6 |
+| Gap | Response | Status |
+|-----|----------|--------|
+| Inkscape UI handoff | `resonite_fleet` + inkscape staging | done |
+| Execution mode guidance | `execution_mode` | done |
+| Webapp Agent Lab | `/agent-tools` tabs | done |
+| VRM / avatar pipeline | batch import, ProtoFlux presets | done |
+| Telemetry / Docker | Prometheus, GHCR, audit logs | done |
+| Marble / fab art | worldlabs batch, DXF refs | done |
+| Inventory + voice | adapter + `resonite_voice` | done (live inventory pending Resonite OSC) |
+
+## Post-1.0 differentiation
+
+- **Strict fleet E2E** in CI (offline mocks; live chain manual)
+- **Cross-fleet portmanteau** vs single-purpose OSC wrappers
+- **Inventory adapter** mock/live/auto vs hard-coded mocks only
 
 ## Fleet pipeline role
 
@@ -42,10 +49,12 @@ inkscape-mcp (UI vectors) → resonite-mcp (in-world UI slots)
 blender-mcp (VRM/GLB)     → resonite-mcp (avatar/props)
 gimp-mcp (textures)       → resonite-mcp (material QA + import)
 worldlabs-mcp (splats)    → resonite-mcp (environment)
+avatar-mcp (VRM)          → resonite-mcp (avatar staging)
 ```
 
 ## References
 
 - [ROADMAP.md](ROADMAP.md)
+- [MCPB.md](MCPB.md)
 - [inkscape-mcp ROADMAP](https://github.com/sandraschi/inkscape-mcp/blob/master/docs/ROADMAP.md)
 - [ResoniteLink protocol](https://github.com/Yellow-Dog-Man/ResoniteLink)

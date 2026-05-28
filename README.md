@@ -542,15 +542,20 @@ Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_AN
 - **resonite_fleet** portmanteau: inkscape UI import, blender/gimp bridge, execution_mode
 - Offline fleet E2E smoke in CI
 
+### MCPB (v1.0.0 hygiene)
+- Claude Desktop bundle: `just mcpb-pack` → `dist/resonite-mcp-v1.0.0.mcpb`
+- See [docs/MCPB.md](docs/MCPB.md)
+
 ### v0.4.0 (2026-03-08) — Presence Awareness & Onboarding
 - [x] Resonite installation detection (Registry/Filesystem)
 - [x] Process monitoring and launch orchestration
 - [x] Presence Gate UI for onboarding and startup
 
 ### Future
-- [ ] Voice command processing
+- [ ] Live inventory OSC (adapter live mode end-to-end)
+- [ ] In-world voice macro bindings
+- [ ] MCPB tag-triggered releases
 - [ ] AR/VR hardware integration
-- [ ] Cross-platform mobile support
 
 ---
 

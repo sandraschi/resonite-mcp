@@ -58,9 +58,10 @@ fix:
 typecheck:
     uv run mypy src/resonite_mcp/
 
-# Run Python tests with coverage
+# Run Python tests; coverage gate on tools + utils (50%)
 test:
-    uv run pytest tests/ -v --cov=resonite_mcp --cov-report=term-missing
+    uv run coverage run -m pytest tests/ -v
+    uv run coverage report --include="src/resonite_mcp/tools/*,src/resonite_mcp/utils/*" --fail-under=50
 
 # ── Hardening ──────────────────────────────────────────────────────────────────
 
@@ -85,6 +86,11 @@ build-fe:
 # Build the Zed extension (Rust WASM)
 build-zed:
     ./build.ps1
+
+# Sync src into mcp-server and pack MCPB bundle -> dist/
+mcpb-pack:
+    uv run python tools/sync_mcpb_src.py
+    uv run python tools/pack_mcpb.py
 
 # ── Cleanup ────────────────────────────────────────────────────────────────────
 

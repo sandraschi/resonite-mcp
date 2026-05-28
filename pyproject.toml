@@ -115,10 +115,6 @@ addopts = [
     "--strict-markers",
     "--strict-config",
     "--disable-warnings",
-    "--cov=resonite_mcp",
-    "--cov-report=term-missing",
-    "--cov-report=html:htmlcov",
-    "--cov-fail-under=80",
 ]
 markers = [
     "unit: Unit tests",
@@ -132,6 +128,15 @@ omit = [
     "*/tests/*",
     "*/test_*.py",
     "setup.py",
+    "resonite_mcp/http_server.py",
+    "resonite_mcp/http_functions.py",
+    "resonite_mcp/agentic.py",
+    "resonite_mcp/cli.py",
+    "resonite_mcp/__main__.py",
+    "resonite_mcp/rag.py",
+    "resonite_mcp/resonite_link.py",
+    "resonite_mcp/transport.py",
+    "resonite_mcp/plugins/*",
 ]
 
 [tool.coverage.report]

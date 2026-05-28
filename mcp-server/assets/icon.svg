@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Resonite MCP">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#312e81"/>
+      <stop offset="100%" stop-color="#1e1b4b"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <circle cx="128" cy="108" r="52" fill="none" stroke="#818cf8" stroke-width="10"/>
+  <path d="M88 168 Q128 128 168 168" fill="none" stroke="#a5b4fc" stroke-width="8" stroke-linecap="round"/>
+  <rect x="96" y="188" width="64" height="12" rx="6" fill="#6366f1"/>
+</svg>

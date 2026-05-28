@@ -1,58 +1,51 @@
-# resonite-mcp - Project Assessment
+# resonite-mcp — Project Assessment
 
 **Category**: MCP Server  
-**Assessment Date**: 2026-01-01  
-**Status**: Runt
+**Assessment Date**: 2026-05-28  
+**Version**: v1.0.0 (Agent Lab Phase 6 complete)
 
 ---
 
-## 📊 **Assessment Summary**
+## Summary
 
-| Metric | Value |
-|--------|-------|
-| **Status** | Runt |
-| **Development Status** | Needs Major Work |
-| **Runt Status** | RUNT - No MCPB packaging |
-| **Last Modified** | 01/01/2026 12:21:19 |
-| **Has Git Repository** | True |
-| **Has Proper Structure** | True |
-| **Has MCPB Packaging** | False |
-| **Has CI/CD Pipeline** | False |
-| **Has Monitoring Stack** | False |
+| Metric | Status |
+|--------|--------|
+| Agent Lab roadmap (Phases 1–6) | Complete |
+| MCPB packaging | `mcp-server/` + `just mcpb-pack` |
+| CI/CD | `.github/workflows/ci.yml` (lint, mypy, E2E smoke, pytest) |
+| Docker / monitoring | Dockerfile, compose, Prometheus/Grafana/Loki profile |
+| Test suite | 52 unit tests; fleet E2E offline + strict |
+| Coverage gate | 50% on `tools/` + `utils/` (via `just test`; HTTP stack excluded) |
 
----
-
-## 🎯 **Standards Compliance**
-
-- ✅ Proper project structure
----
-
-## 📋 **Important TODOs**
-
-- 🔴 **CRITICAL**: RUNT - No MCPB packaging
-- 🔴 **CRITICAL**: Implement MCPB packaging (manifest.json)
-- 🟡 **IMPORTANT**: Set up CI/CD pipeline
-- 🟡 **IMPORTANT**: Implement monitoring stack
----
-
-## 🚀 **Next Steps**
-
-### **Major Refactoring Required**
-1. **Initialize Git repository** if missing
-2. **Implement proper project structure**
-3. **Set up MCPB packaging**
-4. **Create CI/CD pipeline**
-5. **Update documentation**
-6. **Implement monitoring stack**
----
-
-## 📚 **References**
-
-- [MCP Central Documentation Standards](../STANDARDS.md)
-- [FastMCP 2.12 Migration Guide](../FASTMCP_2.12_MIGRATION.md)
-- [MCPB Packaging Standards](../MCPB_PACKAGING_STANDARDS.md)
-- [Monitoring Standards](../monitoring/README.md)
+**Overall**: Production-ready for fleet Agent Lab and stdio MCP; live Resonite validation remains operator-driven.
 
 ---
 
-*Assessment generated on 2026-01-01 21:47:42*
+## Standards compliance
+
+| Area | Notes |
+|------|-------|
+| FastMCP 3.2+ | Portmanteau tools, async handlers, `Context` where applicable |
+| MCPB | `mcp-server/manifest.json`, prompts, sync/pack scripts — see `docs/MCPB.md` |
+| Fleet staging | `D:/Temp/fleet_pipeline/...` defaults documented in fleet ops |
+| Central docs | `mcp-central-docs/projects/resonite-mcp/STATUS.md` |
+
+---
+
+## Remaining gaps (post-1.0)
+
+| Priority | Item |
+|----------|------|
+| High | Live E2E with Resonite + inkscape HTTP (`--live --strict`) |
+| High | Real inventory OSC responses (adapter live mode) |
+| Medium | Voice macros mapped to in-world ProtoFlux bindings |
+| Medium | MCPB release workflow on git tags |
+| Low | Raise coverage on `integrations.py`, `osc.py` toward 70%+ |
+
+---
+
+## References
+
+- [ROADMAP.md](docs/ROADMAP.md)
+- [MCPB.md](docs/MCPB.md)
+- [MCP Central — MCPB standards](file:///D:/Dev/repos/mcp-central-docs/standards/MCPB_PACKAGING_STANDARDS.md)
