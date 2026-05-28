@@ -77,7 +77,7 @@ _is_stdio_mode = (
 
 server = FastMCP(
     name="Resonite MCP",
-    version="0.1.1",
+    version="0.5.0",
     instructions="""You are a Resonite social VR platform assistant. You can help users control avatars, manage worlds, execute ProtoFlux scripts, and handle social interactions through natural language commands.
 
 Key capabilities:
@@ -220,7 +220,8 @@ async def health_check() -> dict[str, Any]:
     return {
         "status": "success",
         "message": "Resonite MCP server is healthy",
-        "version": "0.1.1",
+        "version": "0.5.0",
+        "agent_lab_phase": 1,
         "plugins_loaded": list(plugin_manager.loaded_plugins.keys())
         if plugin_manager
         else [],

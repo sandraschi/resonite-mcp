@@ -4,7 +4,7 @@ Registered via import in server.py. Each prompt triggers a predefined
 conversation template for common Resonite workflows.
 """
 
-from ..server import server
+from .server import server
 
 
 @server.prompt()

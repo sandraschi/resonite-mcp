@@ -502,7 +502,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Roadmap
 
-### v0.4.0
+Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_ANALYSIS.md](docs/COMPETITIVE_ANALYSIS.md)
+
+| Phase | Version | Theme |
+|-------|---------|-------|
+| 1 (0.5.0) | **done** | `resonite_fleet` handoff, execution_mode, offline E2E |
+| 2 (0.6.0) | planned | Webapp Agent Lab |
+| 3–6 | planned | VRM, Docker, Marble, 1.0 polish |
+
+### v0.5.0 (2026-05-28) — Agent Lab Phase 1
+- **resonite_fleet** portmanteau: inkscape UI import, blender/gimp bridge, execution_mode
+- Offline fleet E2E smoke in CI
+
+### v0.4.0 (2026-03-08) — Presence Awareness & Onboarding
 - [x] Resonite installation detection (Registry/Filesystem)
 - [x] Process monitoring and launch orchestration
 - [x] Presence Gate UI for onboarding and startup
