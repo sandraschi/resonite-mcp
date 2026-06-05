@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- **vBot OSC receiver** — `GET /api/resonite/vbot/receiver`, `POST /api/resonite/vbot/test`, types `yahboom` / `mechazilla` / `godzilla` / `custom`; [docs/VBOT_OSC_RECEIVER.md](docs/VBOT_OSC_RECEIVER.md).
+- Cross-links to teleoperator [VIRTUAL_TWINS](https://github.com/sandraschi/teleoperator-mcp/blob/master/docs/VIRTUAL_TWINS.md) and [VBOT_CREATIVE_TWINS](https://github.com/sandraschi/teleoperator-mcp/blob/master/docs/VBOT_CREATIVE_TWINS.md).
+
+---
+
 ## [0.2.0] — 2026-05-19 — Fleet Pipeline Fixes 🔗
 
 ### Fixed

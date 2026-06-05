@@ -14,6 +14,7 @@ def test_list_vbot_types_includes_mechazilla() -> None:
     ids = {t["id"] for t in catalog["types"]}
     assert "yahboom" in ids
     assert "mechazilla" in ids
+    assert "godzilla" in ids
 
 
 def test_receiver_spec_addresses() -> None:

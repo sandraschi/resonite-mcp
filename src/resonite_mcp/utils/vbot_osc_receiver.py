@@ -45,6 +45,13 @@ VBOT_ROBOT_TYPES: dict[str, dict[str, Any]] = {
         "default_scale": 1.0,
         "notes": "Any mesh — wire the same receiver graph.",
     },
+    "godzilla": {
+        "label": "Kaiju / tokusatsu scale",
+        "drive": "holonomic_2d",
+        "default_robot_id": "vbot_godzilla_01",
+        "default_scale": 50.0,
+        "notes": "Resonite handles city-block scale; prefer kinematic locomotion for stability.",
+    },
 }
 
 

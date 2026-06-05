@@ -6,7 +6,7 @@ In-world ProtoFlux graph that listens on **Resonite OSC input port 9000** and dr
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /api/resonite/vbot/types` | yahboom, mechazilla, bumi, custom |
+| `GET /api/resonite/vbot/types` | yahboom, mechazilla, godzilla, bumi, custom |
 | `GET /api/resonite/vbot/receiver?robot_id=&robot_type=` | Full build spec + test sequence |
 | `POST /api/resonite/vbot/test?robot_id=&robot_type=` | Fire spawn/move/head/stop OSC |
 
@@ -95,3 +95,11 @@ Invoke-RestMethod -Method Post "http://127.0.0.1:8787/api/resonite/vbot/test"
 ```
 
 Then start teleoperator `?robot=vboomy` for live WebXR drive.
+
+## Kaiju / Godzilla scale
+
+`robot_type=godzilla`, spawn scale **50+**. Same OSC graph — swap mesh, prefer **kinematic** locomotion at huge scale. Fleet doc: [VBOT_CREATIVE_TWINS.md](https://github.com/sandraschi/teleoperator-mcp/blob/master/docs/VBOT_CREATIVE_TWINS.md).
+
+## LeRobot dataset
+
+Teleop → JSONL (teleoperator-mcp) → `export-lerobot.ps1` → parquet. Virtual and physical episodes share schema; filter by `robot_id` in episode meta. Fleet index: [mcp-central-docs VIRTUAL_TWINS_FLEET.md](https://github.com/sandraschi/mcp-central-docs/blob/main/projects/teleoperator-mcp/VIRTUAL_TWINS_FLEET.md).
