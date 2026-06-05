@@ -1650,3 +1650,55 @@ async def get_protoflux_graph() -> dict:
         ),
     }
 
+
+# ---------------------------------------------------------------------------
+# vBot OSC receiver (teleoperator vBoomy / vMechazilla loop)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/resonite/vbot/types")
+async def list_vbot_types_route() -> dict:
+    """Catalog of creative virtual robot types sharing the fleet OSC contract."""
+    from .utils.vbot_osc_receiver import list_vbot_types
+
+    return list_vbot_types()
+
+
+@app.get("/api/resonite/vbot/receiver")
+async def get_vbot_receiver_spec(
+    robot_id: str = Query(default="vbot_yahboom_01"),
+    robot_type: str = Query(default="yahboom"),
+    osc_port: int = Query(default=9000, ge=1, le=65535),
+) -> dict:
+    """ProtoFlux receiver build spec for in-world vBot OSC (robotics-mcp → Resonite)."""
+    from .utils.vbot_osc_receiver import get_vbot_receiver_spec
+
+    return get_vbot_receiver_spec(robot_id=robot_id, robot_type=robot_type, osc_port=osc_port)
+
+
+@app.post("/api/resonite/vbot/test")
+async def test_vbot_receiver(
+    robot_id: str = Query(default="vbot_yahboom_01"),
+    robot_type: str = Query(default="yahboom"),
+    host: str = Query(default="127.0.0.1"),
+    osc_port: int = Query(default=9000, ge=1, le=65535),
+) -> dict:
+    """Fire spawn + move + head + stop OSC sequence (Resonite must be listening)."""
+    from .http_functions import send_osc_http
+    from .utils.vbot_osc_receiver import get_vbot_receiver_spec
+
+    spec = get_vbot_receiver_spec(robot_id=robot_id, robot_type=robot_type, osc_port=osc_port)
+    results: list[dict] = []
+    for step in spec["test_sequence"]:
+        osc_result = await send_osc_http(host, osc_port, step["address"], step["values"])
+        results.append({"address": step["address"], "values": step["values"], **osc_result})
+
+    return {
+        "status": "success",
+        "robot_id": robot_id,
+        "robot_type": robot_type,
+        "host": host,
+        "osc_port": osc_port,
+        "steps": results,
+        "message": "OSC test sequence sent — verify motion in Resonite if receiver graph is wired.",
+    }
