@@ -1,6 +1,6 @@
 Param([switch]$Headless)
 
-# resonite-mcp Start — delegates to full SOTA startup in web_sota/
+# resonite-mcp Start - delegates to full SOTA startup in web_sota/
 $ScriptDir = Split-Path -Parent $PSCommandPath
 $WebSotaStart = Join-Path $ScriptDir "web_sota\start.ps1"
 

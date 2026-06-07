@@ -9,7 +9,7 @@ if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
 $WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
 # ------------------------------
 
-# Resonite MCP SOTA — Backend (HTTP MCP + SOTA API) + Vite frontend
+# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
 # Backend: 10979, Frontend: 10978 (proxy /api to backend). No manual uv/uvicorn.
 
 $WebPort = 10978
