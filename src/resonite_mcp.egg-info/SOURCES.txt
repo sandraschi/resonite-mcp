@@ -26,6 +26,7 @@ src/resonite_mcp/plugins/plugin_manager.py
 src/resonite_mcp/plugins/protoflux_helpers.py
 src/resonite_mcp/tools/__init__.py
 src/resonite_mcp/tools/avatar.py
+src/resonite_mcp/tools/fleet_tools.py
 src/resonite_mcp/tools/integrations.py
 src/resonite_mcp/tools/inventory.py
 src/resonite_mcp/tools/osc.py
@@ -34,3 +35,16 @@ src/resonite_mcp/tools/resonite_link.py
 src/resonite_mcp/tools/rest_api.py
 src/resonite_mcp/tools/session.py
 src/resonite_mcp/tools/system.py
+src/resonite_mcp/tools/voice_tools.py
+src/resonite_mcp/utils/execution_mode.py
+src/resonite_mcp/utils/fleet_audit.py
+src/resonite_mcp/utils/fleet_e2e_live.py
+src/resonite_mcp/utils/fleet_e2e_offline.py
+src/resonite_mcp/utils/fleet_e2e_strict.py
+src/resonite_mcp/utils/fleet_http.py
+src/resonite_mcp/utils/fleet_staging.py
+src/resonite_mcp/utils/inventory_adapter.py
+src/resonite_mcp/utils/marble_staging.py
+src/resonite_mcp/utils/protoflux_avatar_presets.py
+src/resonite_mcp/utils/structured_logging.py
+src/resonite_mcp/utils/telemetry.py

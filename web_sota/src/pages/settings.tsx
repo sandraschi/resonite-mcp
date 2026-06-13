@@ -3,7 +3,63 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings as SettingsIcon, Shield, Globe, Zap, Save, RefreshCw } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
+function LLMSettings() {
+    const [providers, setProviders] = useState<Record<string, {name:string}[]>>({});
+    const [selectedProvider, setSelectedProvider] = useState("ollama");
+    const [selectedModel, setSelectedModel] = useState("");
+    const [status, setStatus] = useState<"loading"|"ready"|"error">("loading");
+    useEffect(() => {
+        fetch("/api/llm/providers").then(r => r.json()).then(d => {
+            setProviders(d);
+            const savedP = localStorage.getItem("llm_provider") || "ollama";
+            const savedM = localStorage.getItem("llm_model") || "";
+            setSelectedProvider(savedP);
+            const models = d[savedP === "ollama" ? "ollama" : "lm_studio"] || [];
+            setSelectedModel(savedM && models.some((m:{name:string}) => m.name === savedM) ? savedM : (models[0]?.name || ""));
+            setStatus(models.length > 0 ? "ready" : "error");
+        }).catch(() => {
+            setProviders({ ollama: [{name:"llama3.2:3b"}] });
+            setSelectedModel(localStorage.getItem("llm_model") || "llama3.2:3b");
+            setStatus("ready");
+        });
+    }, []);
+    const save = (p:string, m:string) => { localStorage.setItem("llm_provider", p); localStorage.setItem("llm_model", m); };
+    const models = providers[selectedProvider === "ollama" ? "ollama" : "lm_studio"] || [];
+    return (
+        <Card className="border-border/50 bg-card/30 backdrop-blur-md glass overflow-hidden border-t-indigo-500/30">
+            <CardHeader className="bg-gradient-to-b from-indigo-500/[0.05] to-transparent border-b border-border/50">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-indigo-500/10">
+                        <Zap className="h-4 w-4 text-indigo-400" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-sm font-black uppercase tracking-widest text-foreground">Local LLM</CardTitle>
+                        <CardDescription className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter opacity-70">Provider &amp; Model Selection</CardDescription>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className="p-6 space-y-6">
+                <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Provider</Label>
+                    <select className="w-full bg-muted/30 border border-border/50 text-foreground rounded-xl h-11 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all appearance-none cursor-pointer"
+                        value={selectedProvider} onChange={(e) => { setSelectedProvider(e.target.value); save(e.target.value, ""); }}>
+                        <option value="ollama">Ollama</option>
+                        <option value="lm_studio">LM Studio</option>
+                    </select>
+                </div>
+                <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground italic">Model</Label>
+                    <select className="w-full bg-muted/30 border border-border/50 text-foreground rounded-xl h-11 px-4 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/40 transition-all appearance-none cursor-pointer"
+                        value={selectedModel} onChange={(e) => { setSelectedModel(e.target.value); save(selectedProvider, e.target.value); }}>
+                        {models.map((m) => <option key={m.name} value={m.name}>{m.name}</option>)}
+                    </select>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
 export function Settings() {
     return (
@@ -129,6 +185,8 @@ export function Settings() {
                         </div>
                     </CardContent>
                 </Card>
+
+                <LLMSettings />
             </div>
 
             {/* System Integrity Notification (Mock) */}
