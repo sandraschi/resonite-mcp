@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -38,9 +37,12 @@ class TestExecutionMode:
     async def test_execution_mode(self):
         from resonite_mcp.tools.fleet_tools import resonite_fleet
 
-        with patch("resonite_mcp.server.is_resonite_installed", return_value=True), patch(
-            "resonite_mcp.server.is_resonite_running",
-            return_value=True,
+        with (
+            patch("resonite_mcp.server.is_resonite_installed", return_value=True),
+            patch(
+                "resonite_mcp.server.is_resonite_running",
+                return_value=True,
+            ),
         ):
             result = await resonite_fleet("execution_mode")
         assert result["success"] is True

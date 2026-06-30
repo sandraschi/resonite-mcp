@@ -5,7 +5,20 @@ Each tool module registers its functions as MCP tools when imported.
 """
 
 # Import all tool modules to register individual tools
-from . import avatar, fleet_tools, inventory, osc, plugin, session, system, resonite_link, rest_api, voice_tools
+from . import (
+    avatar,
+    fleet_tools,
+    inventory,
+    osc,
+    plugin,
+    prefab_cards,
+    resonite_link,
+    rest_api,
+    session,
+    system,
+    vbot,
+    voice_tools,
+)
 
 __all__ = [
     "avatar",
@@ -13,9 +26,11 @@ __all__ = [
     "inventory",
     "osc",
     "plugin",
-    "session",
-    "system",
+    "prefab_cards",
     "resonite_link",
     "rest_api",
+    "session",
+    "system",
+    "vbot",
     "voice_tools",
 ]

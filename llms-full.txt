@@ -1,0 +1,191 @@
+# Resonite MCP — Full Tool Reference (SOTA 2026)
+
+**FastMCP 3.2+ | Python 3.12+ | Ports 10978/10979**
+
+## Server Identity
+
+- **Name:** Resonite MCP
+- **Version:** 0.8.0
+- **Role:** Natural language control of the Resonite social VR platform
+- **Repo:** https://github.com/sandraschi/resonite-mcp
+
+## Architecture
+
+```
+                          ┌──────────────────────┐
+                          │   Claude / Cursor     │
+                          └──────────┬───────────┘
+                                     │ MCP (stdio/HTTP)
+                          ┌──────────▼───────────┐
+                          │  resonite-mcp server  │
+                          │  (FastMCP 3.2+ ASPI) │  port 10979
+                          └───┬───────┬──────┬───┘
+                              │       │      │
+                    ┌─────────▼──┐ ┌──▼───┐ ┌▼──────────┐
+                    │ OSC (UDP) │ │REST  │ │ResoniteLink│
+                    │ port 9000  │ │HTTPS │ │WS port 4242│
+                    └────────────┘ └──────┘ └────────────┘
+```
+
+**Layers:**
+| Layer | Technology | Port | Purpose |
+|-------|-----------|------|---------|
+| Frontend | Vite + React 19 + Tailwind | 10978 | Web SPA dashboard |
+| Backend | FastAPI + FastMCP 3.2 | 10979 | REST API + MCP transport |
+| OSC | python-osc (UDP) | 9000 | Real-time Resonite control |
+| ResoniteLink | WebSocket JSON | 4242 | Slot/component manipulation |
+| Cloud API | HTTPS | 443 | api.resonite.com REST |
+
+## All Registered Tools (~55 tools)
+
+### OSC Communication (8 tools)
+- `send_osc(host, port, address, values)` — Send OSC message
+- `start_osc_server(port)` — Start OSC listener
+- `stop_osc_server(port)` — Stop OSC listener
+- `get_received_messages(port)` — Get buffered OSC messages
+- `get_latest_message(port)` — Get most recent OSC message
+- `get_osc_server_stats(port)` — OSC server stats
+- `clear_osc_message_buffer(port)` — Clear buffer
+- `test_osc_echo(port)` — Echo test
+
+### Session Management (4 tools)
+- `resonite_session_start(session_name, world_path, avatar_slot)` — Start session
+- `resonite_session_status()` — Session status
+- `resonite_world_load(world_path)` — Load world
+- `resonite_session_end()` — End session + cleanup
+
+### Avatar Control (3 tools)
+- `resonite_avatar_load(avatar_id, slot, parameters)` — Load avatar
+- `resonite_parameter_set(name, value)` — Set avatar parameter
+- `resonite_protoflux_execute(script_name, script_data, execute)` — Run ProtoFlux script
+
+### Inventory Management (7 tools)
+- `resonite_inventory_list(item_type, search_query, limit, offset)` — List inventory
+- `resonite_inventory_search(query, item_type)` — Search inventory
+- `resonite_inventory_spawn(item_id, position, rotation, scale)` — Spawn item
+- `resonite_inventory_upload(item_path, item_name, item_type, ...)` — Upload item
+- `resonite_inventory_delete(item_id, confirm_deletion)` — Delete item
+- `resonite_inventory_share(item_id, share_with, permission_level)` — Share item
+- `resonite_inventory_info(item_id)` — Item details
+
+### Plugin Management (6 tools)
+- `plugin_list()` — List plugins
+- `plugin_load(name)` — Load plugin
+- `plugin_unload(name)` — Unload plugin
+- `plugin_reload(name)` — Reload plugin
+- `plugin_discover()` — Discover plugins
+- `plugin_info(name)` — Plugin details
+
+### REST API / Cloud (6 tools)
+- `resonite_rest_login(username, password, remember_me)` — Login to cloud API
+- `resonite_rest_get_sessions(name, host_name, host_id, min_active_users, ...)` — List public sessions
+- `resonite_rest_get_user(username_or_id)` — Get user profile
+- `resonite_rest_get_records(user_id, path, record_id)` — Browse inventory records
+- `resonite_rest_send_message(target_user_id, message)` — Send chat message
+- `resonite_rest_get_platform()` — Get platform info
+
+### ResoniteLink Tools (10 tools)
+- `resonite_link_connect(host, port)` — Connect WebSocket
+- `resonite_link_spawn(template_url, position)` — Spawn object via template URL
+- `resonite_link_set(component_id, field, value)` — Set component field value
+- `resonite_link_get(component_id, field)` — Get component field value
+- `resonite_link_read_field(ref_id)` — Read field by ref ID
+- `resonite_link_write_field(ref_id, value, value_type)` — Write field by ref ID
+- `resonite_link_get_node(ref_id)` — Get slot/component info by ref ID
+- `resonite_link_get_children(slot_id)` — List direct children of slot
+- `resonite_link_add_slot(parent_id, name)` — Create child slot
+- `resonite_link_add_component(slot_id, component_type)` — Add component to slot
+- `resonite_link_destroy_slot(slot_id, preserve_assets)` — Destroy slot
+- `resonite_link_reflect(component_type)` — Discover component types/fields
+- `resonite_link_batch(operations)` — Execute batch operations atomically
+
+### Cloud Variables (4 tools)
+- `resonite_cloud_var_list(user_id)` — List cloud variable definitions
+- `resonite_cloud_var_get(path)` — Get cloud variable value
+- `resonite_cloud_var_set(path, value)` — Set cloud variable value
+- `resonite_cloud_var_delete(path)` — Delete cloud variable
+
+### Friends & Contacts (3 tools)
+- `resonite_friends_list()` — List friends
+- `resonite_friend_requests()` — List pending friend requests
+- `resonite_friend_presence(user_id)` — Get friend presence info
+
+### vBot Robotics (4 tools)
+- `resonite_vbot_spawn(robot_type, robot_id, position, scale)` — Spawn vBot
+- `resonite_vbot_move(robot_id, linear, angular)` — Move vBot
+- `resonite_vbot_head(robot_id, yaw_deg, pitch_deg)` — Move vBot head
+- `resonite_vbot_stop(robot_id)` — Stop vBot
+- `resonite_vbot_list_types()` — List available vBot types
+
+### Fleet Integration (1 portmanteau, 20 operations)
+- `resonite_fleet(operation, ...)` — Cross-fleet asset pipeline
+  Operations: list_presets, execution_mode, list_staging, import_staged_assets,
+  pull_inkscape_ui, import_blender_asset, import_gimp_texture, list_vrm_staging,
+  import_vrm_batch, pull_blender_vrm, pull_avatar_vrm, list_protoflux_presets,
+  list_marble_staging, import_worldlabs_batch, pull_inkscape_fab, run_marble_pipeline,
+  inventory_status, run_fleet_pipeline, run_strict_fleet_pipeline
+
+### Voice Tools (1 portmanteau)
+- `resonite_voice(operation, ...)` — Voice command macros
+  Operations: parse_command, execute_command, list_macros, run_macro
+
+### System (4 tools)
+- `help(level, topic)` — Documentation
+- `status(level, focus)` — Server status
+- `health_check()` — Component health
+- `search_guides(query, limit)` — Semantic RAG search
+- `ask_resonite(question)` — LLM-synthesized answers
+- `agentic_plan_execute(goal)` — Autonomous multi-step planning
+- `resonite_dashboard_card()` — Prefab status card (App)
+- `resonite_inventory_card(limit)` — Prefab inventory card (App)
+
+### Integrations (3 tools)
+- `resonite_import_worldlabs_url(world_id, ...)` — Import WorldLabs asset
+- `resonite_import_worldlabs_batch(entries, ...)` — Batch import
+- `resonite_import_blender(object_name)` — Import from Blender
+
+## Key Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `MCP_PORT` | 10979 | Backend bind port |
+| `MCP_HOST` | 127.0.0.1 | Backend bind host |
+| `MCP_TRANSPORT` | stdio | Transport mode (stdio/http/sse) |
+| `RESONITE_OSC_HOST` | 127.0.0.1 | OSC target host |
+| `RESONITE_OSC_PORT` | 9000 | OSC target port |
+| `RESONITE_TOKEN` | — | Cloud API auth token |
+| `RESONITE_USER_ID` | — | Cloud API user ID |
+| `MCP_BRIDGE_URLS` | — | Fleet MCP bridge URLs |
+| `RESONITE_TAURI` | 0 | Tauri embedded mode flag |
+
+## Quick Start
+
+```bash
+uv sync
+uv run python -m resonite_mcp --port 10979
+# Frontend: ./web_sota/start.ps1 → http://localhost:10978
+```
+
+## Fleet Integration
+
+- Ports: 10978/10979 (fleet range 10700-11500)
+- Tauri NSIS: `native/` wrapper with embedded PyInstaller backend
+- Cross-MCP: MCPBridge (ProxyProvider) for fleet server federation
+- Prefab UI: status/inventory cards for Claude chat rendering
+
+## Testing
+
+```bash
+uv run pytest tests/unit/
+just e2e   # Playwright E2E smoke test
+just cua-nsis-test  # CUA NSIS install→launch→verify→uninstall
+```
+
+## Standards Compliance
+
+- FastMCP 3.2+ with ctx.sample(), portmanteau pattern, Prefab UI
+- Fleet port range 10700-11500 (10978/10979)
+- Dual transport: stdio (Claude Desktop) + HTTP (Tauri)
+- Playwright E2E + CUA NSIS smoke test
+- MCPB packaging (`.mcpb` bundles)
+- Ruff (Python) + Biome (TypeScript) linting

@@ -1,9 +1,10 @@
 import logging
-from typing import List, Dict, Any, Optional
-import lancedb
-from lancedb.pydantic import LanceModel, Vector
-from lancedb.embeddings import get_registry
 import pathlib
+from typing import Any
+
+import lancedb
+from lancedb.embeddings import get_registry
+from lancedb.pydantic import LanceModel, Vector
 
 logger = logging.getLogger(__name__)
 
@@ -36,13 +37,11 @@ class ResoniteRAG:
 
         logger.info("Indexing Resonite guides...")
         data = self._load_guides()
-        self.table = self.db.create_table(
-            self.table_name, schema=GuideChunk, mode="overwrite"
-        )
+        self.table = self.db.create_table(self.table_name, schema=GuideChunk, mode="overwrite")
         self.table.add(data)
         logger.info(f"Indexed {len(data)} chunks from guides.")
 
-    def _load_guides(self) -> List[Dict[str, Any]]:
+    def _load_guides(self) -> list[dict[str, Any]]:
         """Scan repository for *.md files and chunk them."""
         chunks = []
         repo_root = pathlib.Path(__file__).parent.parent.parent
@@ -75,14 +74,14 @@ class ResoniteRAG:
 
         return chunks
 
-    def _extract_title(self, content: str) -> Optional[str]:
+    def _extract_title(self, content: str) -> str | None:
         """Extract first H1 from markdown."""
         for line in content.splitlines():
             if line.startswith("# "):
                 return line[2:].strip()
         return None
 
-    async def search(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
+    async def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """Perform semantic search."""
         if not self.table:
             await self.initialize()

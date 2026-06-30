@@ -17,9 +17,7 @@ def _enable_agentic_mode():
         server.add_transforms(CodeMode())
         logging.getLogger(__name__).info("CodeMode agentic discovery enabled")
     except ImportError:
-        logging.getLogger(__name__).warning(
-            "CodeMode not available (FastMCP >=3.2.0 required)"
-        )
+        logging.getLogger(__name__).warning("CodeMode not available (FastMCP >=3.2.0 required)")
 
 
 def main():
@@ -64,8 +62,7 @@ def main():
 
     args = parser.parse_args()
 
-    from .utils.structured_logging import configure_file_logging
-    from .utils.structured_logging import configure_json_logging_if_enabled
+    from .utils.structured_logging import configure_file_logging, configure_json_logging_if_enabled
 
     configure_json_logging_if_enabled()
     if os.getenv("RESONITE_MCP_LOG_DIR"):

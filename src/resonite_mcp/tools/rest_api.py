@@ -12,10 +12,10 @@ Assets:   https://assets.resonite.com/
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import uuid
-import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 import httpx
 
@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 RESONITE_API = "https://api.resonite.com"
 
 # In-process token store (resets on server restart; use env var as fallback)
-_token_store: Dict[str, str] = {}  # {"user_id": ..., "token": ...}
+_token_store: dict[str, str] = {}  # {"user_id": ..., "token": ...}
 
 
 def _auth_headers() -> dict[str, str]:
@@ -48,7 +48,7 @@ async def resonite_rest_login(
     username: str,
     password: str,
     remember_me: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Log in to the Resonite API and store the session token.
 
     Args:
@@ -100,12 +100,12 @@ async def resonite_rest_login(
 
 
 async def resonite_rest_get_sessions(
-    name: Optional[str] = None,
-    host_name: Optional[str] = None,
-    host_id: Optional[str] = None,
+    name: str | None = None,
+    host_name: str | None = None,
+    host_id: str | None = None,
     min_active_users: int = 0,
     include_empty_headless: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List public Resonite world sessions.
 
     Does not require authentication.
@@ -148,7 +148,7 @@ async def resonite_rest_get_sessions(
 # ── Users ─────────────────────────────────────────────────────────────────────
 
 
-async def resonite_rest_get_user(username_or_id: str) -> Dict[str, Any]:
+async def resonite_rest_get_user(username_or_id: str) -> dict[str, Any]:
     """Look up a Resonite user by username or user ID.
 
     Args:
@@ -182,10 +182,10 @@ async def resonite_rest_get_user(username_or_id: str) -> Dict[str, Any]:
 
 
 async def resonite_rest_get_records(
-    user_id: Optional[str] = None,
-    path: Optional[str] = None,
-    record_id: Optional[str] = None,
-) -> Dict[str, Any]:
+    user_id: str | None = None,
+    path: str | None = None,
+    record_id: str | None = None,
+) -> dict[str, Any]:
     """Browse a user's Resonite inventory records.
 
     Requires authentication (resonite_rest_login first, or RESONITE_USER_ID + RESONITE_TOKEN env vars).
@@ -242,7 +242,7 @@ async def resonite_rest_get_records(
 async def resonite_rest_send_message(
     target_user_id: str,
     message: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Send a chat message to a Resonite user via the REST API.
 
     Useful for sending a World Labs GLB/SPZ URL to yourself or a collaborator
@@ -291,7 +291,7 @@ async def resonite_rest_send_message(
 # ── Platform info ─────────────────────────────────────────────────────────────
 
 
-async def resonite_rest_get_platform() -> Dict[str, Any]:
+async def resonite_rest_get_platform() -> dict[str, Any]:
     """Get Resonite platform/server information.
 
     Does not require authentication.
@@ -312,6 +312,290 @@ async def resonite_rest_get_platform() -> Dict[str, Any]:
         return {"status": "error", "detail": str(e)}
 
 
+# ── Cloud Variables ─────────────────────────────────────────────────────────
+
+
+async def resonite_cloud_var_list(
+    user_id: str = "",
+    path: str = "Cloud",
+) -> dict[str, Any]:
+    """List cloud variable definitions for a user.
+
+    Cloud variables are key-value pairs stored in Resonite's cloud.
+    Requires authentication.
+
+    Args:
+        user_id: User ID (U-...). Defaults to authenticated user.
+        path: Cloud variable path prefix to filter by.
+
+    ## Return Format
+    {"status": "ok", "variables": [...], "count": int}
+    """
+    auth = _auth_headers()
+    uid = user_id or _token_store.get("user_id", "")
+    if not auth or not uid:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(f"{RESONITE_API}/users/{uid}/vars", headers=auth, params={"path": path})
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                "status": "ok",
+                "variables": data if isinstance(data, list) else [],
+                "count": len(data) if isinstance(data, list) else 0,
+                "path": path,
+            }
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+async def resonite_cloud_var_get(
+    path: str,
+    user_id: str = "",
+) -> dict[str, Any]:
+    """Get a cloud variable value by its path.
+
+    Args:
+        path: Full cloud variable path (e.g. "Cloud/MyVar")
+        user_id: User ID (U-...). Defaults to authenticated user.
+
+    ## Return Format
+    {"status": "ok", "path": str, "value": any}
+    """
+    auth = _auth_headers()
+    uid = user_id or _token_store.get("user_id", "")
+    if not auth or not uid:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    _owner, _var_path = path.split("/", 1) if "/" in path else (uid, path)
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(
+                f"{RESONITE_API}/users/{uid}/vars/{export_name(path)}",
+                headers=auth,
+            )
+            resp.raise_for_status()
+            return {"status": "ok", "path": path, "value": resp.json()}
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+async def resonite_cloud_var_set(
+    path: str,
+    value: Any,
+    user_id: str = "",
+) -> dict[str, Any]:
+    """Set a cloud variable value.
+
+    Creates the variable if it does not exist.
+
+    Args:
+        path: Cloud variable path (e.g. "Cloud/MyVar")
+        value: The value to store (string, number, bool, or JSON-serializable)
+        user_id: User ID (U-...). Defaults to authenticated user.
+
+    ## Return Format
+    {"status": "ok", "path": str, "value": any}
+    """
+    auth = _auth_headers()
+    uid = user_id or _token_store.get("user_id", "")
+    if not auth or not uid:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.put(
+                f"{RESONITE_API}/users/{uid}/vars/{export_name(path)}",
+                json={"value": value},
+                headers={**auth, "Content-Type": "application/json"},
+            )
+            resp.raise_for_status()
+            return {"status": "ok", "path": path, "value": value}
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+async def resonite_cloud_var_delete(
+    path: str,
+    user_id: str = "",
+) -> dict[str, Any]:
+    """Delete a cloud variable.
+
+    Args:
+        path: Cloud variable path to delete
+        user_id: User ID (U-...). Defaults to authenticated user.
+
+    ## Return Format
+    {"status": "ok", "path": str}
+    """
+    auth = _auth_headers()
+    uid = user_id or _token_store.get("user_id", "")
+    if not auth or not uid:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.delete(
+                f"{RESONITE_API}/users/{uid}/vars/{export_name(path)}",
+                headers=auth,
+            )
+            resp.raise_for_status()
+            return {"status": "ok", "path": path}
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+# ── Friends & Contacts ───────────────────────────────────────────────────────
+
+
+async def resonite_friends_list() -> dict[str, Any]:
+    """List your Resonite friends.
+
+    Requires authentication.
+
+    ## Return Format
+    {"status": "ok", "friends": [...], "count": int}
+    """
+    auth = _auth_headers()
+    uid = _token_store.get("user_id", "")
+    if not auth or not uid:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(f"{RESONITE_API}/users/{uid}/contacts", headers=auth)
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                "status": "ok",
+                "friends": data if isinstance(data, list) else [],
+                "count": len(data) if isinstance(data, list) else 0,
+            }
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+async def resonite_friend_requests() -> dict[str, Any]:
+    """List pending friend requests (incoming).
+
+    Requires authentication.
+
+    ## Return Format
+    {"status": "ok", "requests": [...], "count": int}
+    """
+    auth = _auth_headers()
+    uid = _token_store.get("user_id", "")
+    if not auth or not uid:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(f"{RESONITE_API}/users/{uid}/contacts/requests", headers=auth)
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                "status": "ok",
+                "requests": data if isinstance(data, list) else [],
+                "count": len(data) if isinstance(data, list) else 0,
+            }
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+async def resonite_friend_presence(user_id: str) -> dict[str, Any]:
+    """Get a friend's presence and current session info.
+
+    Args:
+        user_id: The friend's user ID (U-...)
+
+    ## Return Format
+    {"status": "ok", "user_id": str, "presence": {...}}
+    """
+    auth = _auth_headers()
+    if not auth:
+        return {
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first.",
+        }
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(f"{RESONITE_API}/users/{user_id}/presence", headers=auth)
+            resp.raise_for_status()
+            return {"status": "ok", "user_id": user_id, "presence": resp.json()}
+    except httpx.HTTPStatusError as e:
+        return {
+            "status": "error",
+            "http_status": e.response.status_code,
+            "detail": e.response.text,
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
+
+
+def export_name(path: str) -> str:
+    """Percent-encode a cloud variable path for URL use."""
+    from urllib.parse import quote
+
+    return quote(path, safe="")
+
+
 # ── Register tools ────────────────────────────────────────────────────────────
 
 if server is not None:
@@ -321,3 +605,10 @@ if server is not None:
     server.tool()(resonite_rest_get_records)
     server.tool()(resonite_rest_send_message)
     server.tool()(resonite_rest_get_platform)
+    server.tool()(resonite_cloud_var_list)
+    server.tool()(resonite_cloud_var_get)
+    server.tool()(resonite_cloud_var_set)
+    server.tool()(resonite_cloud_var_delete)
+    server.tool()(resonite_friends_list)
+    server.tool()(resonite_friend_requests)
+    server.tool()(resonite_friend_presence)

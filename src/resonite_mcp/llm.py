@@ -1,7 +1,7 @@
 import logging
 import os
+
 import httpx
-from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -14,16 +14,14 @@ OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 class LLMSubstrate:
     """Unified interface for LLM substrate interaction."""
 
-    def __init__(
-        self, name: str, provider: str, url: str, model_id: Optional[str] = None
-    ):
+    def __init__(self, name: str, provider: str, url: str, model_id: str | None = None):
         self.name = name
         self.provider = provider
         self.url = url
         self.model_id = model_id
 
 
-async def detect_local_llms() -> List[LLMSubstrate]:
+async def detect_local_llms() -> list[LLMSubstrate]:
     """Probes local endpoints for running LLM servers."""
     found = []
 
@@ -106,9 +104,7 @@ async def synthesize_answer(prompt: str, context: str, substrate: LLMSubstrate) 
                     "messages": [{"role": "user", "content": full_prompt}],
                     "temperature": 0.3,
                 }
-                resp = await client.post(
-                    f"{substrate.url}/v1/chat/completions", json=payload
-                )
+                resp = await client.post(f"{substrate.url}/v1/chat/completions", json=payload)
                 if resp.status_code == 200:
                     return resp.json()["choices"][0]["message"]["content"]
 
@@ -118,7 +114,7 @@ async def synthesize_answer(prompt: str, context: str, substrate: LLMSubstrate) 
     return "Failed to synthesize answer with local LLM."
 
 
-async def get_best_substrate() -> Optional[LLMSubstrate]:
+async def get_best_substrate() -> LLMSubstrate | None:
     """Returns the most capable local substrate, or None."""
     local_llms = await detect_local_llms()
     if local_llms:

@@ -10,6 +10,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Resonite MCP — Agent Lab",
         "width": 1280,
         "height": 860,
@@ -23,7 +24,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -31,7 +32,15 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": ["binaries/resonite-mcp-backend"]
+    "resources": ["resources/resonite-mcp-backend.exe",
+            "resources/.env.example"],
+    "windows": {
+      "webviewInstallMode": { "type": "skip" },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "./windows/hooks.nsh"
+      }
+    }
   },
   "plugins": {
     "shell": { "open": true },
@@ -39,3 +48,5 @@
     "process": { "all": true }
   }
 }
+
+

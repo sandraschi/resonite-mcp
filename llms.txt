@@ -1,0 +1,15 @@
+# Resonite MCP
+
+> FastMCP 3.2+ MCP server for Resonite social VR platform.
+> Natural language control of avatars, worlds, ProtoFlux scripting, and fleet integration.
+
+## Docs
+
+- [README.md](README.md) — Overview and quick start
+- [INSTALLATION.md](docs/INSTALLATION.md) — Full installation guide
+- [API_REFERENCE.md](docs/API_REFERENCE.md) — REST API endpoints
+- [RESONITELINK_GUIDE.md](docs/RESONITELINK_GUIDE.md) — ResoniteLink WebSocket protocol
+- [VBOT_OSC_RECEIVER.md](docs/VBOT_OSC_RECEIVER.md) — vBot OSC receiver build guide
+- [MCPB.md](docs/MCPB.md) — MCPB packaging
+- [DOCKER.md](docs/DOCKER.md) — Docker deployment
+- [llms-full.txt](llms-full.txt) — Full LLM context (tools, architecture, examples)

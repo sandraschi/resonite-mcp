@@ -327,13 +327,14 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
 
     try:
         import fastmcp
+
         fm_version = fastmcp.__version__
     except (ImportError, AttributeError):
         fm_version = ">=3.1.0"
 
     system_info = {
         "server_name": "Resonite MCP Server",
-        "version": mcp_server.version if hasattr(mcp_server, 'version') else "0.1.1",
+        "version": mcp_server.version if hasattr(mcp_server, "version") else "0.1.1",
         "fastmcp_version": fm_version,
         "platform": platform.platform(),
         "python_version": platform.python_version(),
@@ -370,8 +371,10 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
         }
     except ImportError:
         osc_status = {
-            "active_clients": 0, "active_servers": 0,
-            "default_host": "127.0.0.1", "default_port": 9000,
+            "active_clients": 0,
+            "active_servers": 0,
+            "default_host": "127.0.0.1",
+            "default_port": 9000,
             "total_recorded_messages": 0,
         }
 
@@ -474,9 +477,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
 **Open Files:** {open_files}
 """
         except ImportError:
-            advanced_info = (
-                "\n## System Metrics\n**Note:** psutil not available for detailed metrics\n"
-            )
+            advanced_info = "\n## System Metrics\n**Note:** psutil not available for detailed metrics\n"
 
         # Plugin details
         plugin_details = """
@@ -516,8 +517,9 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
 {plugin_details}
 {osc_details}
 ## Session Management
-**Active Sessions:** {session_status["active_sessions"]}
-**OSC Connectivity:** {"✅ Connected" if session_status["osc_connected"] else "❌ Disconnected"}
+**Resonite Process:** {"✅ Running" if session_status["resonite_running"] else "❌ Not Running"}
+**ResoniteLink:** {"✅ Connected" if session_status["resonite_link_connected"] else "❌ Disconnected"}
+**OSC Available:** {"✅ Yes" if session_status["osc_available"] else "❌ No"}
 **Session Persistence:** Single-user mode
 
 ## Network Configuration
@@ -552,7 +554,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
 
 
 # Import server for tool registration
-from ..server import server
+from ..server import server  # noqa: E402
 
 # Register tools
 server.tool()(help)

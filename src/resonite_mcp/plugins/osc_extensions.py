@@ -4,7 +4,6 @@
 send/receive primitives. Keeps the 8 core tools clean and puts power-user features here.
 """
 
-import time
 from typing import Any
 
 from fastmcp import FastMCP
@@ -17,9 +16,7 @@ class OSCExtensionsPlugin(BasePlugin):
 
     def __init__(self):
         super().__init__(
-            name="osc_extensions",
-            version="1.0.0",
-            description="Extended OSC monitoring and automation tools"
+            name="osc_extensions", version="1.0.0", description="Extended OSC monitoring and automation tools"
         )
 
     @property
@@ -56,7 +53,7 @@ class OSCExtensionsPlugin(BasePlugin):
             osc_monitor_start(port=9001, address_filter="/avatar/parameter/*")
             """
             try:
-                from ..tools.osc import osc_servers, osc_recordings
+                from ..tools.osc import osc_recordings, osc_servers
 
                 if port not in osc_servers:
                     return {

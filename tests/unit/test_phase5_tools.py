@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -57,12 +56,15 @@ class TestMarbleStaging:
         ui.mkdir()
         (ui / "icon.svg").write_text("<svg/>", encoding="utf-8")
 
-        with patch(
-            "resonite_mcp.tools.fleet_tools.check_http_health",
-            new=AsyncMock(return_value=False),
-        ), patch(
-            "resonite_mcp.tools.fleet_tools._import_local_file",
-            new=AsyncMock(return_value={"success": True, "path": "mock"}),
+        with (
+            patch(
+                "resonite_mcp.tools.fleet_tools.check_http_health",
+                new=AsyncMock(return_value=False),
+            ),
+            patch(
+                "resonite_mcp.tools.fleet_tools._import_local_file",
+                new=AsyncMock(return_value={"success": True, "path": "mock"}),
+            ),
         ):
             result = await resonite_fleet(
                 "pull_inkscape_fab",
@@ -81,15 +83,19 @@ class TestMarbleStaging:
         ui.mkdir()
         (ui / "icon.svg").write_text("<svg/>", encoding="utf-8")
 
-        with patch(
-            "resonite_mcp.tools.fleet_tools.check_http_health",
-            new=AsyncMock(return_value=False),
-        ), patch(
-            "resonite_mcp.tools.fleet_tools._import_local_file",
-            new=AsyncMock(return_value={"success": True, "path": "mock"}),
-        ), patch(
-            "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
-            new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
+        with (
+            patch(
+                "resonite_mcp.tools.fleet_tools.check_http_health",
+                new=AsyncMock(return_value=False),
+            ),
+            patch(
+                "resonite_mcp.tools.fleet_tools._import_local_file",
+                new=AsyncMock(return_value={"success": True, "path": "mock"}),
+            ),
+            patch(
+                "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
+                new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
+            ),
         ):
             result = await resonite_fleet(
                 "run_marble_pipeline",

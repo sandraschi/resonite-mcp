@@ -2,29 +2,24 @@
 """HTTP server for Resonite MCP - FastAPI interface for web-based control."""
 
 import logging
+
+# Functions will be imported inside endpoints to avoid tool wrapping
+# Configure logging and telemetry
+import os
 import shutil
+import subprocess
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import httpx
 from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-import subprocess
 
-# Functions will be imported inside endpoints to avoid tool wrapping
-
-# Configure logging and telemetry
-import os
-
-from .utils.structured_logging import configure_file_logging
-from .utils.structured_logging import configure_json_logging_if_enabled
-from .utils.telemetry import init_metrics
-from .utils.telemetry import metrics_enabled
-from .utils.telemetry import register_metrics_routes
-from .utils.telemetry import start_metrics_server
+from .utils.structured_logging import configure_file_logging, configure_json_logging_if_enabled
+from .utils.telemetry import init_metrics, metrics_enabled, register_metrics_routes, start_metrics_server
 
 configure_json_logging_if_enabled()
 if os.getenv("RESONITE_MCP_LOG_DIR"):
@@ -48,10 +43,20 @@ app = FastAPI(
 
 register_metrics_routes(app)
 
+_RESONITE_TAURI = os.environ.get("RESONITE_TAURI", "").lower() in ("1", "true", "yes")
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=[
+        "http://127.0.0.1:10978",
+        "http://localhost:10978",
+        "http://goliath:10978",
+        "http://tauri.localhost",
+        "https://tauri.localhost",
+        "tauri://localhost",
+    ],
+    allow_origin_regex=r"https?://tauri\.localhost(:\d+)?" if _RESONITE_TAURI else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,7 +68,7 @@ class OSCMessageRequest(BaseModel):
     host: str
     port: int
     address: str
-    values: List[Any] = []
+    values: list[Any] = []
 
 
 class OSCServerRequest(BaseModel):
@@ -84,13 +89,13 @@ class ResoniteSessionRequest(BaseModel):
 class AvatarLoadRequest(BaseModel):
     avatar_path: str
     slot: int = None
-    parameters: Dict[str, Any] = None
+    parameters: dict[str, Any] = None
 
 
 class ParameterSetRequest(BaseModel):
     parameter: str
     value: Any
-    avatar_slot: Optional[int] = None
+    avatar_slot: int | None = None
 
 
 class AvatarLocomotionRequest(BaseModel):
@@ -99,7 +104,7 @@ class AvatarLocomotionRequest(BaseModel):
 
 class ProtoFluxExecuteRequest(BaseModel):
     script_name: str
-    parameters: Dict[str, Any] = None
+    parameters: dict[str, Any] = None
 
 
 class InventoryListRequest(BaseModel):
@@ -111,9 +116,9 @@ class InventoryListRequest(BaseModel):
 
 class InventorySpawnRequest(BaseModel):
     item_id: str
-    position: List[float] = None
-    rotation: List[float] = None
-    scale: List[float] = None
+    position: list[float] = None
+    rotation: list[float] = None
+    scale: list[float] = None
 
 
 class InventoryUploadRequest(BaseModel):
@@ -161,7 +166,7 @@ class BlenderImportRequest(BaseModel):
 
 class UnitySyncRequest(BaseModel):
     avatar_path: str
-    unity_package: Optional[str] = None
+    unity_package: str | None = None
 
 
 class ControlMoveRequest(BaseModel):
@@ -188,7 +193,7 @@ class FleetLaunchResponse(BaseModel):
 
 class MCPToolRequest(BaseModel):
     tool: str
-    params: Dict[str, Any] = Field(default_factory=dict)
+    params: dict[str, Any] = Field(default_factory=dict)
 
 
 # API Routes
@@ -220,7 +225,7 @@ async def health_check():
 
 
 @app.post("/api/v1/tool")
-async def api_v1_tool(body: MCPToolRequest) -> Dict[str, Any]:
+async def api_v1_tool(body: MCPToolRequest) -> dict[str, Any]:
     """Bridge endpoint for webapp Agent Lab to invoke MCP tools over HTTP."""
     tool = body.tool
     params = dict(body.params or {})
@@ -320,7 +325,7 @@ async def root():
 async def get_osc_status():
     """Get status of all running OSC servers."""
     try:
-        from .tools.osc import osc_servers, get_osc_server_stats
+        from .tools.osc import get_osc_server_stats, osc_servers
 
         results = []
         for port in list(osc_servers.keys()):
@@ -381,8 +386,8 @@ async def stop_osc_server_endpoint(request: OSCServerStopRequest):
 @app.get("/api/osc/received")
 async def get_received_messages_endpoint(
     port: int,
-    address_pattern: Optional[str] = None,
-    max_age_seconds: Optional[float] = None,
+    address_pattern: str | None = None,
+    max_age_seconds: float | None = None,
     limit: int = 100,
 ):
     """Get received OSC messages."""
@@ -416,9 +421,7 @@ async def start_resonite_session(request: ResoniteSessionRequest):
     try:
         from .http_functions import resonite_session_start_http
 
-        result = await resonite_session_start_http(
-            request.session_name, request.world_path, request.avatar_slot
-        )
+        result = await resonite_session_start_http(request.session_name, request.world_path, request.avatar_slot)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -448,9 +451,7 @@ async def load_avatar(request: AvatarLoadRequest):
     try:
         from .http_functions import resonite_avatar_load_http
 
-        result = await resonite_avatar_load_http(
-            request.avatar_path, request.slot, request.parameters
-        )
+        result = await resonite_avatar_load_http(request.avatar_path, request.slot, request.parameters)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -478,9 +479,7 @@ async def set_parameter(request: ParameterSetRequest):
     try:
         from .http_functions import resonite_parameter_set_http
 
-        result = await resonite_parameter_set_http(
-            request.parameter, request.value, request.avatar_slot
-        )
+        result = await resonite_parameter_set_http(request.parameter, request.value, request.avatar_slot)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -657,9 +656,7 @@ async def sync_unity_avatar(request: UnitySyncRequest):
 
 # Inventory API endpoints
 @app.get("/api/resonite/inventory/list")
-async def list_inventory(
-    item_type: str = None, search_query: str = None, limit: int = 50, offset: int = 0
-):
+async def list_inventory(item_type: str = None, search_query: str = None, limit: int = 50, offset: int = 0):
     """List inventory items."""
     try:
         from .http_functions import resonite_inventory_list_http
@@ -694,9 +691,7 @@ async def spawn_inventory_item(request: InventorySpawnRequest):
     try:
         from .http_functions import resonite_inventory_spawn_http
 
-        result = await resonite_inventory_spawn_http(
-            request.item_id, request.position, request.rotation, request.scale
-        )
+        result = await resonite_inventory_spawn_http(request.item_id, request.position, request.rotation, request.scale)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -747,9 +742,7 @@ async def share_inventory_item(request: InventoryShareRequest):
     try:
         from .http_functions import resonite_inventory_share_http
 
-        result = await resonite_inventory_share_http(
-            request.item_id, request.share_with, request.permission_level
-        )
+        result = await resonite_inventory_share_http(request.item_id, request.share_with, request.permission_level)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -885,7 +878,7 @@ class RLConnectRequest(BaseModel):
 class RLWriteRequest(BaseModel):
     ref_id: str
     value: Any
-    value_type: Optional[str] = None
+    value_type: str | None = None
 
 
 class RLAddSlotRequest(BaseModel):
@@ -904,15 +897,15 @@ class RLDestroyRequest(BaseModel):
 
 
 class RLBatchRequest(BaseModel):
-    operations: List[Dict[str, Any]]
+    operations: list[dict[str, Any]]
 
 
 class RLReflectRequest(BaseModel):
-    component_type: Optional[str] = None
+    component_type: str | None = None
 
 
 # Module-level state for the ResoniteLink client singleton
-_rl_state: Dict[str, Any] = {"client": None}
+_rl_state: dict[str, Any] = {"client": None}
 
 
 # Singleton client accessor
@@ -937,9 +930,7 @@ async def rl_connect(req: RLConnectRequest):
     _rl_state["client"] = client
     ok = await client.connect()
     if not ok:
-        raise HTTPException(
-            status_code=503, detail=f"Could not connect to ResoniteLink at {req.host}:{req.port}"
-        )
+        raise HTTPException(status_code=503, detail=f"Could not connect to ResoniteLink at {req.host}:{req.port}")
     return {
         "status": "connected",
         "uri": client.uri,
@@ -1088,7 +1079,7 @@ async def list_cloud_sessions(
     Proxy to api.resonite.com/sessions — returns public world sessions.
     No authentication required.
     """
-    params: Dict[str, Any] = {"minActiveUsers": min_active_users}
+    params: dict[str, Any] = {"minActiveUsers": min_active_users}
     if name:
         params["name"] = name
     if host:
@@ -1101,9 +1092,7 @@ async def list_cloud_sessions(
             resp.raise_for_status()
             return resp.json()
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=exc.response.status_code, detail=f"Resonite API error: {exc}"
-        ) from exc
+        raise HTTPException(status_code=exc.response.status_code, detail=f"Resonite API error: {exc}") from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Could not reach Resonite API: {exc}") from exc
 
@@ -1117,9 +1106,7 @@ async def get_cloud_session(session_id: str):
             resp.raise_for_status()
             return resp.json()
     except httpx.HTTPStatusError as exc:
-        raise HTTPException(
-            status_code=exc.response.status_code, detail=f"Resonite API error: {exc}"
-        ) from exc
+        raise HTTPException(status_code=exc.response.status_code, detail=f"Resonite API error: {exc}") from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Could not reach Resonite API: {exc}") from exc
 
@@ -1195,7 +1182,7 @@ ASSET_CATEGORIES = {
 class RLWriteRequest(BaseModel):
     ref_id: str
     value: Any
-    value_type: Optional[str] = None
+    value_type: str | None = None
 
 
 @app.post("/rl/world/write-field")
@@ -1316,7 +1303,7 @@ async def list_asset_files(category: str = "avatars"):
 class VRMImportRequest(BaseModel):
     file_path: str  # absolute path to .vrm on the Resonite host machine
     target_slot: str = "Root"  # slot to parent the avatar under
-    position: Dict[str, float] = {"x": 0.0, "y": 0.0, "z": 0.0}
+    position: dict[str, float] = {"x": 0.0, "y": 0.0, "z": 0.0}
 
 
 @app.get("/rl/world/vrm-files")
@@ -1477,6 +1464,7 @@ async def start_worldlabs_listener() -> dict:
     global _worldlabs_osc_server
     try:
         from pythonosc import dispatchers, osc_server
+
         from .tools.integrations import resonite_import_worldlabs_url
 
         dispatcher = dispatchers.Dispatcher()
@@ -1496,6 +1484,7 @@ async def start_worldlabs_listener() -> dict:
 
         server = osc_server.ThreadingOSCUDPServer(("127.0.0.1", 9001), dispatcher)
         import threading
+
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         _worldlabs_osc_server = server
@@ -1554,16 +1543,19 @@ async def detect_resonite_platform() -> dict:
     for path in steam_paths + standalone_paths:
         exists = os.path.isfile(path)
         source = "steam" if path in steam_paths else "standalone"
-        result["installations"].append({
-            "path": path,
-            "exists": exists,
-            "source": source,
-            "running": False,
-        })
+        result["installations"].append(
+            {
+                "path": path,
+                "exists": exists,
+                "source": source,
+                "running": False,
+            }
+        )
 
     # Check if Resonite is currently running
     try:
         import psutil
+
         for proc in psutil.process_iter(["name", "exe"]):
             name = (proc.info.get("name") or "").lower()
             if "resonite" in name:

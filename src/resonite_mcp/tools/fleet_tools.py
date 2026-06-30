@@ -5,39 +5,35 @@ from __future__ import annotations
 import logging
 import time
 from pathlib import Path
-from typing import Any
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 from ..utils.execution_mode import describe_execution_mode
-from ..utils.fleet_http import DEFAULT_AVATAR_URL
-from ..utils.fleet_http import DEFAULT_BLENDER_URL
-from ..utils.fleet_http import DEFAULT_GIMP_URL
-from ..utils.fleet_http import DEFAULT_INKSCAPE_URL
-from ..utils.fleet_http import call_avatar_tool
-from ..utils.fleet_http import call_http_tool
-from ..utils.fleet_http import check_avatar_http_health
-from ..utils.fleet_http import check_http_health
-from ..utils.fleet_staging import DEFAULT_AVATAR_VRM_DIR
-from ..utils.fleet_staging import DEFAULT_FLEET_STAGING
-from ..utils.fleet_staging import DEFAULT_INKSCAPE_UI_STAGING
-from ..utils.fleet_staging import DEFAULT_VRM_STAGING
-from ..utils.fleet_staging import classify_staged_assets
-from ..utils.fleet_staging import list_staging_files
-from ..utils.fleet_staging import list_vrm_files
-from ..utils.fleet_staging import stage_file
-from ..utils.protoflux_avatar_presets import get_protoflux_preset
-from ..utils.protoflux_avatar_presets import list_protoflux_presets
-
 from ..utils.fleet_audit import log_fleet_operation
-from ..utils.inventory_adapter import get_inventory_mode
-from ..utils.inventory_adapter import list_inventory_items
-from ..utils.marble_staging import DEFAULT_FAB_STAGING
-from ..utils.marble_staging import DEFAULT_MARBLE_STAGING
-from ..utils.marble_staging import DEFAULT_WORLDLABS_URL
-from ..utils.marble_staging import list_marble_files
+from ..utils.fleet_http import (
+    DEFAULT_AVATAR_URL,
+    DEFAULT_BLENDER_URL,
+    DEFAULT_GIMP_URL,
+    DEFAULT_INKSCAPE_URL,
+    call_avatar_tool,
+    call_http_tool,
+    check_avatar_http_health,
+    check_http_health,
+)
+from ..utils.fleet_staging import (
+    DEFAULT_AVATAR_VRM_DIR,
+    DEFAULT_FLEET_STAGING,
+    DEFAULT_INKSCAPE_UI_STAGING,
+    DEFAULT_VRM_STAGING,
+    classify_staged_assets,
+    list_staging_files,
+    list_vrm_files,
+    stage_file,
+)
+from ..utils.inventory_adapter import get_inventory_mode, list_inventory_items
+from ..utils.marble_staging import DEFAULT_FAB_STAGING, DEFAULT_MARBLE_STAGING, DEFAULT_WORLDLABS_URL, list_marble_files
+from ..utils.protoflux_avatar_presets import get_protoflux_preset, list_protoflux_presets
 
 logger = logging.getLogger(__name__)
 
@@ -200,10 +196,7 @@ async def _pull_blender_vrm_export(
     export_path = ""
     if isinstance(export_resp, dict):
         export_path = str(
-            export_resp.get("output_path")
-            or export_resp.get("file_path")
-            or export_resp.get("path")
-            or ""
+            export_resp.get("output_path") or export_resp.get("file_path") or export_resp.get("path") or ""
         )
 
     if export_path and Path(export_path).is_file():
@@ -485,7 +478,10 @@ async def resonite_fleet(
         if operation == "pull_avatar_vrm":
             roots = _resolve_vrm_roots(vrm_stage, stage)
             avatar_online = await check_avatar_http_health(aurl)
-            handoff: dict[str, Any] = {"avatar_reachable": avatar_online, "local_files_before": len(list_vrm_files(*roots))}
+            handoff: dict[str, Any] = {
+                "avatar_reachable": avatar_online,
+                "local_files_before": len(list_vrm_files(*roots)),
+            }
 
             if avatar_online:
                 avatar_list = await call_avatar_tool(
@@ -873,6 +869,6 @@ async def resonite_fleet(
         ).model_dump()
 
 
-from ..server import server
+from ..server import server  # noqa: E402
 
 server.tool()(resonite_fleet)

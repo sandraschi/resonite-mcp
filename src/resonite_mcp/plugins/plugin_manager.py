@@ -4,7 +4,7 @@ import importlib
 import inspect
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastmcp import FastMCP
 
@@ -16,19 +16,19 @@ logger = logging.getLogger(__name__)
 class PluginManager:
     """Manager for loading and coordinating Resonite MCP plugins."""
 
-    def __init__(self, plugins_dir: Optional[str] = None):
+    def __init__(self, plugins_dir: str | None = None):
         """Initialize the plugin manager.
 
         Args:
             plugins_dir: Directory to scan for plugins (default: plugins/)
         """
         self.plugins_dir = Path(plugins_dir) if plugins_dir else Path(__file__).parent
-        self.loaded_plugins: Dict[str, BasePlugin] = {}
-        self.plugin_types: Dict[str, List[str]] = {}
-        self.discovered_plugins: List[dict] = []
+        self.loaded_plugins: dict[str, BasePlugin] = {}
+        self.plugin_types: dict[str, list[str]] = {}
+        self.discovered_plugins: list[dict] = []
         self.logger = logging.getLogger(f"{__name__}.PluginManager")
 
-    async def discover_plugins(self) -> List[dict]:
+    async def discover_plugins(self) -> list[dict]:
         """Discover available plugins in the plugins directory.
 
         Returns:
@@ -41,22 +41,26 @@ class PluginManager:
             for item in self.plugins_dir.iterdir():
                 if item.is_file() and item.suffix == ".py" and not item.name.startswith("__"):
                     plugin_name = item.stem
-                    self.discovered_plugins.append({
-                        "name": plugin_name,
-                        "path": str(item),
-                        "type": self._infer_type(plugin_name),
-                    })
+                    self.discovered_plugins.append(
+                        {
+                            "name": plugin_name,
+                            "path": str(item),
+                            "type": self._infer_type(plugin_name),
+                        }
+                    )
                     self.logger.debug(f"Discovered plugin: {plugin_name}")
 
         # Also scan for plugin subdirectories with __init__.py
         for item in self.plugins_dir.iterdir():
             if item.is_dir() and (item / "__init__.py").exists():
                 plugin_name = item.name
-                self.discovered_plugins.append({
-                    "name": plugin_name,
-                    "path": str(item),
-                    "type": self._infer_type(plugin_name),
-                })
+                self.discovered_plugins.append(
+                    {
+                        "name": plugin_name,
+                        "path": str(item),
+                        "type": self._infer_type(plugin_name),
+                    }
+                )
                 self.logger.debug(f"Discovered plugin package: {plugin_name}")
 
         return self.discovered_plugins
@@ -73,7 +77,7 @@ class PluginManager:
             return "world"
         return "general"
 
-    async def load_plugin(self, plugin_name: str) -> Optional[BasePlugin]:
+    async def load_plugin(self, plugin_name: str) -> BasePlugin | None:
         """Load a specific plugin by name.
 
         Args:
@@ -94,9 +98,7 @@ class PluginManager:
             # Find plugin classes that inherit from BasePlugin
             plugin_classes = []
             for _name, obj in inspect.getmembers(module):
-                if (inspect.isclass(obj) and
-                    issubclass(obj, BasePlugin) and
-                    obj != BasePlugin):
+                if inspect.isclass(obj) and issubclass(obj, BasePlugin) and obj != BasePlugin:
                     plugin_classes.append(obj)
 
             if not plugin_classes:
@@ -104,7 +106,9 @@ class PluginManager:
                 return None
 
             if len(plugin_classes) > 1:
-                self.logger.warning(f"Multiple plugin classes found in {plugin_name}, using first: {plugin_classes[0].__name__}")
+                self.logger.warning(
+                    f"Multiple plugin classes found in {plugin_name}, using first: {plugin_classes[0].__name__}"
+                )
 
             # Instantiate the plugin
             plugin_class = plugin_classes[0]
@@ -149,7 +153,7 @@ class PluginManager:
             self.logger.error(f"Error initializing plugin {plugin.name}: {e}")
             return False
 
-    async def load_all_plugins(self, server: FastMCP) -> Dict[str, bool]:
+    async def load_all_plugins(self, server: FastMCP) -> dict[str, bool]:
         """Load and initialize all available plugins.
 
         Args:
@@ -215,7 +219,7 @@ class PluginManager:
             self.logger.error(f"Error unloading plugin {plugin_name}: {e}")
             return False
 
-    async def unload_all_plugins(self) -> Dict[str, bool]:
+    async def unload_all_plugins(self) -> dict[str, bool]:
         """Unload all loaded plugins.
 
         Returns:
@@ -231,7 +235,7 @@ class PluginManager:
         self.logger.info(f"Unloaded {sum(results.values())} plugins")
         return results
 
-    def get_plugin_info(self, plugin_name: Optional[str] = None) -> Dict[str, Any]:
+    def get_plugin_info(self, plugin_name: str | None = None) -> dict[str, Any]:
         """Get information about loaded plugins.
 
         Args:
@@ -252,7 +256,7 @@ class PluginManager:
                 "plugins": {name: plugin.get_info() for name, plugin in self.loaded_plugins.items()},
             }
 
-    def get_plugins_by_type(self, plugin_type: str) -> List[str]:
+    def get_plugins_by_type(self, plugin_type: str) -> list[str]:
         """Get all plugins of a specific type.
 
         Args:
@@ -285,11 +289,3 @@ class PluginManager:
 
         # Re-initialize
         return await self.initialize_plugin(plugin, server)
-
-
-
-
-
-
-
-

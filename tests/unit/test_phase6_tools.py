@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -77,24 +76,31 @@ class TestStrictFleetPipeline:
         marble.mkdir()
         (marble / "w.ply").write_text("ply", encoding="utf-8")
 
-        with patch(
-            "resonite_mcp.tools.fleet_tools._import_local_file",
-            new=AsyncMock(return_value={"success": True, "path": "mock", "osc": {"status": "success"}}),
-        ), patch(
-            "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
-            new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
-        ), patch(
-            "resonite_mcp.tools.fleet_tools.call_http_tool",
-            new=AsyncMock(return_value={"success": True}),
-        ), patch(
-            "resonite_mcp.tools.integrations.resonite_import_blender",
-            new=AsyncMock(return_value={"status": "ok", "object_name": "Cube"}),
-        ), patch(
-            "resonite_mcp.server.is_resonite_installed",
-            return_value=True,
-        ), patch(
-            "resonite_mcp.server.is_resonite_running",
-            return_value=False,
+        with (
+            patch(
+                "resonite_mcp.tools.fleet_tools._import_local_file",
+                new=AsyncMock(return_value={"success": True, "path": "mock", "osc": {"status": "success"}}),
+            ),
+            patch(
+                "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
+                new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
+            ),
+            patch(
+                "resonite_mcp.tools.fleet_tools.call_http_tool",
+                new=AsyncMock(return_value={"success": True}),
+            ),
+            patch(
+                "resonite_mcp.tools.integrations.resonite_import_blender",
+                new=AsyncMock(return_value={"status": "ok", "object_name": "Cube"}),
+            ),
+            patch(
+                "resonite_mcp.server.is_resonite_installed",
+                return_value=True,
+            ),
+            patch(
+                "resonite_mcp.server.is_resonite_running",
+                return_value=False,
+            ),
         ):
             result = await resonite_fleet(
                 "run_strict_fleet_pipeline",

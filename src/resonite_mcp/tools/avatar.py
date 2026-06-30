@@ -5,7 +5,7 @@ including avatar loading, parameter manipulation, and ProtoFlux script execution
 """
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 from ..models import AvatarControlInput, OSCMessageInput, ProtoFluxScriptInput
 from ..server import server
@@ -14,7 +14,7 @@ from .osc import send_osc
 logger = logging.getLogger(__name__)
 
 
-async def resonite_avatar_load(input_data: AvatarControlInput) -> Dict[str, Any]:
+async def resonite_avatar_load(input_data: AvatarControlInput) -> dict[str, Any]:
     """Load an avatar into the current Resonite session.
 
     Args:
@@ -58,9 +58,7 @@ async def resonite_avatar_load(input_data: AvatarControlInput) -> Dict[str, Any]
 server.tool()(resonite_avatar_load)
 
 
-async def resonite_parameter_set(
-    parameter_name: str, value: float, avatar_slot: Optional[int] = None
-) -> Dict[str, Any]:
+async def resonite_parameter_set(parameter_name: str, value: float, avatar_slot: int | None = None) -> dict[str, Any]:
     """Set an avatar parameter value in Resonite.
 
     Args:
@@ -73,9 +71,7 @@ async def resonite_parameter_set(
         if avatar_slot is not None:
             address = f"/avatar/{avatar_slot}/parameters/{parameter_name}"
 
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address=address, values=[float(value)]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address=address, values=[float(value)])
         result = await send_osc(osc_input)
 
         if result["status"] == "success":
@@ -93,7 +89,7 @@ async def resonite_parameter_set(
 server.tool()(resonite_parameter_set)
 
 
-async def resonite_protoflux_execute(input_data: ProtoFluxScriptInput) -> Dict[str, Any]:
+async def resonite_protoflux_execute(input_data: ProtoFluxScriptInput) -> dict[str, Any]:
     """Execute a ProtoFlux script in Resonite.
 
     Args:

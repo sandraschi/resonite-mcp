@@ -66,9 +66,7 @@ def configure_file_logging(log_dir: str | Path | None = None) -> None:
     if os.getenv("RESONITE_MCP_LOG_FORMAT", "").strip().lower() == "json":
         handler.setFormatter(JsonLogFormatter())
     else:
-        handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        )
+        handler.setFormatter(logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s"))
     root = logging.getLogger()
     root.addHandler(handler)
     logging.getLogger(__name__).info("File logging enabled at %s", log_path)

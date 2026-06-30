@@ -35,6 +35,8 @@ dependencies = [
     "websockets>=12.0",
     "starlette>=0.40.0",
     "uvicorn>=0.30.0",
+    "prefab-ui>=0.14.0",
+    "charset-normalizer>=3.4.5",
 ]
 
 [project.optional-dependencies]
@@ -107,6 +109,7 @@ module = "tests.*"
 ignore_errors = true
 
 [tool.pytest.ini_options]
+asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
@@ -164,3 +167,13 @@ ignore = ["S101", "B008"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[dependency-groups]
+dev = [
+    "pyinstaller>=6.21.0",
+    "pytest>=9.0.2",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.8.0",
+    "prometheus-client>=0.20.0",
+]
+

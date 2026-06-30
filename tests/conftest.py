@@ -35,5 +35,3 @@ def mock_osc_client():
     """Mock OSC client for testing."""
     with pytest.mock.patch("resonite_mcp.tools.osc.SimpleUDPClient") as mock_client:
         yield mock_client
-
-

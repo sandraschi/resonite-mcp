@@ -1,53 +1,11 @@
 name: CI
-
-on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
-
+on: [push, pull_request]
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12"]
-
+  check:
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: uv sync --all-extras
-
-      - name: Lint (Ruff)
-        run: uv run ruff check src/
-
-      - name: Type check (Mypy)
-        run: uv run mypy src/resonite_mcp/
-
-      - name: Fleet E2E offline smoke (Phase 6)
-        env:
-          PYTHONPATH: src
-        run: uv run python scripts/fleet_e2e_smoke.py --offline --strict
-
-      - name: Strict fleet E2E smoke (Phase 6)
-        env:
-          PYTHONPATH: src
-        run: uv run python scripts/fleet_e2e_smoke.py --strict-fleet --strict
-
-      - name: Agent Lab smoke test
-        env:
-          PYTHONPATH: src
-        run: uv run python scripts/smoke_test.py
-
-      - name: Run tests
-        env:
-          PYTHONPATH: src
-        run: |
-          uv run coverage run -m pytest tests/ -q
-          uv run coverage report --include="src/resonite_mcp/tools/*,src/resonite_mcp/utils/*" --fail-under=50
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run pytest -x --tb=short

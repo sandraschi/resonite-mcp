@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 
 async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
@@ -29,15 +28,20 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
 
     mock_import = AsyncMock(return_value={"success": True, "path": "mock", "osc": {"status": "success"}})
 
-    with patch("resonite_mcp.tools.fleet_tools._import_local_file", new=mock_import), patch(
-        "resonite_mcp.server.is_resonite_installed",
-        return_value=True,
-    ), patch(
-        "resonite_mcp.server.is_resonite_running",
-        return_value=False,
-    ), patch(
-        "resonite_mcp.utils.fleet_http.check_http_health",
-        new=AsyncMock(return_value=False),
+    with (
+        patch("resonite_mcp.tools.fleet_tools._import_local_file", new=mock_import),
+        patch(
+            "resonite_mcp.server.is_resonite_installed",
+            return_value=True,
+        ),
+        patch(
+            "resonite_mcp.server.is_resonite_running",
+            return_value=False,
+        ),
+        patch(
+            "resonite_mcp.utils.fleet_http.check_http_health",
+            new=AsyncMock(return_value=False),
+        ),
     ):
         presets = await resonite_fleet("list_presets")
         steps.append({"name": "offline_list_presets", "success": bool(presets.get("success")), "detail": presets})
@@ -55,10 +59,14 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
         steps.append({"name": "offline_list_vrm_staging", "success": bool(vrm_list.get("success")), "detail": vrm_list})
 
         vrm_import = await resonite_fleet("import_vrm_batch", vrm_dir=str(vrm_models))
-        steps.append({"name": "offline_import_vrm_batch", "success": bool(vrm_import.get("success")), "detail": vrm_import})
+        steps.append(
+            {"name": "offline_import_vrm_batch", "success": bool(vrm_import.get("success")), "detail": vrm_import}
+        )
 
         pf_presets = await resonite_fleet("list_protoflux_presets")
-        steps.append({"name": "offline_protoflux_presets", "success": bool(pf_presets.get("success")), "detail": pf_presets})
+        steps.append(
+            {"name": "offline_protoflux_presets", "success": bool(pf_presets.get("success")), "detail": pf_presets}
+        )
 
         pipeline = await resonite_fleet(
             "run_fleet_pipeline",
@@ -67,13 +75,17 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
             skip_blender=True,
             skip_gimp=True,
         )
-        steps.append({"name": "offline_run_fleet_pipeline", "success": bool(pipeline.get("success")), "detail": pipeline})
+        steps.append(
+            {"name": "offline_run_fleet_pipeline", "success": bool(pipeline.get("success")), "detail": pipeline}
+        )
 
         marble_dir = work_dir / "marble"
         marble_dir.mkdir(parents=True, exist_ok=True)
         (marble_dir / "offline.ply").write_text("ply", encoding="utf-8")
         marble_list = await resonite_fleet("list_marble_staging", marble_dir=str(marble_dir))
-        steps.append({"name": "offline_list_marble_staging", "success": bool(marble_list.get("success")), "detail": marble_list})
+        steps.append(
+            {"name": "offline_list_marble_staging", "success": bool(marble_list.get("success")), "detail": marble_list}
+        )
 
         with patch(
             "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
@@ -81,11 +93,17 @@ async def run_offline_smoke(*, work_dir: Path) -> dict[str, object]:
         ):
             marble_import = await resonite_fleet("import_worldlabs_batch", marble_dir=str(marble_dir))
         steps.append(
-            {"name": "offline_import_worldlabs_batch", "success": bool(marble_import.get("success")), "detail": marble_import},
+            {
+                "name": "offline_import_worldlabs_batch",
+                "success": bool(marble_import.get("success")),
+                "detail": marble_import,
+            },
         )
 
         inventory = await resonite_fleet("inventory_status")
-        steps.append({"name": "offline_inventory_status", "success": bool(inventory.get("success")), "detail": inventory})
+        steps.append(
+            {"name": "offline_inventory_status", "success": bool(inventory.get("success")), "detail": inventory}
+        )
 
         from resonite_mcp.tools.voice_tools import resonite_voice
 

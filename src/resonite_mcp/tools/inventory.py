@@ -25,9 +25,7 @@ from .osc import osc_recordings, osc_servers, send_osc, start_osc_server
 logger = logging.getLogger(__name__)
 
 
-async def _wait_for_osc_response(
-    address_pattern: str, timeout: float = 5.0, port: int = 9001
-) -> dict[str, Any] | None:
+async def _wait_for_osc_response(address_pattern: str, timeout: float = 5.0, port: int = 9001) -> dict[str, Any] | None:
     """Wait for an OSC message matching the pattern in the recordings buffer.
 
     Args:
@@ -87,9 +85,7 @@ async def resonite_inventory_list(input_data: InventoryListInput) -> dict[str, A
         if search_query:
             query_params["search"] = search_query
 
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/inventory/list", values=[query_params]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/inventory/list", values=[query_params])
         await send_osc(osc_input)
 
         # Wait for response from Resonite
@@ -168,9 +164,7 @@ async def resonite_inventory_spawn(input_data: InventorySpawnInput) -> dict[str,
         if scale:
             spawn_params["scale"] = scale
 
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/inventory/spawn", values=[spawn_params]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/inventory/spawn", values=[spawn_params])
         result = await send_osc(osc_input)
         if result["status"] == "success":
             return {
@@ -209,9 +203,7 @@ async def resonite_inventory_upload(input_data: InventoryUploadInput) -> dict[st
         if description:
             upload_params["description"] = description
 
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/inventory/upload", values=[upload_params]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/inventory/upload", values=[upload_params])
         result = await send_osc(osc_input)
         if result["status"] == "success":
             return {
@@ -237,9 +229,7 @@ async def resonite_inventory_delete(input_data: InventoryDeleteInput) -> dict[st
         if not confirm_deletion:
             return {"status": "error", "message": "Deletion not confirmed."}
 
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/inventory/delete", values=[item_id]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/inventory/delete", values=[item_id])
         result = await send_osc(osc_input)
         if result["status"] == "success":
             return {
@@ -268,9 +258,7 @@ async def resonite_inventory_share(input_data: InventoryShareInput) -> dict[str,
             "username": share_with,
             "permission": permission_level,
         }
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/inventory/share", values=[share_params]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/inventory/share", values=[share_params])
         result = await send_osc(osc_input)
         if result["status"] == "success":
             return {
@@ -290,9 +278,7 @@ server.tool()(resonite_inventory_share)
 async def resonite_inventory_info(item_id: str) -> dict[str, Any]:
     """Get detailed information about an inventory item."""
     try:
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/inventory/info", values=[item_id]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/inventory/info", values=[item_id])
         await send_osc(osc_input)
 
         # Wait for response from Resonite

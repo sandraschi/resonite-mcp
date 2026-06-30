@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -8,12 +8,8 @@ class OSCMessageInput(BaseModel):
 
     host: str = Field(..., description="Target hostname or IP address")
     port: int = Field(gt=0, le=65535, description="Target UDP port (1-65535)")
-    address: str = Field(
-        ..., pattern=r"^/.*", description="OSC address pattern starting with /"
-    )
-    values: List[Any] = Field(
-        default_factory=list, description="List of values to send"
-    )
+    address: str = Field(..., pattern=r"^/.*", description="OSC address pattern starting with /")
+    values: list[Any] = Field(default_factory=list, description="List of values to send")
 
 
 class OSCServerInput(BaseModel):
@@ -26,62 +22,44 @@ class OSCServerInput(BaseModel):
 class OSCServerStopInput(BaseModel):
     """Input model for stopping OSC server."""
 
-    port: int = Field(
-        gt=0, le=65535, description="Port of the server to stop (1-65535)"
-    )
+    port: int = Field(gt=0, le=65535, description="Port of the server to stop (1-65535)")
 
 
 class ResoniteSessionInput(BaseModel):
     """Input for Resonite session management."""
 
-    session_name: Optional[str] = Field(
-        None, description="Optional custom session name"
-    )
-    world_path: Optional[str] = Field(
-        None, description="Initial world to load (resonite:// format)"
-    )
-    avatar_slot: Optional[int] = Field(
-        None, ge=0, le=7, description="Avatar slot to use (0-7)"
-    )
+    session_name: str | None = Field(None, description="Optional custom session name")
+    world_path: str | None = Field(None, description="Initial world to load (resonite:// format)")
+    avatar_slot: int | None = Field(None, ge=0, le=7, description="Avatar slot to use (0-7)")
 
 
 class AvatarControlInput(BaseModel):
     """Input for avatar control operations."""
 
     avatar_id: str = Field(..., description="Avatar identifier or path")
-    slot: Optional[int] = Field(
+    slot: int | None = Field(
         None,
         ge=0,
         le=7,
         description="Avatar slot (0-7), auto-assigned if not specified",
     )
-    parameters: Optional[Dict[str, Any]] = Field(
-        None, description="Initial parameter values to set"
-    )
+    parameters: dict[str, Any] | None = Field(None, description="Initial parameter values to set")
 
 
 class ProtoFluxScriptInput(BaseModel):
     """Input for ProtoFlux script operations."""
 
     script_name: str = Field(..., description="Name of the ProtoFlux script")
-    script_data: Optional[Dict[str, Any]] = Field(
-        None, description="Script definition and parameters"
-    )
+    script_data: dict[str, Any] | None = Field(None, description="Script definition and parameters")
     execute: bool = Field(True, description="Whether to execute the script immediately")
 
 
 class InventoryListInput(BaseModel):
     """Input for inventory listing operations."""
 
-    item_type: Optional[str] = Field(
-        None, description="Filter by item type: avatar, world, item, tool, script"
-    )
-    search_query: Optional[str] = Field(
-        None, description="Search query to filter items by name or description"
-    )
-    limit: int = Field(
-        50, ge=1, le=200, description="Maximum number of items to return"
-    )
+    item_type: str | None = Field(None, description="Filter by item type: avatar, world, item, tool, script")
+    search_query: str | None = Field(None, description="Search query to filter items by name or description")
+    limit: int = Field(50, ge=1, le=200, description="Maximum number of items to return")
     offset: int = Field(0, ge=0, description="Number of items to skip (for pagination)")
 
 
@@ -89,15 +67,9 @@ class InventorySpawnInput(BaseModel):
     """Input for spawning items from inventory."""
 
     item_id: str = Field(..., description="Unique identifier of the inventory item")
-    position: Optional[List[float]] = Field(
-        None, description="Position to spawn at [x, y, z]"
-    )
-    rotation: Optional[List[float]] = Field(
-        None, description="Rotation to spawn with [x, y, z, w] quaternion"
-    )
-    scale: Optional[List[float]] = Field(
-        None, description="Scale to spawn with [x, y, z]"
-    )
+    position: list[float] | None = Field(None, description="Position to spawn at [x, y, z]")
+    rotation: list[float] | None = Field(None, description="Rotation to spawn with [x, y, z, w] quaternion")
+    scale: list[float] | None = Field(None, description="Scale to spawn with [x, y, z]")
 
 
 class InventoryUploadInput(BaseModel):
@@ -105,15 +77,9 @@ class InventoryUploadInput(BaseModel):
 
     item_path: str = Field(..., description="Local file path to upload")
     item_name: str = Field(..., description="Name for the uploaded item")
-    item_type: str = Field(
-        ..., description="Type of item: avatar, world, item, tool, script"
-    )
-    description: Optional[str] = Field(
-        None, description="Optional description for the item"
-    )
-    is_public: bool = Field(
-        False, description="Whether the item should be publicly accessible"
-    )
+    item_type: str = Field(..., description="Type of item: avatar, world, item, tool, script")
+    description: str | None = Field(None, description="Optional description for the item")
+    is_public: bool = Field(False, description="Whether the item should be publicly accessible")
 
 
 class InventoryDeleteInput(BaseModel):
@@ -128,9 +94,7 @@ class InventoryShareInput(BaseModel):
 
     item_id: str = Field(..., description="Unique identifier of the inventory item")
     share_with: str = Field(..., description="Username to share with")
-    permission_level: str = Field(
-        "read", description="Permission level: read, write, admin"
-    )
+    permission_level: str = Field("read", description="Permission level: read, write, admin")
 
 
 class ResoniteLinkConnectInput(BaseModel):
@@ -144,7 +108,7 @@ class ResoniteLinkSpawnInput(BaseModel):
     """Input for spawning objects via ResoniteLink."""
 
     template_url: str = Field(..., description="URL of the template to spawn")
-    position: Dict[str, float] = Field(
+    position: dict[str, float] = Field(
         default_factory=lambda: {"x": 0.0, "y": 0.0, "z": 0.0},
         description="Position to spawn at",
     )

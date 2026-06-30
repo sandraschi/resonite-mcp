@@ -42,9 +42,7 @@ async def resonite_session_start(input_data: ResoniteSessionInput) -> dict[str, 
         start_time = datetime.now()
 
         # Initialize OSC connection (Resonite default is 127.0.0.1:9000)
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/resonite/session/start", values=[session_id]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/resonite/session/start", values=[session_id])
         osc_result = await send_osc(osc_input)
 
         if osc_result["status"] != "success":
@@ -176,9 +174,7 @@ async def resonite_world_load(world_path: str) -> dict[str, Any]:
             }
 
         # Send OSC command to load the world
-        osc_input = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/resonite/world/load", values=[world_path]
-        )
+        osc_input = OSCMessageInput(host="127.0.0.1", port=9000, address="/resonite/world/load", values=[world_path])
         osc_result = await send_osc(osc_input)
 
         world_info = {

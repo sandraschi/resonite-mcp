@@ -18,10 +18,9 @@ from resonite_mcp.tools.osc import osc_recordings
 @pytest.mark.asyncio
 async def test_resonite_inventory_list_success():
     """Test successful inventory listing with OSC response."""
-    with patch(
-        "resonite_mcp.tools.inventory.send_osc", new_callable=AsyncMock
-    ) as mock_send_osc, patch(
-        "resonite_mcp.tools.inventory.start_osc_server", new_callable=AsyncMock
+    with (
+        patch("resonite_mcp.tools.inventory.send_osc", new_callable=AsyncMock) as mock_send_osc,
+        patch("resonite_mcp.tools.inventory.start_osc_server", new_callable=AsyncMock),
     ):
         mock_send_osc.return_value = {"status": "success"}
 
@@ -57,13 +56,11 @@ async def test_resonite_inventory_list_success():
 @pytest.mark.asyncio
 async def test_resonite_inventory_list_timeout():
     """Test inventory listing timeout fallback."""
-    with patch(
-        "resonite_mcp.tools.inventory.send_osc", new_callable=AsyncMock
-    ) as mock_send_osc, patch(
-        "resonite_mcp.tools.inventory.start_osc_server", new_callable=AsyncMock
-    ), patch(
-        "resonite_mcp.tools.inventory._wait_for_osc_response", new_callable=AsyncMock
-    ) as mock_wait:
+    with (
+        patch("resonite_mcp.tools.inventory.send_osc", new_callable=AsyncMock) as mock_send_osc,
+        patch("resonite_mcp.tools.inventory.start_osc_server", new_callable=AsyncMock),
+        patch("resonite_mcp.tools.inventory._wait_for_osc_response", new_callable=AsyncMock) as mock_wait,
+    ):
         mock_send_osc.return_value = {"status": "success"}
         mock_wait.return_value = None  # Simulate timeout
 
@@ -102,9 +99,7 @@ async def test_resonite_inventory_info_success():
 @pytest.mark.asyncio
 async def test_resonite_inventory_search_success():
     """Test inventory search using the list tool."""
-    with patch(
-        "resonite_mcp.tools.inventory.resonite_inventory_list", new_callable=AsyncMock
-    ) as mock_list:
+    with patch("resonite_mcp.tools.inventory.resonite_inventory_list", new_callable=AsyncMock) as mock_list:
         mock_list.return_value = {
             "status": "success",
             "items": [{"id": "item1", "name": "Avatar 1"}],

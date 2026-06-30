@@ -166,7 +166,7 @@ def get_vbot_receiver_spec(
     }
 
     setup_steps = [
-        "Resonite → Settings → OSC → enable input on port {port}".format(port=osc_port),
+        f"Resonite → Settings → OSC → enable input on port {osc_port}",
         "Create empty root 'vBotRoot' with CharacterController or Rigidbody + collider",
         "Add child 'Head' slot with Camera (for future LiveKit capture)",
         "Attach ProtoFlux to vBotRoot → add OSC_Data_Source nodes per addresses.move/stop/head",

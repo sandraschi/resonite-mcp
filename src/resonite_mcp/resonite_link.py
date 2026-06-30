@@ -31,7 +31,8 @@ import asyncio
 import json
 import logging
 import uuid
-from typing import Any, Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Any
 
 import websockets
 from websockets.exceptions import ConnectionClosed
@@ -67,15 +68,15 @@ class ResoniteLinkClient:
         self.host = host
         self.port = port
         self.uri = f"ws://{host}:{port}"
-        self.ws: Optional[websockets.WebSocketClientProtocol] = None
+        self.ws: websockets.WebSocketClientProtocol | None = None
         self.running = False
-        self._listen_task: Optional[asyncio.Task] = None
+        self._listen_task: asyncio.Task | None = None
         # Pending requests: msg_id → asyncio.Future
-        self._pending: Dict[str, asyncio.Future] = {}
+        self._pending: dict[str, asyncio.Future] = {}
         # Event callbacks by type
-        self._callbacks: Dict[str, Callable] = {}
+        self._callbacks: dict[str, Callable] = {}
         # Session metadata received on connect
-        self.session_info: Dict[str, Any] = {}
+        self.session_info: dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     # Connection management
@@ -119,7 +120,7 @@ class ResoniteLinkClient:
     # Low-level send / receive
     # ------------------------------------------------------------------
 
-    async def _send(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    async def _send(self, payload: dict[str, Any]) -> dict[str, Any]:
         """
         Send a message and await the correlated response by id.
         Raises ResoniteLinkError on error responses or timeout.
@@ -135,7 +136,7 @@ class ResoniteLinkClient:
         try:
             await self.ws.send(json.dumps(payload))
             response = await asyncio.wait_for(fut, timeout=self.RESPONSE_TIMEOUT)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             self._pending.pop(msg_id, None)
             raise ResoniteLinkError(f"Timeout waiting for response to id={msg_id}")
         finally:
@@ -146,7 +147,7 @@ class ResoniteLinkClient:
 
         return response
 
-    async def _send_no_wait(self, payload: Dict[str, Any]) -> bool:
+    async def _send_no_wait(self, payload: dict[str, Any]) -> bool:
         """Fire-and-forget send (for commands with no expected response)."""
         if not self.connected:
             return False
@@ -205,7 +206,7 @@ class ResoniteLinkClient:
     # Data Model API  (official ResoniteLink 0.8.x messages)
     # ------------------------------------------------------------------
 
-    async def get_session_info(self) -> Dict[str, Any]:
+    async def get_session_info(self) -> dict[str, Any]:
         """Return cached session info (populated on connect)."""
         return self.session_info
 
@@ -214,22 +215,22 @@ class ResoniteLinkClient:
         resp = await self._send({"type": "ReadField", "refId": ref_id})
         return resp.get("value")
 
-    async def write_field(self, ref_id: str, value: Any, value_type: str = None) -> Dict[str, Any]:
+    async def write_field(self, ref_id: str, value: Any, value_type: str = None) -> dict[str, Any]:
         """
         Write a value to a field by its ref ID.
 
         value_type: optional C# type string e.g. "System.Single", "UnityEngine.Color"
         """
-        payload: Dict[str, Any] = {"type": "WriteField", "refId": ref_id, "value": value}
+        payload: dict[str, Any] = {"type": "WriteField", "refId": ref_id, "value": value}
         if value_type:
             payload["valueType"] = value_type
         return await self._send(payload)
 
-    async def get_node(self, ref_id: str) -> Dict[str, Any]:
+    async def get_node(self, ref_id: str) -> dict[str, Any]:
         """Get node (slot/component) info by ref ID."""
         return await self._send({"type": "GetNode", "refId": ref_id})
 
-    async def get_children(self, slot_id: str) -> List[Dict[str, Any]]:
+    async def get_children(self, slot_id: str) -> list[dict[str, Any]]:
         """List direct children of a slot."""
         resp = await self._send({"type": "GetChildren", "refId": slot_id})
         return resp.get("children", [])
@@ -251,26 +252,22 @@ class ResoniteLinkClient:
         resp = await self._send({"type": "AddComponent", "refId": slot_id, "componentType": component_type})
         return resp.get("refId", "")
 
-    async def destroy_slot(self, slot_id: str, preserve_assets: bool = False) -> Dict[str, Any]:
+    async def destroy_slot(self, slot_id: str, preserve_assets: bool = False) -> dict[str, Any]:
         """Destroy a slot and its children."""
-        return await self._send({
-            "type": "DestroySlot",
-            "refId": slot_id,
-            "preserveAssets": preserve_assets
-        })
+        return await self._send({"type": "DestroySlot", "refId": slot_id, "preserveAssets": preserve_assets})
 
-    async def reflect(self, component_type: str = None) -> Dict[str, Any]:
+    async def reflect(self, component_type: str = None) -> dict[str, Any]:
         """
         Reflection API (v0.8.3+).
         If component_type given, returns members for that type.
         If None, returns list of all supported types.
         """
-        payload: Dict[str, Any] = {"type": "Reflect"}
+        payload: dict[str, Any] = {"type": "Reflect"}
         if component_type:
             payload["componentType"] = component_type
         return await self._send(payload)
 
-    async def batch(self, operations: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    async def batch(self, operations: list[dict[str, Any]]) -> list[dict[str, Any]]:
         """
         Batch multiple operations atomically (v0.8.3+).
         Each operation is a normal message dict (without top-level id).
@@ -287,7 +284,7 @@ class ResoniteLinkClient:
         """Create a named slot under parent. Returns new slot ref ID."""
         return await self.add_slot(parent_id, name)
 
-    async def teleport_avatar(self, position: Dict[str, float]) -> Dict[str, Any]:
+    async def teleport_avatar(self, position: dict[str, float]) -> dict[str, Any]:
         """
         Teleport via DynamicVariableSpace or similar.
 
@@ -304,7 +301,7 @@ class ResoniteLinkClient:
         )
         return {"status": "not_configured", "hint": "Set up ProtoFlux teleport node in world"}
 
-    async def set_component_value(self, ref_id: str, field: str, value: Any) -> Dict[str, Any]:
+    async def set_component_value(self, ref_id: str, field: str, value: Any) -> dict[str, Any]:
         """
         Legacy helper: write_field by ref_id.
         Note: In ResoniteLink 0.8.x, field access requires knowing the field's

@@ -3,10 +3,9 @@
 
 import logging
 import webbrowser
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .tools import rest_api
-from .tools.system import status
 
 # Import will be done in each function to avoid circular imports
 
@@ -14,9 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 # Import the actual OSC functions from server module (without tool wrappers)
-async def send_osc_http(
-    host: str, port: int, address: str, values: Optional[List[Any]] = None
-) -> Dict[str, Any]:
+async def send_osc_http(host: str, port: int, address: str, values: list[Any] | None = None) -> dict[str, Any]:
     """Send OSC message (HTTP version)."""
     try:
         # Import required modules
@@ -57,7 +54,7 @@ async def send_osc_http(
         return {"status": "error", "message": f"OSC operation failed: {e}"}
 
 
-async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> Dict[str, Any]:
+async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> dict[str, Any]:
     """Start OSC server (HTTP version)."""
     try:
         import asyncio
@@ -91,7 +88,7 @@ async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> Dict[str
         return {"status": "error", "message": f"OSC server operation failed: {e}"}
 
 
-async def stop_osc_server_http(port: int) -> Dict[str, Any]:
+async def stop_osc_server_http(port: int) -> dict[str, Any]:
     """Stop OSC server (HTTP version)."""
     try:
         from .tools.osc import osc_servers
@@ -117,10 +114,10 @@ async def stop_osc_server_http(port: int) -> Dict[str, Any]:
 
 async def get_received_messages_http(
     port: int,
-    address_pattern: Optional[str] = None,
-    max_age_seconds: Optional[float] = None,
+    address_pattern: str | None = None,
+    max_age_seconds: float | None = None,
     limit: int = 100,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get received OSC messages (HTTP version)."""
     try:
         from .tools.osc import get_received_messages
@@ -130,9 +127,7 @@ async def get_received_messages_http(
         return {"status": "error", "message": f"Failed to get received messages: {e}"}
 
 
-async def get_latest_message_http(
-    port: int, address_pattern: Optional[str] = None
-) -> Dict[str, Any]:
+async def get_latest_message_http(port: int, address_pattern: str | None = None) -> dict[str, Any]:
     """Get latest OSC message (HTTP version)."""
     try:
         from .tools.osc import get_latest_message
@@ -142,7 +137,7 @@ async def get_latest_message_http(
         return {"status": "error", "message": f"Failed to get latest message: {e}"}
 
 
-async def get_osc_server_stats_http(port: int) -> Dict[str, Any]:
+async def get_osc_server_stats_http(port: int) -> dict[str, Any]:
     """Get OSC server stats (HTTP version)."""
     try:
         from .tools.osc import get_osc_server_stats
@@ -152,7 +147,7 @@ async def get_osc_server_stats_http(port: int) -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to get OSC server stats: {e}"}
 
 
-async def clear_osc_message_buffer_http(port: int) -> Dict[str, Any]:
+async def clear_osc_message_buffer_http(port: int) -> dict[str, Any]:
     """Clear OSC message buffer (HTTP version)."""
     try:
         from .tools.osc import clear_osc_message_buffer
@@ -162,21 +157,21 @@ async def clear_osc_message_buffer_http(port: int) -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to clear OSC message buffer: {e}"}
 
 
-async def test_osc_echo_http(port: int = 9000) -> Dict[str, Any]:
+async def test_osc_echo_http(port: int = 9000) -> dict[str, Any]:
     """Test OSC echo (HTTP version)."""
     return {"status": "success", "message": "Not implemented yet", "echo_test": "passed"}
 
 
 async def resonite_session_start_http(
-    session_name: Optional[str] = None,
-    world_path: Optional[str] = None,
-    avatar_slot: Optional[int] = None,
-) -> Dict[str, Any]:
+    session_name: str | None = None,
+    world_path: str | None = None,
+    avatar_slot: int | None = None,
+) -> dict[str, Any]:
     """Start Resonite session (HTTP version)."""
     return {"status": "success", "message": "Session started", "session_name": session_name}
 
 
-async def resonite_platform_info_http() -> Dict[str, Any]:
+async def resonite_platform_info_http() -> dict[str, Any]:
     """HTTP wrapper for fetching Resonite platform information.
 
     Returns:
@@ -186,12 +181,12 @@ async def resonite_platform_info_http() -> Dict[str, Any]:
 
 
 async def resonite_sessions_list_http(
-    name: Optional[str] = None,
-    host_name: Optional[str] = None,
-    host_id: Optional[str] = None,
+    name: str | None = None,
+    host_name: str | None = None,
+    host_id: str | None = None,
     min_active_users: int = 0,
     include_empty_headless: bool = True,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """HTTP wrapper for listing Resonite world sessions.
 
     Returns:
@@ -209,7 +204,7 @@ async def resonite_sessions_list_http(
     return result
 
 
-async def resonite_start_app_http() -> Dict[str, Any]:
+async def resonite_start_app_http() -> dict[str, Any]:
     """Attempt to launch Resonite via Steam protocol.
 
     Returns:
@@ -226,15 +221,25 @@ async def resonite_start_app_http() -> Dict[str, Any]:
         }
     except Exception as e:
         logger.error(f"Failed to launch Resonite: {e}")
-        return {"status": "error", "message": f"Launch failed: {str(e)}"}
+        return {"status": "error", "message": f"Launch failed: {e!s}"}
 
 
-async def resonite_system_status_http() -> Dict[str, Any]:
-    """Full system status wrapper."""
-    return await status(level="advanced")
+async def resonite_system_status_http() -> dict[str, Any]:
+    """Full system status — returns JSON that the webapp PresenceGate expects."""
+    from .server import is_resonite_installed, is_resonite_running
+
+    return {
+        "status": "success",
+        "authenticated": True,
+        "workspace": "Resonite MCP",
+        "server_running": True,
+        "resonite_installed": is_resonite_installed(),
+        "resonite_running": is_resonite_running(),
+        "launch_url": "steam://rungameid/2519830",
+    }
 
 
-async def resonite_session_status_http() -> Dict[str, Any]:
+async def resonite_session_status_http() -> dict[str, Any]:
     """Get session status (HTTP version)."""
     # This usually means checking if we are connected via ResoniteLink or have active OSC servers
     from .tools.osc import osc_clients, osc_servers
@@ -247,7 +252,7 @@ async def resonite_session_status_http() -> Dict[str, Any]:
     }
 
 
-async def resonite_session_end_http() -> Dict[str, Any]:
+async def resonite_session_end_http() -> dict[str, Any]:
     """End session (HTTP version)."""
     # Simply close all OSC servers for now
     from .tools.osc import osc_servers
@@ -258,15 +263,15 @@ async def resonite_session_end_http() -> Dict[str, Any]:
     return {"status": "success", "message": f"Closed {len(ports)} OSC servers"}
 
 
-async def resonite_world_load_http(world_path: str) -> Dict[str, Any]:
+async def resonite_world_load_http(world_path: str) -> dict[str, Any]:
     """Load world (HTTP version)."""
     # In Resonite, loading a world often involves sending an OSC message or using ResoniteLink
     return await send_osc_http("127.0.0.1", 9000, "/world/load", [world_path])
 
 
 async def resonite_avatar_load_http(
-    avatar_path: str, slot: Optional[int] = None, parameters: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+    avatar_path: str, slot: int | None = None, parameters: dict[str, Any] | None = None
+) -> dict[str, Any]:
     """Load avatar (HTTP version)."""
     from .tools import avatar
 
@@ -274,24 +279,22 @@ async def resonite_avatar_load_http(
 
 
 async def resonite_parameter_set_http(
-    parameter_name: str, value: float, avatar_slot: Optional[int] = None
-) -> Dict[str, Any]:
+    parameter_name: str, value: float, avatar_slot: int | None = None
+) -> dict[str, Any]:
     """Set parameter (HTTP version)."""
     from .tools import avatar
 
     return await avatar.resonite_parameter_set(parameter_name, value, avatar_slot)
 
 
-async def resonite_protoflux_execute_http(
-    script_name: str, parameters: Optional[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+async def resonite_protoflux_execute_http(script_name: str, parameters: dict[str, Any] | None = None) -> dict[str, Any]:
     """Execute ProtoFlux script (HTTP version)."""
     from .tools import avatar
 
     return await avatar.resonite_protoflux_execute(script_name, parameters)
 
 
-async def resonite_avatar_info_http() -> Dict[str, Any]:
+async def resonite_avatar_info_http() -> dict[str, Any]:
     """Get active avatar info (HTTP version)."""
     # In a real scenario, this would poll Resonite for the current avatar.
     # For now, we return the structure the frontend expects, ideally synced
@@ -313,38 +316,36 @@ async def resonite_avatar_info_http() -> Dict[str, Any]:
     }
 
 
-async def resonite_avatar_reset_pose_http() -> Dict[str, Any]:
+async def resonite_avatar_reset_pose_http() -> dict[str, Any]:
     """Reset avatar pose (HTTP version)."""
     # Typically sent via OSC pattern
     return await send_osc_http("127.0.0.1", 9000, "/avatar/reset_pose", [1.0])
 
 
-async def resonite_avatar_locomotion_http(locomotion_type: str) -> Dict[str, Any]:
+async def resonite_avatar_locomotion_http(locomotion_type: str) -> dict[str, Any]:
     """Set avatar locomotion mode (HTTP version)."""
     return await send_osc_http("127.0.0.1", 9000, f"/avatar/locomotion/{locomotion_type}", [1.0])
 
 
-async def resonite_avatar_kill_sequences_http() -> Dict[str, Any]:
+async def resonite_avatar_kill_sequences_http() -> dict[str, Any]:
     """Kill all avatar sequences (HTTP version)."""
     return await send_osc_http("127.0.0.1", 9000, "/avatar/kill_sequences", [1.0])
 
 
 # Inventory functions
 async def resonite_inventory_list_http(
-    item_type: Optional[str] = None,
-    search_query: Optional[str] = None,
+    item_type: str | None = None,
+    search_query: str | None = None,
     limit: int = 50,
     offset: int = 0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List inventory items (HTTP version)."""
     from .tools import inventory
 
     return await inventory.resonite_inventory_list(item_type, search_query, limit, offset)
 
 
-async def resonite_inventory_search_http(
-    query: str, item_type: Optional[str] = None
-) -> Dict[str, Any]:
+async def resonite_inventory_search_http(query: str, item_type: str | None = None) -> dict[str, Any]:
     """Search inventory (HTTP version)."""
     from .tools import inventory
 
@@ -353,10 +354,10 @@ async def resonite_inventory_search_http(
 
 async def resonite_inventory_spawn_http(
     item_id: str,
-    position: Optional[List[float]] = None,
-    rotation: Optional[List[float]] = None,
-    scale: Optional[List[float]] = None,
-) -> Dict[str, Any]:
+    position: list[float] | None = None,
+    rotation: list[float] | None = None,
+    scale: list[float] | None = None,
+) -> dict[str, Any]:
     """Spawn inventory item (HTTP version)."""
     from .tools import inventory
 
@@ -367,20 +368,16 @@ async def resonite_inventory_upload_http(
     item_path: str,
     item_name: str,
     item_type: str,
-    description: Optional[str] = None,
+    description: str | None = None,
     is_public: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Upload to inventory (HTTP version)."""
     from .tools import inventory
 
-    return await inventory.resonite_inventory_upload(
-        item_path, item_name, item_type, description, is_public
-    )
+    return await inventory.resonite_inventory_upload(item_path, item_name, item_type, description, is_public)
 
 
-async def resonite_inventory_delete_http(
-    item_id: str, confirm_deletion: bool = True
-) -> Dict[str, Any]:
+async def resonite_inventory_delete_http(item_id: str, confirm_deletion: bool = True) -> dict[str, Any]:
     """Delete from inventory (HTTP version)."""
     from .tools import inventory
 
@@ -389,14 +386,14 @@ async def resonite_inventory_delete_http(
 
 async def resonite_inventory_share_http(
     item_id: str, share_with: str, permission_level: str = "read"
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Share inventory item (HTTP version)."""
     from .tools import inventory
 
     return await inventory.resonite_inventory_share(item_id, share_with, permission_level)
 
 
-async def resonite_inventory_info_http(item_id: str) -> Dict[str, Any]:
+async def resonite_inventory_info_http(item_id: str) -> dict[str, Any]:
     """Get inventory item info (HTTP version)."""
     from .tools import inventory
 
@@ -404,7 +401,7 @@ async def resonite_inventory_info_http(item_id: str) -> Dict[str, Any]:
 
 
 # Plugin functions
-async def plugin_list_http() -> Dict[str, Any]:
+async def plugin_list_http() -> dict[str, Any]:
     """List plugins (HTTP version)."""
     try:
         from .server import plugin_manager
@@ -424,7 +421,7 @@ async def plugin_list_http() -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to list plugins: {e}"}
 
 
-async def plugin_load_http(plugin_name: str) -> Dict[str, Any]:
+async def plugin_load_http(plugin_name: str) -> dict[str, Any]:
     """Load plugin (HTTP version)."""
     try:
         from .server import plugin_manager, server
@@ -451,7 +448,7 @@ async def plugin_load_http(plugin_name: str) -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to load plugin '{plugin_name}': {e}"}
 
 
-async def plugin_unload_http(plugin_name: str) -> Dict[str, Any]:
+async def plugin_unload_http(plugin_name: str) -> dict[str, Any]:
     """Unload plugin (HTTP version)."""
     try:
         from .server import plugin_manager
@@ -472,7 +469,7 @@ async def plugin_unload_http(plugin_name: str) -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to unload plugin '{plugin_name}': {e}"}
 
 
-async def plugin_reload_http(plugin_name: str) -> Dict[str, Any]:
+async def plugin_reload_http(plugin_name: str) -> dict[str, Any]:
     """Reload plugin (HTTP version)."""
     try:
         from .server import plugin_manager, server
@@ -493,7 +490,7 @@ async def plugin_reload_http(plugin_name: str) -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to reload plugin '{plugin_name}': {e}"}
 
 
-async def plugin_discover_http() -> Dict[str, Any]:
+async def plugin_discover_http() -> dict[str, Any]:
     """Discover plugins (HTTP version)."""
     try:
         from .server import plugin_manager
@@ -512,7 +509,7 @@ async def plugin_discover_http() -> Dict[str, Any]:
         return {"status": "error", "message": f"Failed to discover plugins: {e}"}
 
 
-async def plugin_info_http(plugin_name: Optional[str] = None) -> Dict[str, Any]:
+async def plugin_info_http(plugin_name: str | None = None) -> dict[str, Any]:
     """Get plugin info (HTTP version)."""
     try:
         from .server import plugin_manager

@@ -19,9 +19,7 @@ def _npx_argv(extra: list[str]) -> list[str]:
     node_dir = Path(node).resolve().parent
     npx_cli = node_dir / "node_modules" / "npm" / "bin" / "npx-cli.js"
     if not npx_cli.is_file():
-        raise FileNotFoundError(
-            "npx not on PATH and npx-cli.js not found. Install Node.js/npm globally."
-        )
+        raise FileNotFoundError("npx not on PATH and npx-cli.js not found. Install Node.js/npm globally.")
     return [node, str(npx_cli), *extra]
 
 

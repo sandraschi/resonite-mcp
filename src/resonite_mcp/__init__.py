@@ -17,4 +17,4 @@ __email__ = "sandra@example.com"
 
 from .server import server
 
-__all__ = ["server", "__version__", "__author__", "__email__"]
+__all__ = ["__author__", "__email__", "__version__", "server"]

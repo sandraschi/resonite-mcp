@@ -62,9 +62,7 @@ async def _list_live_inventory(*, item_type: str | None, limit: int) -> list[dic
         from ..models import InventoryListInput
         from ..tools.inventory import resonite_inventory_list
 
-        result = await resonite_inventory_list(
-            InventoryListInput(item_type=item_type, limit=limit, offset=0)
-        )
+        result = await resonite_inventory_list(InventoryListInput(item_type=item_type, limit=limit, offset=0))
         if result.get("status") != "success":
             return None
         payload = result.get("data") or result

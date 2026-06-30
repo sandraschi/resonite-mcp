@@ -1,5 +1,6 @@
 import asyncio
 import logging
+
 from resonite_mcp.rag import rag_engine
 
 logging.basicConfig(level=logging.INFO)

@@ -38,9 +38,7 @@ def test_http_api():
             if method == "GET":
                 response = requests.get(f"http://127.0.0.1:8000{endpoint}", timeout=3)
             elif method == "POST":
-                response = requests.post(
-                    f"http://127.0.0.1:8000{endpoint}", json=data[0] if data else {}, timeout=3
-                )
+                response = requests.post(f"http://127.0.0.1:8000{endpoint}", json=data[0] if data else {}, timeout=3)
 
             print(f"{method} {endpoint}: {response.status_code}")
             if response.status_code == 200:

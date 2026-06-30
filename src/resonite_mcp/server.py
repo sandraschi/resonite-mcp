@@ -61,9 +61,7 @@ class DevNullStdout:
 
 
 # Set up logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 # Detect if we're running in stdio mode (for MCP)
@@ -152,9 +150,7 @@ async def ask_resonite(question: str) -> str:
             context = "\n\n".join([f"From {r['title']}:\n{r['text']}" for r in results])
             return f"Based on Resonite documentation (Note: No local LLM found for synthesis):\n\n{context}"
 
-        answer = await synthesize_answer(
-            question, "\n\n".join([r["text"] for r in results]), substrate
-        )
+        answer = await synthesize_answer(question, "\n\n".join([r["text"] for r in results]), substrate)
         return f"Synthesized via {substrate.provider} ({substrate.name}):\n\n{answer}"
     except Exception as e:
         return f"Error querying documentation: {e!s}"
@@ -168,12 +164,12 @@ def is_resonite_installed() -> bool:
     try:
         import winreg
 
-        # Check Steam Installation
-        steam_paths = [
+        # Check Steam Installation registry
+        steam_reg_paths = [
             r"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 2519830",
             r"SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 2519830",
         ]
-        for path in steam_paths:
+        for path in steam_reg_paths:
             try:
                 key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
                 winreg.CloseKey(key)
@@ -181,7 +177,7 @@ def is_resonite_installed() -> bool:
             except OSError:
                 continue
 
-        # Check for standalone or common paths
+        # Check common paths
         common_paths = [
             os.path.expandvars(r"%LOCALAPPDATA%\Yellow Dog Man Studios\Resonite"),
             os.path.expandvars(r"%PROGRAMFILES%\Resonite"),
@@ -190,6 +186,21 @@ def is_resonite_installed() -> bool:
         for p in common_paths:
             if os.path.exists(p):
                 return True
+
+        # Check Steam library paths
+        steam_base = os.path.expandvars(r"%PROGRAMFILES(X86)%\Steam\steamapps\common\Resonite")
+        if os.path.isdir(steam_base):
+            return True
+
+        # Scan Steam libraryfolders.vdf for additional libraries
+        library_vdf = os.path.expandvars(r"%PROGRAMFILES(X86)%\Steam\steamapps\libraryfolders.vdf")
+        if os.path.isfile(library_vdf):
+            for line in open(library_vdf, encoding="utf-8"):
+                line = line.strip()
+                if line.startswith('"path"'):
+                    lib_path = line.split('"')[3].replace("\\\\", "\\")
+                    if os.path.isdir(os.path.join(lib_path, "steamapps", "common", "Resonite")):
+                        return True
     except Exception as e:
         logger.error(f"Error checking Resonite installation: {e}")
 
@@ -203,9 +214,7 @@ def is_resonite_running() -> bool:
 
     try:
         # Simple tasklist check to avoid extra dependencies if psutil is missing
-        output = subprocess.check_output(
-            'tasklist /FI "IMAGENAME eq Resonite.exe"', shell=True
-        ).decode()
+        output = subprocess.check_output('tasklist /FI "IMAGENAME eq Resonite.exe"', shell=True).decode()
         return "Resonite.exe" in output
     except Exception:
         return False
@@ -222,17 +231,11 @@ async def health_check() -> dict[str, Any]:
         "message": "Resonite MCP server is healthy",
         "version": "0.8.0",
         "agent_lab_phase": 4,
-        "plugins_loaded": list(plugin_manager.loaded_plugins.keys())
-        if plugin_manager
-        else [],
+        "plugins_loaded": list(plugin_manager.loaded_plugins.keys()) if plugin_manager else [],
         "osc_connected": True,
-        "resonite_link_connected": resonite_link_client.running
-        if resonite_link_client
-        else False,
+        "resonite_link_connected": resonite_link_client.running if resonite_link_client else False,
         "rag_engine_active": True,
-        "llm_substrate": (await get_best_substrate()).name
-        if await get_best_substrate()
-        else "none",
+        "llm_substrate": (await get_best_substrate()).name if await get_best_substrate() else "none",
         "resonite_installed": installed,
         "resonite_running": running,
     }
@@ -258,9 +261,14 @@ async def agentic_plan_execute(
         from .agentic import agentic_execute, agentic_plan
 
         tool_names = [
-            "resonite_session_start", "resonite_world_load", "resonite_avatar_load",
-            "resonite_parameter_set", "resonite_inventory_list", "resonite_inventory_spawn",
-            "resonite_rest_get_sessions", "send_osc",
+            "resonite_session_start",
+            "resonite_world_load",
+            "resonite_avatar_load",
+            "resonite_parameter_set",
+            "resonite_inventory_list",
+            "resonite_inventory_spawn",
+            "resonite_rest_get_sessions",
+            "send_osc",
         ]
 
         plan = await agentic_plan(ctx, goal, tool_names)
@@ -286,9 +294,7 @@ async def launch_resonite(request):
     try:
         # Launch using the Steam shortcut URL
         webbrowser.open("steam://rungameid/2519830")
-        return JSONResponse(
-            {"status": "success", "message": "Resonite launch command sent"}
-        )
+        return JSONResponse({"status": "success", "message": "Resonite launch command sent"})
     except Exception as e:
         return JSONResponse({"status": "error", "message": str(e)}, status_code=500)
 

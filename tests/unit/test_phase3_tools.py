@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -73,15 +72,19 @@ class TestPullAvatarVrm:
         avatar_dir.mkdir()
         (avatar_dir / "local.vrm").write_bytes(b"VRM1.0 local")
 
-        with patch(
-            "resonite_mcp.tools.fleet_tools.DEFAULT_AVATAR_VRM_DIR",
-            avatar_dir,
-        ), patch(
-            "resonite_mcp.tools.fleet_tools.check_avatar_http_health",
-            new=AsyncMock(return_value=False),
-        ), patch(
-            "resonite_mcp.tools.fleet_tools._import_local_file",
-            new=AsyncMock(return_value={"success": True, "path": "mock"}),
+        with (
+            patch(
+                "resonite_mcp.tools.fleet_tools.DEFAULT_AVATAR_VRM_DIR",
+                avatar_dir,
+            ),
+            patch(
+                "resonite_mcp.tools.fleet_tools.check_avatar_http_health",
+                new=AsyncMock(return_value=False),
+            ),
+            patch(
+                "resonite_mcp.tools.fleet_tools._import_local_file",
+                new=AsyncMock(return_value={"success": True, "path": "mock"}),
+            ),
         ):
             result = await resonite_fleet(
                 "pull_avatar_vrm",

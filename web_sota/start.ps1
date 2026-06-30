@@ -1,19 +1,16 @@
 Param([switch]$Headless)
 $SkipFrontend = $Headless
 
-# --- SOTA Headless Standard ---
 if ($Headless -and ($Host.UI.RawUI.WindowTitle -notmatch 'Hidden')) {
-    Start-Process pwsh -ArgumentList '-NoProfile', '-File', $PSCommandPath, '-Headless' -WindowStyle Hidden
+    $a = @('-NoProfile', '-File', $PSCommandPath, '-Headless')
+    Start-Process pwsh -ArgumentList $a -WindowStyle Hidden
     exit
 }
-$WindowStyle = if ($Headless) { 'Hidden' } else { 'Normal' }
-# ------------------------------
-
-# Resonite MCP SOTA - Backend (HTTP MCP + SOTA API) + Vite frontend
-# Backend: 10979, Frontend: 10978 (proxy /api to backend). No manual uv/uvicorn.
 
 $WebPort = 10978
 $BackendPort = 10979
+$ProjectRoot = Split-Path -Parent $PSScriptRoot
+
 $FleetStartPath = Join-Path $ProjectRoot "scripts\FleetStartMode.ps1"
 if (-not (Test-Path -LiteralPath $FleetStartPath)) {
     Write-Host "ERROR: Missing vendored launcher helper: $FleetStartPath" -ForegroundColor Red
@@ -21,35 +18,44 @@ if (-not (Test-Path -LiteralPath $FleetStartPath)) {
 }
 . $FleetStartPath
 
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
-
-function Clear-Port {
-    param([int]$Port)
-    $conns = Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
-    if (-not $conns) { return $false }
-    $pids = $conns | Select-Object -ExpandProperty OwningProcess -Unique
-    foreach ($p in $pids) {
-        if ($p -and $p -ne 0) {
-            try {
-                Stop-Process -Id $p -Force -ErrorAction Stop
-                Write-Host "      PID $p (port $Port) stopped" -ForegroundColor DarkGray
-            }
-            catch { }
-        }
+function Clear-Port($Port) {
+    $c = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue
+    if (-not $c) { return $false }
+    $c | Select-Object -ExpandProperty OwningProcess -Unique | Where-Object { $_ -and $_ -ne 0 } | ForEach-Object {
+        taskkill /F /PID $_ 2>$null
+        Write-Host "  Killed PID $_ on port $Port" -ForegroundColor DarkGray
     }
-    Start-Sleep -Milliseconds 400
     return $true
 }
 
-Write-Host "[RESONITE-MCP] SOTA startup (backend $BackendPort, frontend $WebPort)..." -ForegroundColor Cyan
-
-# 1. Clear port squatters
-foreach ($port in @($WebPort, $BackendPort)) {
-    $cleared = Clear-Port -Port $port
-    if ($cleared) { Write-Host "      Port $port cleared" -ForegroundColor Yellow }
+function Force-Kill-Zombies {
+    param([int]$BP, [int]$FP)
+    Write-Host "[RESONITE-MCP] Force-killing zombies..." -ForegroundColor DarkGray
+    Clear-Port $BP
+    Clear-Port $FP
+    taskkill /F /IM "resonite-mcp-backend.exe" /T 2>$null
+    taskkill /F /IM "resonite-mcp-native.exe" /T 2>$null
+    taskkill /F /IM "python.exe" /T 2>$null
+    taskkill /F /IM "uv.exe" /T 2>$null
+    Start-Sleep -Milliseconds 500
+    $remaining = Get-NetTCPConnection -LocalPort $BP -ErrorAction SilentlyContinue
+    if ($remaining) {
+        Write-Host "  Port $BP still occupied — elevated kill (UAC)..." -ForegroundColor Yellow
+        $cmd = "Get-NetTCPConnection -LocalPort $BP -ErrorAction SilentlyContinue | ForEach-Object { taskkill /F /PID `$_.OwningProcess /T 2>null }; taskkill /F /IM resonite-mcp-backend.exe /T 2>null; taskkill /F /IM python.exe /T 2>null"
+        Start-Process powershell -Verb RunAs -WindowStyle Hidden -ArgumentList "-NoProfile", "-Command", $cmd
+        Start-Sleep 4
+    }
+    if (Get-NetTCPConnection -LocalPort $BP -ErrorAction SilentlyContinue) {
+        Write-Host "  WARNING: Port $BP still busy" -ForegroundColor Red
+    } else {
+        Write-Host "  All ports clear" -ForegroundColor Green
+    }
 }
 
-# 2. Sync deps and env from project root
+Write-Host "[RESONITE-MCP] Starting backend $BackendPort, frontend $WebPort" -ForegroundColor Cyan
+
+Force-Kill-Zombies -BP $BackendPort -FP $FrontendPort
+
 Push-Location $ProjectRoot
 if (-not (Test-Path "pyproject.toml")) {
     Write-Host "[ERROR] pyproject.toml not found. Run from web_sota folder." -ForegroundColor Red
@@ -65,13 +71,11 @@ $env:MCP_TRANSPORT = "http"
 $env:MCP_PORT = [string]$BackendPort
 $env:MCP_HOST = "127.0.0.1"
 
-# 3. Start Python backend (HTTP mode via cli entry point)
 Write-Host "[RESONITE-MCP] Starting backend on port $BackendPort ..." -ForegroundColor Green
-$serverArgs = @("run", "python", "-m", "resonite_mcp", "--port", [string]$BackendPort)
-$backendProc = Start-Process -FilePath "uv" -ArgumentList $serverArgs -WorkingDirectory $ProjectRoot -NoNewWindow -PassThru
+$sa = @("run", "python", "-m", "resonite_mcp", "--port", [string]$BackendPort)
+Start-Process -FilePath "uv" -ArgumentList $sa -WorkingDirectory $ProjectRoot -NoNewWindow -PassThru
 Pop-Location
 
-# 4. Health-check backend before starting frontend
 $backendUrl = "http://127.0.0.1:$BackendPort/health"
 Write-Host "[RESONITE-MCP] Waiting for backend at $backendUrl ..." -ForegroundColor Gray
 $ready = $false
@@ -86,10 +90,9 @@ for ($i = 0; $i -lt 30; $i++) {
     }
 }
 if (-not $ready) {
-    Write-Host "[WARNING] Backend did not respond within 30s. Starting frontend anyway..." -ForegroundColor Yellow
+    Write-Host "[WARNING] Backend did not respond within 30s." -ForegroundColor Yellow
 }
 
-# 5. Frontend from web_sota
 Set-Location $PSScriptRoot
 if (-not (Test-Path "node_modules")) {
     Write-Host "[RESONITE-MCP] Installing frontend deps..." -ForegroundColor Yellow
@@ -97,10 +100,10 @@ if (-not (Test-Path "node_modules")) {
 }
 Write-Host "[RESONITE-MCP] Starting Vite on port $WebPort ..." -ForegroundColor Green
 
-# 6. Launch background task to open browser once frontend is ready
 $frontendUrl = "http://127.0.0.1:$WebPort/"
-$pollAndOpen = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
-Start-Process powershell -ArgumentList "-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollAndOpen
+$pollCode = "for (`$i = 0; `$i -lt 60; `$i++) { try { `$null = Invoke-WebRequest -Uri '$frontendUrl' -TimeoutSec 2 -UseBasicParsing -ErrorAction Stop; Start-Process '$frontendUrl'; exit } catch { Start-Sleep -Seconds 1 } }"
+$pa = @("-NoProfile", "-WindowStyle", "Hidden", "-Command", $pollCode)
+Start-Process powershell -ArgumentList $pa
 
 Write-Host "Browser will open automatically when Vite is ready." -ForegroundColor Gray
 if ($SkipFrontend) { return }

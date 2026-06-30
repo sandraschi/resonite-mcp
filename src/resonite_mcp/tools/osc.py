@@ -8,7 +8,7 @@ import asyncio
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pythonosc import dispatcher, osc_server, udp_client
 
@@ -17,15 +17,15 @@ from ..models import OSCMessageInput, OSCServerInput, OSCServerStopInput
 logger = logging.getLogger(__name__)
 
 # Import server for tool registration
-from ..server import server
+from ..server import server  # noqa: E402
 
 # Global OSC state management
-osc_clients: Dict[str, udp_client.SimpleUDPClient] = {}
-osc_servers: Dict[int, osc_server.ThreadingOSCUDPServer] = {}
-osc_recordings: Dict[str, List[Dict[str, Any]]] = {}
+osc_clients: dict[str, udp_client.SimpleUDPClient] = {}
+osc_servers: dict[int, osc_server.ThreadingOSCUDPServer] = {}
+osc_recordings: dict[str, list[dict[str, Any]]] = {}
 
 
-async def send_osc(input_data: OSCMessageInput) -> Dict[str, Any]:
+async def send_osc(input_data: OSCMessageInput) -> dict[str, Any]:
     """Send an OSC message to the specified address.
 
     This is a low-level OSC function for direct protocol control.
@@ -38,7 +38,8 @@ async def send_osc(input_data: OSCMessageInput) -> Dict[str, Any]:
         Dictionary with operation status and details
 
     Examples:
-        Send a parameter value: send_osc({"host": "127.0.0.1", "port": 9000, "address": "/avatar/happy", "values": [0.8]})
+        Send a parameter value:
+        send_osc({"host": "127.0.0.1", "port": 9000, "address": "/avatar/happy", "values": [0.8]})
     """
     host = input_data.host
     port = input_data.port
@@ -70,7 +71,7 @@ async def send_osc(input_data: OSCMessageInput) -> Dict[str, Any]:
         logger.error(f"Failed to send OSC message: {e}")
         return {
             "status": "error",
-            "message": f"Failed to send OSC message: {str(e)}",
+            "message": f"Failed to send OSC message: {e!s}",
             "address": address,
             "host": host,
             "port": port,
@@ -80,7 +81,7 @@ async def send_osc(input_data: OSCMessageInput) -> Dict[str, Any]:
 server.tool()(send_osc)
 
 
-async def start_osc_server(input_data: OSCServerInput) -> Dict[str, Any]:
+async def start_osc_server(input_data: OSCServerInput) -> dict[str, Any]:
     """Start an OSC server to receive incoming messages from Resonite.
 
     This creates a UDP server that can receive OSC messages from Resonite
@@ -151,7 +152,7 @@ async def start_osc_server(input_data: OSCServerInput) -> Dict[str, Any]:
         logger.error(f"Failed to start OSC server: {e}")
         return {
             "status": "error",
-            "message": f"Failed to start OSC server: {str(e)}",
+            "message": f"Failed to start OSC server: {e!s}",
             "port": port,
             "address": address,
         }
@@ -160,7 +161,7 @@ async def start_osc_server(input_data: OSCServerInput) -> Dict[str, Any]:
 server.tool()(start_osc_server)
 
 
-async def stop_osc_server(input_data: OSCServerStopInput) -> Dict[str, Any]:
+async def stop_osc_server(input_data: OSCServerStopInput) -> dict[str, Any]:
     """Stop a running OSC server.
 
     Args:
@@ -191,7 +192,7 @@ async def stop_osc_server(input_data: OSCServerStopInput) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"Failed to stop OSC server: {e}")
-        return {"status": "error", "message": f"Failed to stop OSC server: {str(e)}", "port": port}
+        return {"status": "error", "message": f"Failed to stop OSC server: {e!s}", "port": port}
 
 
 server.tool()(stop_osc_server)
@@ -199,10 +200,10 @@ server.tool()(stop_osc_server)
 
 async def get_received_messages(
     port: int,
-    address_pattern: Optional[str] = None,
-    max_age_seconds: Optional[float] = None,
+    address_pattern: str | None = None,
+    max_age_seconds: float | None = None,
     limit: int = 100,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get OSC messages received by a running OSC server.
 
     Args:
@@ -255,7 +256,7 @@ async def get_received_messages(
         logger.error(f"Failed to get received messages: {e}")
         return {
             "status": "error",
-            "message": f"Failed to get received messages: {str(e)}",
+            "message": f"Failed to get received messages: {e!s}",
             "port": port,
         }
 
@@ -263,7 +264,7 @@ async def get_received_messages(
 server.tool()(get_received_messages)
 
 
-async def get_latest_message(port: int, address_pattern: Optional[str] = None) -> Dict[str, Any]:
+async def get_latest_message(port: int, address_pattern: str | None = None) -> dict[str, Any]:
     """Get the most recent OSC message from a running server."""
     try:
         result = await get_received_messages(port, address_pattern, limit=1)
@@ -281,7 +282,7 @@ async def get_latest_message(port: int, address_pattern: Optional[str] = None) -
         logger.error(f"Failed to get latest message: {e}")
         return {
             "status": "error",
-            "message": f"Failed to get latest message: {str(e)}",
+            "message": f"Failed to get latest message: {e!s}",
             "port": port,
         }
 
@@ -289,7 +290,7 @@ async def get_latest_message(port: int, address_pattern: Optional[str] = None) -
 server.tool()(get_latest_message)
 
 
-async def get_osc_server_stats(port: int) -> Dict[str, Any]:
+async def get_osc_server_stats(port: int) -> dict[str, Any]:
     """Get statistics about a running OSC server's message buffer."""
     try:
         if port not in osc_servers:
@@ -323,7 +324,7 @@ async def get_osc_server_stats(port: int) -> Dict[str, Any]:
         logger.error(f"Failed to get OSC server stats: {e}")
         return {
             "status": "error",
-            "message": f"Failed to get OSC server stats: {str(e)}",
+            "message": f"Failed to get OSC server stats: {e!s}",
             "port": port,
         }
 
@@ -331,7 +332,7 @@ async def get_osc_server_stats(port: int) -> Dict[str, Any]:
 server.tool()(get_osc_server_stats)
 
 
-async def clear_osc_message_buffer(port: int) -> Dict[str, Any]:
+async def clear_osc_message_buffer(port: int) -> dict[str, Any]:
     """Clear all messages from an OSC server's buffer."""
     try:
         if str(port) in osc_recordings:
@@ -356,7 +357,7 @@ async def clear_osc_message_buffer(port: int) -> Dict[str, Any]:
         logger.error(f"Failed to clear OSC message buffer: {e}")
         return {
             "status": "error",
-            "message": f"Failed to clear OSC message buffer: {str(e)}",
+            "message": f"Failed to clear OSC message buffer: {e!s}",
             "port": port,
         }
 
@@ -364,7 +365,7 @@ async def clear_osc_message_buffer(port: int) -> Dict[str, Any]:
 server.tool()(clear_osc_message_buffer)
 
 
-async def test_osc_echo(port: int = 9000) -> Dict[str, Any]:
+async def test_osc_echo(port: int = 9000) -> dict[str, Any]:
     """Test OSC functionality by sending and receiving a message."""
     try:
         # Start a test server if not already running
@@ -417,7 +418,7 @@ async def test_osc_echo(port: int = 9000) -> Dict[str, Any]:
 
     except Exception as e:
         logger.error(f"OSC echo test failed: {e}")
-        return {"status": "error", "message": f"OSC echo test failed: {str(e)}", "port": port}
+        return {"status": "error", "message": f"OSC echo test failed: {e!s}", "port": port}
 
 
 server.tool()(test_osc_echo)

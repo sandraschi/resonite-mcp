@@ -10,8 +10,10 @@ a = Analysis(
     ["run_server.py"],
     pathex=["src"],
     binaries=[],
+    
     datas=datas,
     hiddenimports=[
+        "charset_normalizer",
         "uvicorn.logging",
         "uvicorn.loops",
         "uvicorn.loops.asyncio",
@@ -25,8 +27,10 @@ a = Analysis(
         "resonite_mcp.tools.fleet_tools",
         "resonite_mcp.tools.voice_tools",
         "resonite_mcp.utils.telemetry",
-    ],
-    hookspath=[],
+    "_strptime",
+],
+hookspath=[],
+    
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
@@ -35,7 +39,7 @@ a = Analysis(
         "torch",
         "transformers",
     ],
-    noarchive=False,
+    noarchive=True,
     optimize=0,
 )
 pyz = PYZ(a.pure)
@@ -46,11 +50,12 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
+    
     name="resonite-mcp-backend",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
@@ -60,3 +65,11 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
 )
+
+
+
+
+
+
+
+

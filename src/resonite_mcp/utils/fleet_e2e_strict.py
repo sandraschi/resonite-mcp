@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from unittest.mock import AsyncMock
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 
 async def run_strict_offline_smoke(*, work_dir: Path) -> dict[str, object]:
@@ -41,24 +40,32 @@ async def run_strict_offline_smoke(*, work_dir: Path) -> dict[str, object]:
 
     mock_import = AsyncMock(return_value={"success": True, "path": "mock", "osc": {"status": "success"}})
 
-    with patch("resonite_mcp.tools.fleet_tools._import_local_file", new=mock_import), patch(
-        "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
-        new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
-    ), patch(
-        "resonite_mcp.tools.integrations.resonite_import_blender",
-        new=AsyncMock(return_value={"status": "ok", "object_name": "Cube"}),
-    ), patch(
-        "resonite_mcp.tools.fleet_tools.call_http_tool",
-        new=AsyncMock(return_value={"success": True}),
-    ), patch(
-        "resonite_mcp.tools.fleet_tools.check_http_health",
-        new=AsyncMock(return_value=False),
-    ), patch(
-        "resonite_mcp.server.is_resonite_installed",
-        return_value=True,
-    ), patch(
-        "resonite_mcp.server.is_resonite_running",
-        return_value=False,
+    with (
+        patch("resonite_mcp.tools.fleet_tools._import_local_file", new=mock_import),
+        patch(
+            "resonite_mcp.tools.integrations.resonite_import_worldlabs_batch",
+            new=AsyncMock(return_value={"status": "ok", "imported": 1, "total": 1, "imports": []}),
+        ),
+        patch(
+            "resonite_mcp.tools.integrations.resonite_import_blender",
+            new=AsyncMock(return_value={"status": "ok", "object_name": "Cube"}),
+        ),
+        patch(
+            "resonite_mcp.tools.fleet_tools.call_http_tool",
+            new=AsyncMock(return_value={"success": True}),
+        ),
+        patch(
+            "resonite_mcp.tools.fleet_tools.check_http_health",
+            new=AsyncMock(return_value=False),
+        ),
+        patch(
+            "resonite_mcp.server.is_resonite_installed",
+            return_value=True,
+        ),
+        patch(
+            "resonite_mcp.server.is_resonite_running",
+            return_value=False,
+        ),
     ):
         strict = await resonite_fleet(
             "run_strict_fleet_pipeline",

@@ -94,7 +94,9 @@ async def resonite_import_worldlabs_url(
         from .osc import send_osc
 
         msg = OSCMessageInput(
-            host="127.0.0.1", port=9000, address="/worldlabs/import",
+            host="127.0.0.1",
+            port=9000,
+            address="/worldlabs/import",
             values=[splat_url, mesh_url, world_name],
         )
         await send_osc(msg)
@@ -164,11 +166,7 @@ async def resonite_import_blender(object_name: str, export_format: str = "glb") 
             tool_result = resp.json()
             if tool_result.get("success") and tool_result.get("data"):
                 export_data = tool_result["data"]
-                file_url = (
-                    export_data.get("url")
-                    or export_data.get("file_path", "")
-                    or str(export_data)
-                )
+                file_url = export_data.get("url") or export_data.get("file_path", "") or str(export_data)
             else:
                 file_url = ""
             results["blender_export"] = "ok" if file_url else "no_file_path"
@@ -205,7 +203,8 @@ async def resonite_import_blender(object_name: str, export_format: str = "glb") 
 
 
 async def resonite_avatar_unity(
-    avatar_model_path: str, unity_package_path: str | None = None,
+    avatar_model_path: str,
+    unity_package_path: str | None = None,
 ) -> dict[str, Any]:
     """Sync avatar data between Unity3D and Resonite.
 

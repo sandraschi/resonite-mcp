@@ -78,15 +78,14 @@ async def plugin_load(plugin_name: str) -> dict[str, Any]:
         if result:
             try:
                 from ..server import server as mcp_server
+
                 await pm.initialize_plugin(result, mcp_server)
             except Exception:
-                pass
+                logger.debug("Plugin init skipped for %s", result)
         return {
             "status": "success" if result else "error",
             "message": (
-                f"Plugin '{plugin_name}' loaded"
-                if result
-                else f"Plugin '{plugin_name}' not found or failed to load"
+                f"Plugin '{plugin_name}' loaded" if result else f"Plugin '{plugin_name}' not found or failed to load"
             ),
             "plugin_name": plugin_name,
             "loaded": result,
@@ -231,9 +230,7 @@ async def plugin_info(plugin_name: str | None = None) -> dict[str, Any]:
         }
     if plugin_name:
         loaded = plugin_name in pm.loaded_plugins
-        discovered = any(
-            p.get("name") == plugin_name for p in (pm.discovered_plugins or [])
-        )
+        discovered = any(p.get("name") == plugin_name for p in (pm.discovered_plugins or []))
         return {
             "status": "success",
             "plugin": {
@@ -253,7 +250,7 @@ async def plugin_info(plugin_name: str | None = None) -> dict[str, Any]:
 
 
 # Import server for tool registration
-from ..server import server
+from ..server import server  # noqa: E402
 
 server.tool()(plugin_list)
 server.tool()(plugin_load)

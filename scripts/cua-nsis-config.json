@@ -1,0 +1,12 @@
+{
+  "product_name": "Resonite MCP Operator",
+  "install_dir": "%LOCALAPPDATA%\\Resonite MCP",
+  "operator_exe": "resonite-mcp-native.exe",
+  "backend_process_names": ["resonite-mcp-native", "resonite-mcp-backend"],
+  "backend_port": 10979,
+  "health_path": "/health",
+  "frontend_port": 10978,
+  "window_title_re": "Resonite MCP",
+  "nsis_glob": "native/target/release/bundle/nsis/Resonite MCP_*_x64-setup.exe",
+  "uninstall_registry_filter": "*Resonite MCP*"
+}

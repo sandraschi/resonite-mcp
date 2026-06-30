@@ -31,18 +31,13 @@ async def basic_session_workflow():
     try:
         # 1. Start a new session
         print("\\n1. Starting session...")
-        session_result = await resonite_session_start(
-            session_name="DemoSession",
-            world_path="resonite://TutorialWorld"
-        )
+        session_result = await resonite_session_start(session_name="DemoSession", world_path="resonite://TutorialWorld")
         print(f"✅ Session started: {session_result['session_info']['session_id']}")
 
         # 2. Load an avatar
         print("\\n2. Loading avatar...")
         avatar_result = await resonite_avatar_load(
-            avatar_path="resonite://DefaultAvatar",
-            slot=0,
-            parameters={"Happy": 0.7, "Relaxed": 0.8}
+            avatar_path="resonite://DefaultAvatar", slot=0, parameters={"Happy": 0.7, "Relaxed": 0.8}
         )
         print(f"✅ Avatar loaded: {avatar_result['avatar_path']}")
 
@@ -54,17 +49,12 @@ async def basic_session_workflow():
 
         # 4. Execute a ProtoFlux script
         print("\\n4. Executing ProtoFlux script...")
-        protoflux_result = await resonite_protoflux_execute(
-            "WelcomeAnimation",
-            {"duration": 3.0, "intensity": 0.8}
-        )
+        protoflux_result = await resonite_protoflux_execute("WelcomeAnimation", {"duration": 3.0, "intensity": 0.8})
         print(f"✅ Script executed: {protoflux_result['script_name']}")
 
         # 5. Send custom OSC messages
         print("\\n5. Sending custom OSC messages...")
-        osc_result = await send_osc(
-            "127.0.0.1", 9000, "/custom/gesture", ["wave", 1.0]
-        )
+        osc_result = await send_osc("127.0.0.1", 9000, "/custom/gesture", ["wave", 1.0])
         print(f"✅ OSC message sent: {osc_result['address']}")
 
         # Wait a bit for things to settle
@@ -78,6 +68,7 @@ async def basic_session_workflow():
     except Exception as e:
         print(f"❌ Error in workflow: {e}")
         import traceback
+
         traceback.print_exc()
 
 
@@ -118,11 +109,10 @@ async def advanced_workflow():
 
     try:
         # Start session with specific world
-        session_result = await resonite_session_start(
-            session_name="AdvancedDemo",
-            world_path="resonite://SocialHub"
+        session_result = await resonite_session_start(session_name="AdvancedDemo", world_path="resonite://SocialHub")
+        print(
+            f"✅ Advanced session started in: {session_result['session_info'].get('initial_world', {}).get('path', 'default')}"
         )
-        print(f"✅ Advanced session started in: {session_result['session_info'].get('initial_world', {}).get('path', 'default')}")
 
         # Load multiple avatars
         avatars = [
@@ -169,6 +159,7 @@ async def main():
     # Check if we can import the server
     try:
         import resonite_mcp
+
         print(f"✅ Server version: {resonite_mcp.__version__}")
         print("✅ Server ready for demos")
     except ImportError as e:
@@ -190,11 +181,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
-
-
-
-
-
-

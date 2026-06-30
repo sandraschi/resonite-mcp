@@ -11,10 +11,13 @@ from fastmcp import FastMCP
 
 from .base_plugin import BasePlugin
 
-
 _VALID_TEMPLATES = [
-    "avatar_animation", "world_interaction", "ui_control",
-    "data_processing", "network_sync", "physics_simulation",
+    "avatar_animation",
+    "world_interaction",
+    "ui_control",
+    "data_processing",
+    "network_sync",
+    "physics_simulation",
 ]
 
 _TEMPLATE_DEFINITIONS = {
@@ -50,9 +53,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
 
     def __init__(self):
         super().__init__(
-            name="protoflux_helpers",
-            version="1.0.0",
-            description="Advanced ProtoFlux scripting tools and templates"
+            name="protoflux_helpers", version="1.0.0", description="Advanced ProtoFlux scripting tools and templates"
         )
 
     @property
@@ -97,7 +98,8 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                     }
 
                 inp = OSCMessageInput(
-                    host="127.0.0.1", port=9000,
+                    host="127.0.0.1",
+                    port=9000,
                     address="/protoflux/analyze",
                     values=[script_name],
                 )
@@ -189,7 +191,8 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                     }
 
                 inp = OSCMessageInput(
-                    host="127.0.0.1", port=9000,
+                    host="127.0.0.1",
+                    port=9000,
                     address="/protoflux/debug",
                     values=[script_name, debug_mode],
                 )
@@ -282,20 +285,26 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                 rl_available = resonite_link_client.running if resonite_link_client else False
 
                 if rl_available:
-                    sections.append({
-                        "title": "ResoniteLink",
-                        "content": "Connected — can query script nodes in real-time",
-                    })
+                    sections.append(
+                        {
+                            "title": "ResoniteLink",
+                            "content": "Connected — can query script nodes in real-time",
+                        }
+                    )
                 else:
-                    sections.append({
-                        "title": "Connectivity",
-                        "content": "ResoniteLink not connected. Connect for live introspection.",
-                    })
+                    sections.append(
+                        {
+                            "title": "Connectivity",
+                            "content": "ResoniteLink not connected. Connect for live introspection.",
+                        }
+                    )
 
-                sections.append({
-                    "title": "Overview",
-                    "content": f"ProtoFlux script '{script_name}' — documented via OSC helper.",
-                })
+                sections.append(
+                    {
+                        "title": "Overview",
+                        "content": f"ProtoFlux script '{script_name}' — documented via OSC helper.",
+                    }
+                )
 
                 return {
                     "success": True,

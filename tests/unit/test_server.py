@@ -34,9 +34,7 @@ class TestOSCTools:
 
             osc_clients.clear()
 
-            result = await send_osc(
-                OSCMessageInput(host="127.0.0.1", port=9000, address="/test", values=[1, 2, 3])
-            )
+            result = await send_osc(OSCMessageInput(host="127.0.0.1", port=9000, address="/test", values=[1, 2, 3]))
 
             assert result["status"] == "success"
             assert result["host"] == "127.0.0.1"
@@ -74,9 +72,7 @@ class TestOSCTools:
 
             osc_clients.clear()
 
-            result = await send_osc(
-                OSCMessageInput(host="127.0.0.1", port=9000, address="/test", values=[1])
-            )
+            result = await send_osc(OSCMessageInput(host="127.0.0.1", port=9000, address="/test", values=[1]))
 
             assert result["status"] == "error"
             assert "Connection failed" in result["message"]
@@ -101,9 +97,10 @@ class TestResoniteTools:
     @pytest.mark.asyncio
     async def test_resonite_session_start_with_world(self):
         """Test session start with world loading."""
-        with patch("resonite_mcp.tools.session.send_osc") as mock_send_osc, patch(
-            "resonite_mcp.tools.session.resonite_world_load"
-        ) as mock_world_load:
+        with (
+            patch("resonite_mcp.tools.session.send_osc") as mock_send_osc,
+            patch("resonite_mcp.tools.session.resonite_world_load") as mock_world_load,
+        ):
             mock_send_osc.return_value = {"status": "success"}
             mock_world_load.return_value = {"status": "success"}
 
@@ -118,9 +115,12 @@ class TestResoniteTools:
     @pytest.mark.asyncio
     async def test_resonite_world_load_success(self):
         """Test successful world loading."""
-        with patch("resonite_mcp.server.is_resonite_running", return_value=True), patch(
-            "resonite_mcp.tools.session.send_osc",
-            new=AsyncMock(return_value={"status": "success", "message": "sent"}),
+        with (
+            patch("resonite_mcp.server.is_resonite_running", return_value=True),
+            patch(
+                "resonite_mcp.tools.session.send_osc",
+                new=AsyncMock(return_value={"status": "success", "message": "sent"}),
+            ),
         ):
             result = await resonite_world_load(world_path="resonite://TestWorld")
 
@@ -143,9 +143,7 @@ class TestResoniteTools:
             mock_send_osc.return_value = {"status": "success"}
 
             result = await resonite_avatar_load(
-                AvatarControlInput(
-                    avatar_id="resonite://TestAvatar", slot=0, parameters={"happy": 0.8}
-                )
+                AvatarControlInput(avatar_id="resonite://TestAvatar", slot=0, parameters={"happy": 0.8})
             )
 
             assert result["status"] == "success"

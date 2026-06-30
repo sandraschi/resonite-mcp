@@ -1,4 +1,5 @@
-﻿set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+import 'scripts/just/fleet.just'
 
 # Open the interactive recipe dashboard in the browser
 default:
@@ -104,6 +105,10 @@ build-native:
     npm install
     npx @tauri-apps/cli build
 
+# Run CUA smoke test against installed NSIS app
+cua-nsis-test:
+    C:\Windows\py.exe scripts/cua-smoke.py
+
 # Full release: web_sota + sidecar + NSIS installer
 build-all:
     pwsh -NoLogo -File '{{justfile_directory()}}\native\build.ps1'
@@ -147,4 +152,3 @@ kill-ports:
             Write-Host "Port $port cleared" -ForegroundColor Yellow \
         } \
     }
-

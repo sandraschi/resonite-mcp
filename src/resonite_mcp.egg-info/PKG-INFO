@@ -31,6 +31,8 @@ Requires-Dist: sentence-transformers>=3.0.0
 Requires-Dist: websockets>=12.0
 Requires-Dist: starlette>=0.40.0
 Requires-Dist: uvicorn>=0.30.0
+Requires-Dist: prefab-ui>=0.14.0
+Requires-Dist: charset-normalizer>=3.4.5
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"

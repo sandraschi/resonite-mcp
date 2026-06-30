@@ -4,10 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .fleet_http import DEFAULT_INKSCAPE_URL
-from .fleet_http import DEFAULT_RESONITE_URL
-from .fleet_http import call_http_tool
-from .fleet_http import check_http_health
+from .fleet_http import DEFAULT_INKSCAPE_URL, DEFAULT_RESONITE_URL, call_http_tool, check_http_health
 
 DEFAULT_LIVE_WORK_DIR = Path("D:/Temp/fleet_pipeline/resonite_e2e_live")
 
