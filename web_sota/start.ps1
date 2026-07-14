@@ -40,7 +40,7 @@ function Force-Kill-Zombies {
     Start-Sleep -Milliseconds 500
     $remaining = Get-NetTCPConnection -LocalPort $BP -ErrorAction SilentlyContinue
     if ($remaining) {
-        Write-Host "  Port $BP still occupied — elevated kill (UAC)..." -ForegroundColor Yellow
+        Write-Host "  Port $BP still occupied - elevated kill (UAC)..." -ForegroundColor Yellow
         $cmd = "Get-NetTCPConnection -LocalPort $BP -ErrorAction SilentlyContinue | ForEach-Object { taskkill /F /PID `$_.OwningProcess /T 2>null }; taskkill /F /IM resonite-mcp-backend.exe /T 2>null; taskkill /F /IM python.exe /T 2>null"
         Start-Process powershell -Verb RunAs -WindowStyle Hidden -ArgumentList "-NoProfile", "-Command", $cmd
         Start-Sleep 4
