@@ -30,10 +30,15 @@ In the spirit of kami and miko - this MCP server serves as a bridge between huma
 - **World Management**: Load/save worlds, manage sessions
 - **ProtoFlux Scripting**: Create and execute visual scripts in real-time
 - **OSC Communication**: Bidirectional communication with Resonite via OSC protocol
-- **ResoniteLink**: Real-time WebSocket JSON protocol for high-performance 3D interaction
+- **ResoniteLink**: Real-time WebSocket JSON protocol for high-performance 3D interaction —
+  **live-verified 2026-07-18** against Resonite 2026.7.14.913 (protocol 0.13.1.0): UDP discovery,
+  connect, data-model read, and slot write all confirmed against a running session, zero fixes needed
 - **Cloud Session Browser**: Browse public world sessions from `api.resonite.com`  thumbnails, user counts, join deep links
 - **World Inspector** *(NEW)*: Live scene-graph browser  traverse slots, inspect components, edit fields via ResoniteLink
-- **Asset Injection**: Inject VRM avatars, props, furniture, and architecture models into a running Resonite world
+- **Asset Injection**: Inject props and geometry into a running world via the protocol's
+  texture / mesh-JSON / raw-mesh / audio imports (client wrapping in progress). Note: generic
+  VRM/GLB file import does NOT exist in ResoniteLink — those endpoints honestly return
+  not_implemented; avatars travel as converted mesh data or in-world imports
 - **Presence Awareness & Onboarding** *(NEW)*: Self-detecting lifecycle gate that guides users to launch or install Resonite
 - **Dual Interface**: Both MCP stdio protocol and HTTP REST API
 - **Real-time Feedback**: Live parameter monitoring and event handling
