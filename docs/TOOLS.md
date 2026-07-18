@@ -19,12 +19,23 @@ for the capability table and live-verification record).
 - `resonite_link_spawn(...)` — creates named slots (template-URL spawning: not_implemented)
 - `resonite_link_set(component_id, field, value)` / `resonite_link_get(component_id, field)`
 - `resonite_link_call_method(...)` — sync method calls (protocol 0.11.0)
+- `resonite_link_import_mesh_json(vertices, submeshes, bones?, blendshapes?)` —
+  live-verified 2026-07-18; returns an asset URL (`local://...`), not an entity ID.
+- `resonite_link_spawn_mesh(vertices, submeshes, name?, pos_x/y/z?, color_r/g/b/a?)`
+  — convenience: import + StaticMesh + MeshRenderer + optional PBS_Metallic
+  material in one call. Live-verified 2026-07-18 as three manual steps, now wrapped.
+- `resonite_link_import_texture(file_path)` — wire shape confirmed against
+  upstream source, **not yet live-tested**. `file_path` resolves on the
+  Resonite host machine.
 - Python client (`resonite_mcp.resonite_link.ResoniteLinkClient`): full slot &
-  component CRUD, reflection, batching, `rl_value`/`rl_ref`/`rl_auto` helpers.
+  component CRUD, reflection, batching, `rl_value`/`rl_ref`/`rl_auto`/`rl_list`
+  helpers, plus `import_mesh_json`/`import_texture_file`/`spawn_mesh` above.
 - **Not in the protocol** (endpoints return not_implemented honestly): generic
-  VRM/GLB/FBX file import, per-field-ref writes. Asset imports (texture /
-  mesh-JSON / raw mesh / audio / cubemap) exist in the protocol; first-class
-  client wrapping is in progress.
+  VRM/GLB/FBX file import, per-field-ref writes.
+- **In the protocol but not implemented client-side**: `import_mesh_raw()`
+  (`importMeshRawData`) requires a binary WebSocket payload frame this client
+  doesn't send; it raises with guidance instead of faking it. Use mesh-JSON.
+  Audio/cubemap imports also remain unwrapped.
 
 ## Session Management (4 tools)
 - `resonite_session_start(session_name?, world_path?, avatar_slot?)`

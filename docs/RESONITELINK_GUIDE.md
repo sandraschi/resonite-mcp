@@ -35,19 +35,30 @@ possible, so re-verify on upstream releases.
 | Batching (`dataModelOperationBatch`) | ✅ Implemented |
 | Sync method calls (0.11.0: `callSyncMethod`, `callStaticSyncMethod`) | ✅ Implemented |
 | LAN session discovery (0.12.0: UDP 12512 announcements) | ✅ Implemented (`discover_sessions`, tool `resonite_link_discover`) |
-| Asset imports (texture / mesh-JSON / raw mesh / audio / cubemap) | ⚠️ Not yet wrapped (protocol supports them; client passthrough via raw messages) |
+| Asset imports: mesh-JSON (`import_mesh_json` / `resonite_link_import_mesh_json`) | ✅ Wrapped + live-verified 2026-07-18 |
+| Asset imports: convenience `spawn_mesh` / `resonite_link_spawn_mesh` (import + StaticMesh + MeshRenderer + optional PBS_Metallic material, one call) | ✅ Wrapped 2026-07-18, built from individually-verified steps |
+| Asset imports: texture (`import_texture_file` / `resonite_link_import_texture`) | ⚠️ Wrapped 2026-07-18, wire shape confirmed against upstream source, **not yet live-tested** |
+| Asset imports: raw mesh (`importMeshRawData`) | ❌ Not implemented — requires a binary WebSocket payload frame this client doesn't send yet; `import_mesh_raw()` raises with guidance rather than faking it. Use mesh-JSON instead. |
+| Asset imports: audio / cubemap | ⚠️ Not yet wrapped |
 | Generic model/file import (VRM/GLB/FBX) | ❌ Does not exist in the protocol — endpoints return not_implemented |
 | Dictionaries (0.10.0), spherical harmonics (0.13.x) | ✅ Pass-through (JSON client; use explicit `rl_value` types) |
 
-**LIVE VALIDATED 2026-07-18**: first end-to-end run against a running Resonite
+**LIVE VALIDATED 2026-07-18**: end-to-end run against a running Resonite
 instance succeeded with zero client fixes — Resonite **2026.7.14.913**, protocol
 **0.13.1.0** (exact match for this client). Verified live: UDP session discovery
 (port 12512; note the in-game dashboard port readout was WRONG in this test —
 always use `discover_sessions()`), connect + session metadata, `getSlot` on Root
-with component data, `addSlot` with position + protocol readback verification.
-The 22 wire-format regression tests remain the offline gate; asset-import
-message wrapping (importMeshJSON etc.) is the next live-test target. Evidence:
-mcp-central-docs `projects/RESONITE_PHASE0_RUNBOOK.md` execution log.
+with component data, `addSlot` with position + protocol readback verification,
+`importMeshJSON` (hand-built unit cube), the StaticMesh -> MeshRenderer render
+chain, and PBS_Metallic material wiring via the list-member `Materials`
+encoding. All of that is now wrapped into first-class client methods
+(`import_mesh_json`, `spawn_mesh`) and MCP tools (`resonite_link_import_mesh_json`,
+`resonite_link_spawn_mesh`) rather than left as raw `_send()` calls. The 30
+wire-format regression tests (up from 22) are the offline gate; next live-test
+target is `import_texture_file`/`resonite_link_import_texture` (shape-correct,
+unproven) and the Blender-mesh-JSON volume path. Evidence: mcp-central-docs
+`projects/RESONITE_PHASE0_RUNBOOK.md` execution log,
+`projects/RESONITE_PHASE0_HANDOFF.md` wire-shape cheat sheet.
 
 ### 2. Connection
 First, establish a connection to the ResoniteLink server:
