@@ -1,4 +1,6 @@
 set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+set allow-duplicate-recipes := true
+
 import 'scripts/just/fleet.just'
 
 # Open the interactive recipe dashboard in the browser
@@ -100,10 +102,7 @@ build-sidecar:
 # Tauri desktop app (requires sidecar for release)
 build-native:
     pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
-    Set-Location '{{justfile_directory()}}\native'
-    $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
-    npm install
-    npx @tauri-apps/cli build
+    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli build
 
 # Run CUA smoke test against installed NSIS app
 cua-nsis-test:
@@ -116,17 +115,11 @@ build-all:
 # Tauri dev (start backend separately or build-sidecar first)
 tauri-dev:
     pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
-    Set-Location '{{justfile_directory()}}\native'
-    $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
-    npm install
-    npx @tauri-apps/cli dev
+    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli dev
 
 build-native-debug:
     pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
-    Set-Location '{{justfile_directory()}}\native'
-    $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"
-    npm install
-    npx @tauri-apps/cli build --debug
+    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli build --debug
 
 # ── Cleanup ────────────────────────────────────────────────────────────────────
 

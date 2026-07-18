@@ -1,27 +1,26 @@
-# resonite-mcp 1.1.0 — 2026-07-11 — Real ResoniteLink Protocol (0.13.1)
+# resonite-mcp 1.2.0 — 2026-07-18/19 — Live Asset & Audio Pipeline, Webapp Audit
 
-## Live verification (2026-07-18, docs-only update)
-- First live E2E against a running session: Resonite 2026.7.14.913, protocol
-  0.13.1.0 — discovery, connect, read (Root + components), write (slot with
-  position, readback-verified). Zero client fixes. The 07-11 rewrite against
-  upstream 0.13.1 was exactly right.
-- Field lesson: the in-game dashboard's displayed port did not match the real
-  linkPort; UDP discovery (12512) is authoritative.
-- Next: wrap asset imports (importMeshJSON / importTexture2DFile / audio) as
-  first-class client methods + live-test with blender-mcp-exported geometry.
+## Live-verified additions
+- `utils/gltf_meshjson.py` + `utils/stl_meshjson.py` + `utils/decimate_meshjson.py`
+  — stdlib-only mesh converters and decimation, proven against real fixtures
+  (Marble colliders, Boomy's chassis STL, Nekomimi-chan's full VRM at
+  45,451 triangles with no decimation needed).
+- `ResoniteLinkClient.import_audio_clip_file()` / `.spawn_audio()` — full
+  audio pipe (import → StaticAudioClip → AudioClipPlayer → AudioOutput,
+  autoplay), live-verified with a stdlib-generated test tone.
+- `uvs` wire shape corrected to a list of coordinate objects (was
+  incorrectly assumed to be a bare dict) — confirmed via live server error.
 
-## BREAKING / Fixed
-- Complete ResoniteLink client rewrite: the old client spoke a fictional wire format that never existed upstream. Now implements the verified real protocol (0.13.1): `$type` discriminators, `messageId`/`sourceMessageId` correlation, typed value wrappers, camelCase messages.
-- Legacy method names kept as compatibility mappings onto real messages.
-- Per-field-ref writes and generic model import (VRM/GLB) do not exist in the protocol — those paths now fail honestly (501/not_implemented) instead of fake-success.
+## Known limitations, explicit
+- UV_Coordinate's polymorphic `$type` discriminator still unknown after
+  4 live attempts — blocks textured (non-solid) materials generally.
+- VRM bones/blendshapes unparsed — static geometry only so far.
+- `import_mesh_raw()` still unimplemented (binary payload frame needed).
 
-## Added
-- LAN session discovery (UDP 12512, protocol 0.12.0) — tool `resonite_link_discover`, `GET /rl/discover`
-- Sync method calls (protocol 0.11.0) — `resonite_link_call_method`
-- Reflection: component type list / component / type / enum definitions
-- Value helpers `rl_value` / `rl_ref` / `rl_auto`; session metadata on connect
-- 22 wire-format regression tests locking the protocol shapes
-
-## Changed
-- `POST /rl/field` requires `member`; `GET /rl/field/{id}` returns full component data
-- `resonite_link_spawn` creates named slots; template-URL spawning returns not_implemented
+## Webapp audit correction
+- Self-corrected a same-session mistake: the webapp's real backend is
+  `http_server.py` (76 routes, mostly real), not the never-launched
+  `web_sota/backend/server.py` initially checked. Full findings and a
+  phased fix plan in `docs/WEBAPP_UPDATE_PLAN.md`, including one page
+  (`Logging.tsx`) that turned out to be broken in production the *other*
+  way — its real code sits only in the unused file.

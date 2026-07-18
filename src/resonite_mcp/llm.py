@@ -84,7 +84,10 @@ async def detect_local_llms() -> list[LLMSubstrate]:
 
 async def synthesize_answer(prompt: str, context: str, substrate: LLMSubstrate) -> str:
     """Synthesizes an answer using the detected substrate."""
-    full_prompt = f"Context from documentation:\n{context}\n\nQuestion: {prompt}\n\nPlease provide a concise technical answer based ONLY on the context above."
+    full_prompt = (
+        f"Context from documentation:\n{context}\n\nQuestion: {prompt}\n\n"
+        "Please provide a concise technical answer based ONLY on the context above."
+    )
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:

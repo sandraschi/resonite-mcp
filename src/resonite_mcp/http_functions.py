@@ -54,7 +54,7 @@ async def send_osc_http(host: str, port: int, address: str, values: list[Any] | 
         return {"status": "error", "message": f"OSC operation failed: {e}"}
 
 
-async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> dict[str, Any]:
+async def start_osc_server_http(port: int, address: str = "0.0.0.0") -> dict[str, Any]:  # noqa: S104
     """Start OSC server (HTTP version)."""
     try:
         import asyncio

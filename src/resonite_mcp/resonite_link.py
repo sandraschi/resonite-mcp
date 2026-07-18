@@ -747,6 +747,86 @@ class ResoniteLinkClient:
         """
         return await self.add_slot(name=name, parent_id=parent_id, position=position)
 
+    async def import_audio_clip_file(self, file_path: str) -> str:
+        """Import an audio asset from a file path on the RESONITE HOST machine
+        (not the machine running this client — matters if they differ).
+
+        Wire shape assumed by analogy with import_texture_file()/
+        ImportTexture2DFile.cs (both are plain single-field file-import
+        messages per the docstring's message-type list) — NOT yet
+        confirmed against ImportAudioClipFile.cs upstream source, and not
+        live-tested until this session. Update this docstring once proven.
+        """
+        resp = await self._send({"$type": "importAudioClipFile", "filePath": file_path})
+        asset_url = resp.get("assetURL")
+        if not asset_url:
+            raise ResoniteLinkError(f"importAudioClipFile succeeded but no assetURL in response: {resp}")
+        return str(asset_url)
+
+    async def spawn_audio(
+        self,
+        file_path: str,
+        position: dict[str, float] | None = None,
+        name: str = "Audio",
+        slot_id: str | None = None,
+        loop: bool = False,
+        volume: float = 1.0,
+        spatialize: bool = True,
+    ) -> dict[str, str]:
+        """Convenience: import an audio file and wire the full playback chain.
+
+        Mirrors spawn_mesh()'s composition pattern:
+          1. importAudioClipFile -> assetURL
+          2. addSlot at `position` (or reuse `slot_id` if given, e.g. to
+             attach speech to an existing avatar slot like Nekomimi-chan's)
+          3. StaticAudioClip(URL: Uri = assetURL) on that slot
+          4. AudioClipPlayer(Clip: reference = static clip component)
+          5. AudioOutput(Source: reference = the AudioClipPlayer,
+             Spatialize, Volume) so it's actually audible, positionally
+
+        Component member names confirmed live 2026-07-18 (not guessed —
+        learned from the earlier UV_Coordinate lesson: reflection first,
+        not brute-force guessing): AudioClipPlayer.Clip is a reference to
+        IAssetProvider<AudioClip>; AudioClipPlayer.playback is a nested
+        SyncPlayback/IPlayable object with sub-fields {"play", "loop",
+        "position", "speed"} — read back live via getComponent() before
+        being used here, not assumed. Playback is triggered automatically
+        by this method (play=True). Wiring itself is proven (spawn +
+        trigger both return success with no errors); **actual audibility
+        still needs a human to confirm** — no automated way to verify
+        sound reaches a listener's ears from here.
+
+        Returns {"slot_id", "asset_url", "clip_id", "player_id", "output_id"}.
+        """
+        asset_url = await self.import_audio_clip_file(file_path)
+        if slot_id is None:
+            slot_id = await self.add_slot(name=name, position=position)
+        clip_id = await self.add_component(
+            slot_id, "[FrooxEngine]FrooxEngine.StaticAudioClip", {"URL": rl_value("Uri", asset_url)}
+        )
+        player_id = await self.add_component(
+            slot_id, "[FrooxEngine]FrooxEngine.AudioClipPlayer", {"Clip": rl_ref(clip_id)}
+        )
+        output_id = await self.add_component(
+            slot_id,
+            "[FrooxEngine]FrooxEngine.AudioOutput",
+            {"Source": rl_ref(player_id), "Volume": volume, "Spatialize": spatialize},
+        )
+        # Trigger playback. "playback" is a nested SyncPlayback/IPlayable
+        # object, not a plain bool — live-confirmed shape 2026-07-18:
+        # {"play": bool, "loop": bool, "position": float, "speed": float}.
+        await self.update_component(
+            player_id,
+            {"playback": rl_value("playback", {"play": True, "loop": loop, "position": 0.0, "speed": 1.0})},
+        )
+        return {
+            "slot_id": slot_id,
+            "asset_url": asset_url,
+            "clip_id": clip_id,
+            "player_id": player_id,
+            "output_id": output_id,
+        }
+
     async def import_file(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """NOT IMPLEMENTED upstream: ResoniteLink has no generic file import.
 

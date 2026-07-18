@@ -6,7 +6,6 @@ import {
 	ExternalLink,
 	HelpCircle,
 	Info,
-	MessageSquare,
 	Radio,
 	Wifi,
 	Zap,
@@ -14,19 +13,6 @@ import {
 	Headphones,
 	Cpu,
 } from "lucide-react";
-
-function ExtLink({ href, label }: { href: string; label: string }) {
-	return (
-		<a
-			href={href}
-			target="_blank"
-			rel="noopener noreferrer"
-			className="inline-flex items-center gap-1 text-indigo-400 hover:text-indigo-300 text-xs font-bold"
-		>
-			{label} <ExternalLink className="h-3 w-3" />
-		</a>
-	);
-}
 
 function RefCard({
 	title,

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: resonite-mcp
-Version: 1.0.0
+Version: 1.2.0
 Summary: Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting
 Author-email: Sandra Schipal <sandra@example.com>
 License: MIT
@@ -21,7 +21,7 @@ Classifier: Topic :: Communications :: Chat
 Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
 Requires-Python: >=3.12
 Description-Content-Type: text/markdown
-Requires-Dist: fastmcp>=3.2.0
+Requires-Dist: fastmcp<4,>=3.4.4
 Requires-Dist: fastapi>=0.100.0
 Requires-Dist: httpx>=0.25.0
 Requires-Dist: python-osc>=1.8.0
@@ -52,83 +52,63 @@ Requires-Dist: mkdocstrings[python]>=0.20.0; extra == "docs"
 Provides-Extra: monitoring
 Requires-Dist: prometheus-client>=0.20.0; extra == "monitoring"
 
-# Resonite MCP Server
+# resonite-mcp
 
 <p align="center">
   <a href="https://github.com/casey/just"><img src="https://img.shields.io/badge/just-ready_to_go-7c5cfc?style=flat-square&logo=just&logoColor=white" alt="Just"></a>
   <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff"></a>
-  <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.13+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://python.org"><img src="https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python"></a>
   <a href="https://github.com/PrefectHQ/fastmcp"><img src="https://img.shields.io/badge/FastMCP-3.2-7c5cfc?style=flat-square" alt="FastMCP"></a>
+  <img src="https://img.shields.io/badge/ResoniteLink-0.13.1_live--verified-22c55e?style=flat-square" alt="ResoniteLink live-verified">
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
 </p>
 
+**Natural-language control of the Resonite social VR platform** — read and
+write a live world's data model over the official **ResoniteLink** protocol,
+with OSC streaming, a World Inspector webapp, and fleet bridges to Blender,
+Marble/World Labs, and the VRM avatar depot.
 
-> 📖 **[Installation Guide](INSTALL.md)** — quick start, manual setup, and troubleshooting
+> **Live-verified 2026-07-18**: session discovery, connect, data-model read,
+> and slot write confirmed against a running Resonite session
+> (2026.7.14.913, protocol 0.13.1.0) — zero client fixes needed.
 
-**FastMCP 3.1.0+ compliant server for natural language control of Resonite social VR platform.**
+#### The Miko's Digital Shrine
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
-[![FastMCP 3.1.0+](https://img.shields.io/badge/FastMCP-3.1.0+-green.svg)](https://goFastMCP 3.1.0com/)
-[![Status](https://img.shields.io/badge/status-SOTA-blue.svg)](#)
+In the spirit of kami and miko — this MCP server serves as a bridge between
+human creators and the digital spirits of virtual worlds. The somewhat
+superannuated miko tends the shrines of code, ensuring the kami of creation
+flow freely through our digital spaces.
 
-## Overview
+## What it does
 
-The Resonite MCP Server provides comprehensive integration between Claude Desktop and the Resonite social VR platform. Through natural language commands, users can control avatars, manage worlds, execute ProtoFlux scripts, and participate in social interactions within Resonite.
+- **ResoniteLink first** *(primary path)*: official WebSocket JSON protocol
+  (Resonite 2026.1.8.6+) — slot & component CRUD, reflection, sync method
+  calls, batching, LAN session discovery (UDP 12512). See
+  [RESONITELINK_GUIDE](docs/RESONITELINK_GUIDE.md) for the honest capability
+  table (short version: no generic VRM/GLB import in the protocol; geometry
+  travels as mesh-JSON — client wrapping of asset imports in progress).
+- **World Inspector**: live scene-graph browser in the webapp — traverse
+  slots, inspect components, edit fields.
+- **OSC streaming** *(secondary)*: high-frequency parameter streaming
+  (avatar parameters etc.), 8 tools, bidirectional.
+- **Fleet bridges**: Marble/World Labs batch import staging, VRM staging from
+  blender-mcp / avatar-mcp, inkscape overlays, voice macros
+  (`resonite_fleet`, `resonite_voice` portmanteaus).
+- **Session & presence**: cloud session browser, install/launch detection
+  with onboarding gate, avatar + world management tools.
+- **Dual interface**: MCP stdio for Claude Desktop + FastAPI HTTP
+  (`/docs`, Prometheus `/metrics`).
 
-####  The Miko's Digital Shrine
-In the spirit of kami and miko - this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The somewhat superannuated miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
+## Quick start
 
-### Key Features
-
-- **Avatar Control**: Load avatars, set parameters, control animations
-- **World Management**: Load/save worlds, manage sessions
-- **ProtoFlux Scripting**: Create and execute visual scripts in real-time
-- **OSC Communication**: Bidirectional communication with Resonite via OSC protocol
-- **ResoniteLink**: Real-time WebSocket JSON protocol for high-performance 3D interaction
-- **Cloud Session Browser**: Browse public world sessions from `api.resonite.com`  thumbnails, user counts, join deep links
-- **World Inspector** *(NEW)*: Live scene-graph browser  traverse slots, inspect components, edit fields via ResoniteLink
-- **Asset Injection**: Inject VRM avatars, props, furniture, and architecture models into a running Resonite world
-- **Presence Awareness & Onboarding** *(NEW)*: Self-detecting lifecycle gate that guides users to launch or install Resonite
-- **Dual Interface**: Both MCP stdio protocol and HTTP REST API
-- **Real-time Feedback**: Live parameter monitoring and event handling
-
-### Architecture
-
-This server follows FastMCP 3.1.0+ SOTA standards with:
-- Portmanteau tool organization for complex operations
-- Pydantic input validation for all tools
-- Comprehensive error handling and logging
-- Dual MCP/stdio and HTTP/FastAPI interfaces
-- Plugin system for extensibility
-
-### Implementation Status
-
-- ** Core OSC Communication**: 8 tools fully implemented
-- ** Avatar Control**: 3 tools fully implemented
-- ** Session Management**: 4 tools (3 fully implemented, 1 mock)
-- ** Inventory Management**: 7 tools (structure complete, mock responses)
-- ** Plugin Management**: 5 tools (structure complete, mock responses)
-- ** System Tools**: 3 tools fully implemented
-- ** Health Monitoring**: 1 tool fully implemented
-- ** Local LLM Substrate**: Full "Glom On" autonomy with Ollama/LM Studio detection
-- ** Presence Awareness**: Robust installation detection and launch orchestration
-
-**Total: 31 tools (13 fully functional, 15 with mock responses, 3 documentation)**
-
-##  Installation
-
-### Prerequisites
-- [uv](https://docs.astral.sh/uv/) installed (RECOMMENDED)
-- Python 3.12+
-
-###  Quick Start
-Run immediately via `uvx`:
-```bash
-uvx resonite-mcp
+```powershell
+git clone https://github.com/sandraschi/resonite-mcp
+cd resonite-mcp
+just              # interactive dashboard; then: just bootstrap, just serve
 ```
 
-###  Claude Desktop Integration
-Add to your `claude_desktop_config.json`:
+Claude Desktop (`claude_desktop_config.json`):
+
 ```json
 "mcpServers": {
   "resonite-mcp": {
@@ -137,485 +117,54 @@ Add to your `claude_desktop_config.json`:
   }
 }
 ```
-### Prerequisites
 
-- Python 3.8+
-- Resonite client installed and running
-- OSC enabled in Resonite settings (default port 9000)
+Or bundle it: `just mcpb-pack` → `dist/resonite-mcp-v1.1.0.mcpb`.
 
-### Install from Source
+## How it runs (honest wrapper notes)
 
-```bash
-# Clone the repository
-git clone https://github.com/sandraschi/resonite-mcp.git
-cd resonite-mcp
+- You need the **Resonite client (or headless) running and hosting a session**;
+  only the host can enable ResoniteLink (Dashboard → Session → Settings →
+  Enable ResoniteLink). Headless: `enableResoniteLink <port>`.
+- **Find the port via discovery** (`resonite_link_discover`, UDP 12512) — the
+  dashboard's displayed port was wrong in live testing.
+- Desktop mode is fine for everything; VR is optional.
+- ResoniteLink upstream is **beta**: breaking changes possible. This client
+  pins protocol 0.13.1 with 22 wire-format regression tests.
 
-# Install with development dependencies
-pip install -e ".[dev]"
+## Webapp (port 10978)
 
-# Verify installation
-python -c "import resonite_mcp; print(' Installation successful')"
-```
-
-### Install from PyPI (future)
-
-```bash
-pip install resonite-mcp
-```
-
-## Quick Start
-
-```powershell
-git clone https://github.com/sandraschi/resonite-mcp
-cd resonite-mcp
-just
-```
-
-This opens an interactive dashboard showing all available commands. Run `just bootstrap` to install dependencies, then `just serve` or `just dev` to start.
-
-### Manual Setup
-
-If you don't have `just` installed:
-### 1. Start the MCP Server
-**For Claude Desktop (stdio mode):**
-resonite-mcp --stdio
-
-##  Webapp (port 10978)
-
-A premium dark-mode control panel ships alongside the MCP server:
-
-```powershell
-# Start frontend + backend
-.\web_sota\start.ps1
-# Opens http://localhost:10978
-```
-
-| Page | Description |
-|---|---|
-| Dashboard | Live server KPIs and **Resonite Bridge** presence status |
-| **Sessions** | Browse public Resonite world sessions (cloud API proxy) |
-| **World Inspector** | Real-time slot hierarchy tree with field inspector and asset injector |
-| **Presence Gate** | Life-cycle gate for launching or installing Resonite (Auto-Unlock) |
-| ResoniteLink | Connect / disconnect / monitor ResoniteLink WebSocket |
-| Avatar | Avatar control |
-| OSC | OSC send/receive |
-| Dev Tools | MCP tool explorer |
-
-### Asset directories (World Inspector inject panel)
-| Category | Path |
-|---|---|
-| Avatars (VRM) | `~/.avatarmcp/models/` |
-| Props | `~/Documents/ResoniteAssets/props/` |
-| Furniture | `~/Documents/ResoniteAssets/furniture/` |
-| Architecture | `~/Documents/ResoniteAssets/architecture/` |
-| Misc | `~/Documents/ResoniteAssets/misc/` |
-
-Drop `.vrm`, `.fbx`, `.obj`, `.glb`, `.gltf`, `.blend`, `.dae` files into these directories and they will appear in the inject picker.
-
-For HTTP API mode:
-
-```bash
-resonite-mcp --host 127.0.0.1 --port 8000
-```
-
-### 2. Configure Claude Desktop
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "resonite": {
-      "command": "python",
-      "args": ["-m", "resonite_mcp"],
-      "env": {}
-    }
-  }
-}
-```
-
-### 3. Start Using Resonite
-
-Once configured, you can use natural language commands like:
-
-- "Load the default avatar in Resonite"
-- "Start a new session and load the tutorial world"
-- "Set my avatar's happiness to 80%"
-- "Execute the color changer ProtoFlux script"
+`.\web_sota\start.ps1` → Dashboard, Sessions browser, World Inspector,
+Presence Gate, ResoniteLink monitor, Avatar, OSC, Dev Tools.
 
 ## Documentation
 
-### For Beginners
-- **[Beginner's Guide](./BEGINNERS_GUIDE.md)** - Complete guide for total newcomers to Resonite
-- **[Access Guide](./RESONITE_ACCESS_GUIDE.md)** - How to run Resonite on Quest, Pico, PC, mobile
-- **[Artifacts Guide](./ARTIFACTS_GUIDE.md)** - Import/export 3D models, VRM avatars, Gaussian splats
-- **[Marble Integration Guide](./MARBLE_RESONITE_GUIDE.md)** - World Labs Marble photogrammetry workflows
-- **[ProtoFlux Guide](./PROTOFLUX_GUIDE.md)** - Comprehensive guide to visual programming
-- **[ProtoFlux Hands-On Guide](./PROTOFLUX_HANDS_ON_GUIDE.md)** - Step-by-step tutorials for beginners
-- **[Useful ProtoFlux Scripts](./USEFUL_PROTOFLUX_SCRIPTS.md)** - Essential scripts for VR creators
-- **[Platform Comparison](./RESONITE_COMPARISON.md)** - How Resonite compares to VRChat, AltspaceVR, etc.
-- **[Installation Guide](./docs/INSTALLATION.md)** - Step-by-step setup instructions
-- **[Troubleshooting](./docs/TROUBLESHOUTING.md)** - Common issues and solutions
-
-### For Developers
-- **[API Reference](./docs/API_REFERENCE.md)** - Complete tool documentation
-- **[HTTP API](http://127.0.0.1:8000/docs)** - Interactive REST API documentation
-
----
-
-## Usage Examples
-
-### Basic Session Management
-
-```python
-# Start a new Resonite session
-await resonite_session_start(session_name="MySession")
-
-# Load a world
-await resonite_world_load("resonite://TutorialWorld")
-
-# Load an avatar
-await resonite_avatar_load("resonite://DefaultAvatar", slot=0)
-
-# Set avatar parameters
-await resonite_parameter_set("Happy", 0.8)
-await resonite_parameter_set("Angry", 0.2)
-```
-
-### ProtoFlux Scripting
-
-```python
-# Execute a ProtoFlux script
-await resonite_protoflux_execute("ColorChanger", {
-    "target_color": [1.0, 0.5, 0.0],
-    "transition_time": 2.0
-})
-```
-
-### OSC Communication
-
-```python
-# Send custom OSC messages
-await send_osc("127.0.0.1", 9000, "/avatar/parameters/CustomParam", [0.75])
-
-# Start OSC server for receiving messages
-await start_osc_server(9001)
-```
-
-## API Reference
-
-### Available Tools (31 total)
-
-#### Session Management (4 tools)
-- `resonite_session_start(session_name?, world_path?, avatar_slot?)` - Start new Resonite session
-- `resonite_session_status()` - Get current session status
-- `resonite_session_end()` - End current session
-- `resonite_world_load(world_path)` - Load a world in the session
-
-#### Avatar Control (3 tools)
-- `resonite_avatar_load(avatar_path, slot?, parameters?)` - Load avatar with optional parameters
-- `resonite_parameter_set(parameter_name, value, avatar_slot?)` - Set avatar parameter value
-- `resonite_protoflux_execute(script_name, parameters?)` - Execute ProtoFlux script
-
-#### Inventory Management (7 tools)
-- `resonite_inventory_list(item_type?, search_query?, limit?, offset?)` - List inventory items
-- `resonite_inventory_search(query, item_type?)` - Search inventory by query
-- `resonite_inventory_spawn(item_data)` - Spawn item in world
-- `resonite_inventory_upload(file_data)` - Upload item to inventory
-- `resonite_inventory_delete(item_data)` - Delete item from inventory
-- `resonite_inventory_share(item_data)` - Share item with users
-- `resonite_inventory_info(item_id)` - Get detailed item information
-
-#### OSC Communication (8 tools)
-- `send_osc(host, port, address, values?)` - Send OSC message
-- `start_osc_server(port, address?)` - Start OSC server for receiving
-- `stop_osc_server(port)` - Stop OSC server
-- `get_received_messages(port, address_pattern?, max_age_seconds?, limit?)` - Get received messages
-- `get_latest_message(port, address_pattern?)` - Get most recent message
-- `get_osc_server_stats(port)` - Get server statistics
-- `clear_osc_message_buffer(port)` - Clear message buffer
-- `test_osc_echo(port?)` - Test OSC connectivity
-
-#### ResoniteLink (4 tools - NEW)
-- `resonite_link_connect(host?, port?)` - Connect to ResoniteLink WebSocket
-- `resonite_link_spawn(template_url, position?)` - Spawn object via ResoniteLink
-- `resonite_link_set(component_id, field, value)` - Set component field value
-- `resonite_link_get(component_id, field)` - Get component field value
-
-#### Plugin Management (5 tools)
-- `plugin_list()` - List all available plugins
-- `plugin_load(plugin_name)` - Load a plugin
-- `plugin_unload(plugin_name)` - Unload a plugin
-- `plugin_reload(plugin_name)` - Reload a plugin
-- `plugin_discover()` - Discover available plugins
-- `plugin_info(plugin_name?)` - Get plugin information
-
-#### System Tools (3 tools)
-- `help(level?, topic?)` - Get help documentation
-- `status(level?, focus?)` - Get server status information
-- `health_check()` - Health check endpoint
-
-### HTTP API Endpoints
-
-When running in HTTP mode (`resonite-mcp --host 127.0.0.1 --port 8000`), the following REST endpoints are available:
-
-#### Server Management
-- `GET /` - Server information and API overview
-- `GET /health` - Health check endpoint
-- `GET /docs` - Interactive FastAPI documentation
-
-#### OSC Communication
-- `POST /osc/send` - Send OSC messages to Resonite
-- `POST /osc/server/start` - Start OSC server for receiving messages
-- `POST /osc/server/stop` - Stop OSC server
-
-#### Session Management
-- `POST /resonite/session/start` - Start new Resonite session
-- `GET /resonite/session/status` - Get current session status
-- `POST /resonite/session/end` - End current session
-- `POST /resonite/world/load` - Load a world in the session
-
-#### Avatar Control
-- `POST /resonite/avatar/load` - Load avatar with optional parameters
-- `POST /resonite/parameter/set` - Set avatar parameter value
-- `POST /resonite/protoflux/execute` - Execute ProtoFlux script
-
-#### Inventory Management
-- `GET /resonite/inventory/list` - List inventory items with pagination
-- `GET /resonite/inventory/search` - Search inventory by query
-- `POST /resonite/inventory/spawn` - Spawn item in world
-- `POST /resonite/inventory/upload` - Upload item to inventory
-- `DELETE /resonite/inventory/delete` - Delete item from inventory
-- `POST /resonite/inventory/share` - Share item with other users
-- `GET /resonite/inventory/info/{item_id}` - Get detailed item information
-
-#### Plugin Management
-- `GET /plugins/list` - List all available plugins
-- `GET /plugins/discover` - Discover new plugins
-- `POST /plugins/load` - Load a specific plugin
-- `POST /plugins/unload` - Unload a specific plugin
-- `POST /plugins/reload` - Reload a specific plugin
-- `GET /plugins/info` - Get plugin information
-
-## Configuration
-
-### Environment Variables
-
-- `RESONITE_OSC_HOST` - Resonite OSC host (default: 127.0.0.1)
-- `RESONITE_OSC_PORT` - Resonite OSC port (default: 9000)
-- `LOG_LEVEL` - Logging level (default: INFO)
-
-### Resonite Setup
-
-1. **Enable OSC in Resonite:**
-   - Open Resonite Settings
-   - Go to "Network" tab
-   - Enable "OSC" and set port to 9000
-   - Optionally enable "Receive OSC" for bidirectional communication
-
-2. **Grant Permissions:**
-   - Allow Resonite to accept OSC connections
-   - Configure firewall if necessary
-
-## Development
-
-### Project Structure
-
-```
-resonite-mcp/
- src/resonite_mcp/
-    __init__.py          # Package initialization
-    server.py            # Main MCP server with all tools
-    cli.py               # Command-line interface
-    http_server.py      # FastAPI HTTP server
- tests/
-    unit/                # Unit tests
-    integration/         # Integration tests
-    conftest.py          # Pytest configuration
- docs/                    # Documentation
- examples/                # Usage examples
- scripts/                 # Development scripts
- assets/prompts/          # MCP prompt templates
- pyproject.toml          # Project configuration
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=resonite_mcp --cov-report=html
-
-# Run specific test category
-pytest tests/unit/
-pytest tests/integration/
-```
-
-### Development Server
-
-```bash
-# Run with auto-reload for development
-resonite-mcp --host 127.0.0.1 --port 8000
-
-# Access API docs at http://127.0.0.1:8000/docs
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/-feature`
-3. Write tests for your changes
-4. Ensure all tests pass: `pytest`
-5. Update documentation as needed
-6. Commit your changes: `git commit -m 'Add  feature'`
-7. Push to the branch: `git push origin feature/-feature`
-8. Open a Pull Request
-
-### Code Standards
-
-- Follow PEP 8 style guidelines
-- Use type hints for all function parameters and return values
-- Write comprehensive docstrings for all public functions
-- Add unit tests for all new functionality
-- Update documentation for any user-facing changes
-
-## Troubleshooting
-
-### Common Issues
-
-**Server won't start:**
-- Ensure Python 3.8+ is installed
-- Check that all dependencies are installed: `pip install -e ".[dev]"`
-- Verify Resonite is running and OSC is enabled
-
-**OSC connection fails:**
-- Confirm Resonite OSC settings (port 9000 by default)
-- Check firewall settings allow UDP traffic
-- Verify Resonite is accepting OSC connections
-
-**Tools not available in Claude:**
-- Restart Claude Desktop after configuration changes
-- Check `claude_desktop_config.json` syntax
-- Verify server path is correct
-
-**HTTP API not responding:**
-- Confirm server is running: `curl http://127.0.0.1:8000/health`
-- Check port is not already in use
-- Verify CORS settings if accessing from browser
-
-### Debug Mode
-
-Enable debug logging:
-
-```bash
-resonite-mcp --log-level DEBUG --stdio
-```
-
-Or set environment variable:
-```bash
-LOG_LEVEL=DEBUG resonite-mcp --stdio
-```
-
-
-## 🛡️ Industrial Quality Stack
-
-This project adheres to **SOTA 14.1** industrial standards for high-fidelity agentic orchestration:
-
-- **Python (Core)**: [Ruff](https://astral.sh/ruff) for linting and formatting. Zero-tolerance for `print` statements in core handlers (`T201`).
-- **Webapp (UI)**: [Biome](https://biomejs.dev/) for sub-millisecond linting. Strict `noConsoleLog` enforcement.
-- **Protocol Compliance**: Hardened `stdout/stderr` isolation to ensure crash-resistant JSON-RPC communication.
-- **Automation**: [Justfile](./justfile) recipes for all fleet operations (`just lint`, `just fix`, `just dev`).
-- **Security**: Automated audits via `bandit` and `safety`.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+| Doc | What |
+|---|---|
+| [INSTALL.md](INSTALL.md) | All install paths |
+| [docs/TOOLS.md](docs/TOOLS.md) | Tool & HTTP API reference |
+| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Env vars, Resonite setup, asset dirs |
+| [docs/RESONITELINK_GUIDE.md](docs/RESONITELINK_GUIDE.md) | Protocol capabilities + live-verification record |
+| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Dev setup, tests, quality stack |
+| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common failures, debug mode |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Agent Lab phases (1–6 done, v1.1.0) |
+| [MARBLE_RESONITE_GUIDE.md](MARBLE_RESONITE_GUIDE.md) | World Labs → Resonite pipeline |
+| [PROTOFLUX_GUIDE.md](PROTOFLUX_GUIDE.md) + [hands-on](PROTOFLUX_HANDS_ON_GUIDE.md) | Visual programming |
+| [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) · [RESONITE_ACCESS_GUIDE.md](RESONITE_ACCESS_GUIDE.md) | New to Resonite |
+
+## Status
+
+v1.1.0 — real ResoniteLink wire format (0.13.1), live-verified 2026-07-18.
+Agent Lab phases 1–6 complete. Known honest gaps: asset-import messages not
+yet wrapped as first-class client methods; some inventory/plugin tools still
+adapter/mock-backed (`RESONITE_INVENTORY_MODE`); tool inventory re-audit
+pending in [docs/TOOLS.md](docs/TOOLS.md). Current mission: **Nekomimi-chan's
+Resonite home** — see mcp-central-docs `projects/RESONITE_HOME_NEKOMIMI_PLAN.md`.
 
 ## Acknowledgments
 
-- [Resonite](https://resonite.com/) - The  social VR platform
-- [Yellow Dog Man Studios](https://yellowdogman.com/) - Creators of Resonite
-- [FastMCP](https://goFastMCP 3.1.0com/) - The MCP framework powering this server
-- [python-osc](https://pypi.org/project/python-osc/) - OSC protocol implementation
+[Resonite](https://resonite.com/) & [Yellow Dog Man Studios](https://yellowdogman.com/) —
+incl. the official [ResoniteLink](https://github.com/Yellow-Dog-Man/ResoniteLink)
+protocol · [FastMCP](https://github.com/PrefectHQ/fastmcp) ·
+[python-osc](https://pypi.org/project/python-osc/)
 
-## Recent Updates
-
-### v0.4.0 (2026-03-08)  Presence Awareness & Onboarding
--  **Presence Detection**: Backend monitoring for Resonite process and Steam installation
--  **Launch Orchestration**: One-click startup via `steam://` protocol handler
--  **Presence Gate**: Frontend gate that locks/unlocks features based on Resonite state
--  **Onboarding UI**: Premium setup guide for first-time virtual world explorers
--  **v0.3.0 Additions**: Local LLM Substrate ("Glom On"), AI Synthesis for `ask_resonite`, `llm.py` detection module.
-
-### v0.1.0 (December 2025)  Initial Release
-- Fixed MCP stdio mode startup issues
-- Added HTTP API endpoints (25+ endpoints)
-- Implemented 31 MCP tools with FastMCP 3.1.0+ compliance
-
-## Roadmap
-
-Agent Lab phased plan: [docs/ROADMAP.md](docs/ROADMAP.md) | [docs/COMPETITIVE_ANALYSIS.md](docs/COMPETITIVE_ANALYSIS.md)
-
-| Phase | Version | Theme |
-|-------|---------|-------|
-| 1 (0.5.0) | **done** | `resonite_fleet` handoff, execution_mode, offline E2E |
-| 2 (0.6.0) | **done** | Webapp Agent Lab, live HTTP E2E |
-| 3 (0.7.0) | **done** | VRM/avatar pipeline, ProtoFlux presets |
-| 4 (0.8.0) | **done** | Prometheus, Docker, JSON fleet audit logs |
-| 5 (0.9.0) | **done** | Marble/World Labs batch import, fab art overlays |
-| 6 (1.0.0) | **done** | Inventory adapter, voice macros, strict fleet E2E CI |
-
-### v1.0.0 (2026-05-28) — Agent Lab Phase 6
-- **Inventory adapter**: mock/live/auto via `RESONITE_INVENTORY_MODE`, `inventory_status`
-- **Voice macros**: `resonite_voice` portmanteau + HTTP bridge
-- **Strict fleet E2E**: `fleet_e2e_strict.py`, CI `--strict-fleet`
-
-### v0.9.0 (2026-05-28) — Agent Lab Phase 5
-- **Marble pipeline**: `list_marble_staging`, `import_worldlabs_batch`, `run_marble_pipeline`
-- **Fab art pull**: inkscape DXF/SVG overlays via `pull_inkscape_fab`
-- **Agent Lab Marble + Voice tabs** on `/agent-tools`
-
-### v0.8.0 (2026-05-28) — Agent Lab Phase 4
-- **Prometheus**: `/metrics`, `/api/metrics`, sidecar port 9079
-- **Docker**: GHCR image, compose monitoring profile (9093/3003/3103)
-- **JSON fleet audit logs** for import operations (Loki-ready)
-
-### v0.7.0 (2026-05-28) — Agent Lab Phase 3
-- **VRM fleet ops**: `list_vrm_staging`, `import_vrm_batch`, `pull_blender_vrm`, `pull_avatar_vrm`
-- **ProtoFlux presets**: `list_protoflux_presets` + manifest catalog
-- **Agent Lab VRM tab** on `/agent-tools`
-
-### v0.6.0 (2026-05-28) — Agent Lab Phase 2
-- **Webapp `/agent-tools`**: runtime, fleet handoff, staging gallery, pipeline tabs
-- **`POST /api/v1/tool`**: HTTP bridge for `resonite_fleet`, `resonite_voice`, and `health_check`
-- **Live E2E**: `scripts/fleet_e2e_smoke.py --live` inkscape → resonite HTTP chain
-
-### v0.5.0 (2026-05-28) — Agent Lab Phase 1
-- **resonite_fleet** portmanteau: inkscape UI import, blender/gimp bridge, execution_mode
-- Offline fleet E2E smoke in CI
-
-### MCPB (v1.0.0 hygiene)
-- Claude Desktop bundle: `just mcpb-pack` → `dist/resonite-mcp-v1.0.0.mcpb`
-- See [docs/MCPB.md](docs/MCPB.md)
-
-### Native desktop (Tauri 2.0)
-- Agent Lab installer: `just build-all` → NSIS setup.exe
-- Dev: `just tauri-dev` (+ `just start-be` in another terminal)
-- See [docs/NATIVE.md](docs/NATIVE.md)
-
-### v0.4.0 (2026-03-08) — Presence Awareness & Onboarding
-- [x] Resonite installation detection (Registry/Filesystem)
-- [x] Process monitoring and launch orchestration
-- [x] Presence Gate UI for onboarding and startup
-
-### Future
-- [ ] Live inventory OSC (adapter live mode end-to-end)
-- [ ] In-world voice macro bindings
-- [ ] MCPB tag-triggered releases
-- [ ] AR/VR hardware integration
-
----
-
-**Made with  for the Resonite community**
+MIT licensed. Made with care for the Resonite community.

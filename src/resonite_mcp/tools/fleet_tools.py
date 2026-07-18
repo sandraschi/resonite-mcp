@@ -110,13 +110,13 @@ async def _import_local_file(path: str, *, target_slot: str = "root") -> dict[st
         from ..resonite_link import ResoniteLinkClient
 
         client = ResoniteLinkClient()
-        payload = {
-            "type": "importFile",
-            "filePath": str(src.resolve()),
-            "targetSlotId": target_slot,
-            "position": {"x": 0, "y": 0, "z": 0},
-        }
-        resp = await client._send(payload)
+        # Raises ResoniteLinkError: generic file import does not exist in the
+        # real protocol (verified against 0.13.1). Kept as the single honest
+        # failure point so callers surface not_implemented instead of fake-ok.
+        resp = await client.import_file(
+            file_path=str(src.resolve()),
+            target_slot_id=target_slot,
+        )
         result["resonite_link"] = resp
         result["success"] = True
     except Exception as exc:

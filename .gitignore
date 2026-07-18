@@ -48,3 +48,15 @@ Thumbs.db
 # Build Artifacts
 target/
 _dashboard/
+
+# Test / coverage artifacts
+htmlcov/
+.coverage
+test_output.txt
+
+# Local RAG index
+.lancedb/
+
+# Editor / fileops backup sidecars
+*.bak
+*.py.backup

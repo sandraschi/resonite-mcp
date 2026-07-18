@@ -39,9 +39,27 @@ possible, so re-verify on upstream releases.
 | Asset imports: convenience `spawn_mesh` / `resonite_link_spawn_mesh` (import + StaticMesh + MeshRenderer + optional PBS_Metallic material, one call) | ✅ Wrapped 2026-07-18, built from individually-verified steps |
 | Asset imports: texture (`import_texture_file` / `resonite_link_import_texture`) | ⚠️ Wrapped 2026-07-18, wire shape confirmed against upstream source, **not yet live-tested** |
 | Asset imports: raw mesh (`importMeshRawData`) | ❌ Not implemented — requires a binary WebSocket payload frame this client doesn't send yet; `import_mesh_raw()` raises with guidance rather than faking it. Use mesh-JSON instead. |
-| Asset imports: audio / cubemap | ⚠️ Not yet wrapped |
+| Asset imports: audio (`import_audio_clip_file` / `spawn_audio`, tools `resonite_link_import_audio` / `resonite_link_spawn_audio`) | ✅ Wrapped + live-verified 2026-07-19 (full playback chain: StaticAudioClip → AudioClipPlayer → AudioOutput, autoplay) |
+| Asset imports: cubemap | ⚠️ Not yet wrapped |
+| Mesh source converters (`utils/gltf_meshjson.py`, `utils/stl_meshjson.py`) — GLB/glTF and STL to mesh-JSON, stdlib only | ✅ Live-verified 2026-07-18/19 against real fixtures (Marble colliders, Boomy's chassis STL, a full VRM avatar) |
+| Mesh decimation (`utils/decimate_meshjson.py`) — vertex clustering | ✅ Live-verified; explicitly NOT equivalent to Blender's quadric Decimate — a no-Blender fallback, not the production path |
 | Generic model/file import (VRM/GLB/FBX) | ❌ Does not exist in the protocol — endpoints return not_implemented |
 | Dictionaries (0.10.0), spherical harmonics (0.13.x) | ✅ Pass-through (JSON client; use explicit `rl_value` types) |
+
+**LIVE VALIDATED 2026-07-18/19 (second session)**: pushed a hand-authored
+multi-block mesh and a decimated real robot chassis (STL) live, then a full
+undecimated VRM avatar (190,111 vertices / 45,451 triangles — no decimation
+needed at all, well above the previous ~11.5k-triangle proof point). Found
+and fixed one real, previously-wrong assumption: `uvs` is a **list** of
+coordinate objects, not a bare `{x,y}` dict — confirmed via a live server
+error, not guessed. Built and live-verified the full audio pipe (import →
+StaticAudioClip → AudioClipPlayer → AudioOutput, autoplay). **Still open**:
+the `UV_Coordinate` polymorphic `$type` discriminator is unknown after four
+live attempts (`UV_Coordinate`/`float2`/`uv`/`UVCoordinate` all rejected) —
+blocks textured (non-solid-color) materials until resolved via upstream
+source inspection. VRM bones/blendshapes remain unparsed — static geometry
+only so far. Details: mcp-central-docs
+`projects/resonite-living/RESONITE_LIVING_STATUS_20260718.md`.
 
 **LIVE VALIDATED 2026-07-18**: end-to-end run against a running Resonite
 instance succeeded with zero client fixes — Resonite **2026.7.14.913**, protocol
@@ -61,50 +79,79 @@ unproven) and the Blender-mesh-JSON volume path. Evidence: mcp-central-docs
 `projects/RESONITE_PHASE0_HANDOFF.md` wire-shape cheat sheet.
 
 ### 2. Connection
-First, establish a connection to the ResoniteLink server:
+Prefer discovery over guessing a port — call `resonite_link_discover`
+first (UDP 12512 broadcast) and connect to whatever it finds. The
+default port below is a fallback only:
 
 ```python
-await resonite_link_connect(host="localhost", port=4242)
+sessions = await resonite_link_discover()
+await resonite_link_connect(host=sessions[0]["host"], port=sessions[0]["linkPort"])
 ```
 
 ## Available Tools
 
-### `resonite_link_spawn`
-Spawns an object from the Resonite inventory or a public URL.
+### `resonite_link_spawn_mesh` (real, live-verified)
+Imports mesh-JSON data and wires the full render chain (StaticMesh →
+MeshRenderer → optional PBS_Metallic material) in one call.
 
 ```python
-await resonite_link_spawn(
-    template_url="resonite:///items/ExampleCube.7pb",
-    position={"x": 5.0, "y": 1.0, "z": 0.0}
+await resonite_link_spawn_mesh(
+    vertices=[...],       # [{"position": {"x","y","z"}, ...}, ...]
+    submeshes=[...],      # [{"$type": "triangles", "triangles": [...]}]
+    position={"x": 0, "y": 1, "z": 5},
+    name="my-object",
+    color={"r": 0.8, "g": 0.4, "b": 0.1, "a": 1.0},
 )
 ```
 
-### `resonite_link_set`
-Sets a field on a specific component using its unique ID.
+### `resonite_link_spawn_audio` (real, live-verified)
+Imports an audio file and wires the full playback chain (StaticAudioClip →
+AudioClipPlayer → AudioOutput), autoplaying it.
 
 ```python
-await resonite_link_set(
-    component_id="ID_OF_THE_COMPONENT",
-    field="Color",
-    value=[1.0, 0.0, 0.0, 1.0] # Red RGBA
+await resonite_link_spawn_audio(
+    file_path="C:/path/to/clip.wav",
+    position={"x": 0, "y": 1.5, "z": 5},
+    loop=False,
+    volume=1.0,
 )
 ```
 
-### `resonite_link_get`
-Requests the current value of a component field.
+### `resonite_link_add_component` / `resonite_link_update_component`
+Adds a component to a slot, or updates members on an existing one — the
+real mechanism for setting values (there is no generic per-field-ref
+"set"; the protocol writes named members on a specific component).
 
 ```python
-await resonite_link_get(
-    component_id="ID_OF_THE_COMPONENT",
-    field="IsActive"
+material_id = await resonite_link_add_component(
+    slot_id="Reso_A12",
+    component_type="[FrooxEngine]FrooxEngine.PBS_Metallic",
+    members={"AlbedoColor": {"$type": "colorX", "value": {"r": 1.0, "g": 0.0, "b": 0.0, "a": 1.0}}},
 )
+```
+
+### `resonite_link_get_component`
+Reads a component's full data (type + all members) by ID — there is no
+per-field read; the protocol returns the whole component.
+
+```python
+await resonite_link_get_component(component_id="Reso_A13")
 ```
 
 ## Best Practices
 
-1. **ID Management**: Capture component IDs during spawn or by using the Resonite inspector to target specific elements.
-2. **Batching**: While ResoniteLink is fast, avoid spamming `set` commands in high-frequency loops (above 60Hz) to prevent network congestion.
-3. **Template URLs**: Use standard `resonite:///` URIs for inventory items to ensure reliable spawning across different world instances.
+1. **Discover, don't guess ports.** Always call `resonite_link_discover`
+   (UDP 12512 broadcast) rather than assuming a port — the in-game
+   dashboard's displayed port has been observed wrong in testing, and the
+   client's own default (4242) is just a fallback, not a guarantee.
+2. **No template-URL spawning.** The protocol has no `resonite:///` item
+   spawning — build content with `add_slot`/`add_component`, or import
+   assets via the real asset-import messages (mesh-JSON, texture, audio).
+3. **Batching**: avoid spamming component updates in high-frequency loops
+   (above 60Hz) to prevent network congestion; use
+   `dataModelOperationBatch` for grouped changes instead.
+4. **IDs are not persistent** across world save/load — capture them fresh
+   each session rather than hardcoding.
 
 ---
 **Note**: ResoniteLink is currently in Beta. Protocol changes may occur.

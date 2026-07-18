@@ -73,7 +73,7 @@ class OSCMessageRequest(BaseModel):
 
 class OSCServerRequest(BaseModel):
     port: int
-    address: str = "0.0.0.0"
+    address: str = "0.0.0.0"  # noqa: S104
 
 
 class OSCServerStopRequest(BaseModel):
@@ -280,8 +280,8 @@ async def launch_app(request: FleetLaunchRequest) -> FleetLaunchResponse:
         allowed_base = Path("D:/Dev/repos").resolve()
         target_path = path.resolve()
         target_path.relative_to(allowed_base)
-    except ValueError:
-        raise HTTPException(status_code=403, detail="Access denied: Path outside allowed directory")
+    except ValueError as exc:
+        raise HTTPException(status_code=403, detail="Access denied: Path outside allowed directory") from exc
 
     start_script = path / "web_sota" / "start.ps1"
     if not start_script.exists():
@@ -292,15 +292,16 @@ async def launch_app(request: FleetLaunchRequest) -> FleetLaunchResponse:
                 raise HTTPException(status_code=400, detail="No valid SOTA entry point found")
 
     try:
-        subprocess.Popen(
-            ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", str(start_script)],
+        powershell_path = shutil.which("powershell.exe") or "powershell.exe"
+        subprocess.Popen(  # noqa: S603 -- repo_path already validated against allowed_base above
+            [powershell_path, "-ExecutionPolicy", "Bypass", "-File", str(start_script)],
             cwd=str(path),
             creationflags=subprocess.CREATE_NEW_CONSOLE,
         )
         return FleetLaunchResponse(success=True, message=f"Launched {path.name} successfully")
     except Exception as e:
         logger.error(f"Failed to launch {path.name}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/")
@@ -583,9 +584,9 @@ async def get_platform_info():
 
 @app.get("/api/sessions")
 async def list_sessions(
-    name: str = None,
-    host_name: str = None,
-    host_id: str = None,
+    name: str | None = None,
+    host_name: str | None = None,
+    host_id: str | None = None,
     min_active_users: int = 0,
     include_empty_headless: bool = True,
 ):
@@ -656,7 +657,9 @@ async def sync_unity_avatar(request: UnitySyncRequest):
 
 # Inventory API endpoints
 @app.get("/api/resonite/inventory/list")
-async def list_inventory(item_type: str = None, search_query: str = None, limit: int = 50, offset: int = 0):
+async def list_inventory(
+    item_type: str | None = None, search_query: str | None = None, limit: int = 50, offset: int = 0
+):
     """List inventory items."""
     try:
         from .http_functions import resonite_inventory_list_http
@@ -671,7 +674,7 @@ async def list_inventory(item_type: str = None, search_query: str = None, limit:
 
 
 @app.get("/api/resonite/inventory/search")
-async def search_inventory(query: str, item_type: str = None):
+async def search_inventory(query: str, item_type: str | None = None):
     """Search inventory items."""
     try:
         from .http_functions import resonite_inventory_search_http
@@ -843,7 +846,7 @@ async def reload_plugin_endpoint(request: PluginReloadRequest):
 
 
 @app.get("/plugins/info")
-async def get_plugin_info(plugin_name: str = None):
+async def get_plugin_info(plugin_name: str | None = None):
     """Get plugin information."""
     try:
         from .http_functions import plugin_info_http
@@ -876,9 +879,10 @@ class RLConnectRequest(BaseModel):
 
 
 class RLWriteRequest(BaseModel):
-    ref_id: str
+    ref_id: str  # component ID
+    member: str | None = None  # member name (Resonite inspector name) — required
     value: Any
-    value_type: str | None = None
+    value_type: str | None = None  # optional protocol type ("float3", "colorX", ...)
 
 
 class RLAddSlotRequest(BaseModel):
@@ -960,12 +964,24 @@ async def rl_status():
 # --- Data Model ---
 
 
+@app.get("/rl/discover")
+async def rl_discover(timeout_seconds: float = 12.0):
+    """Discover ResoniteLink sessions on the LAN (UDP 12512, protocol 0.12.0+)."""
+    from .resonite_link import discover_sessions
+
+    try:
+        sessions = await discover_sessions(timeout=timeout_seconds)
+        return {"sessions": sessions, "count": len(sessions)}
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 @app.get("/rl/field/{ref_id}")
 async def rl_read_field(ref_id: str):
-    """Read a field value by its ResoniteLink ref ID."""
+    """Read a component's data (type + members) by component ID."""
     client = _get_rl_client()
     try:
-        value = await client.read_field(ref_id)
+        value = await client.get_component(ref_id)
         return {"ref_id": ref_id, "value": value}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -973,10 +989,15 @@ async def rl_read_field(ref_id: str):
 
 @app.post("/rl/field")
 async def rl_write_field(req: RLWriteRequest):
-    """Write a value to a field by its ref ID."""
+    """Write one member on a component (updateComponent). Requires 'member'."""
+    if not req.member:
+        raise HTTPException(
+            status_code=422,
+            detail="'member' is required: ResoniteLink writes component members, not bare field refs.",
+        )
     client = _get_rl_client()
     try:
-        resp = await client.write_field(req.ref_id, req.value, req.value_type)
+        resp = await client.set_component_value(req.ref_id, req.member, req.value, req.value_type)
         return {"status": "ok", "response": resp}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
@@ -1222,29 +1243,21 @@ async def inject_file(
         with temp_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        # 2. Trigger the import via ResoniteLink
-        # We use the absolute path so Resonite can find it on the local disk
-        payload = {
-            "type": "importFile",
-            "filePath": str(temp_path),
-            "targetSlotId": target_slot,
-            "position": {"x": pos_x, "y": pos_y, "z": pos_z},
-        }
-
-        resp = await client._send(payload)
-
-        return {
-            "status": "ok",
-            "filename": file.filename,
-            "temp_path": str(temp_path),
-            "target_slot": target_slot,
-            "response": resp,
-        }
-    except Exception as exc:
+        # 2. Generic model import is NOT supported by ResoniteLink (verified
+        # against protocol 0.13.1: only texture/mesh-JSON/audio imports exist).
+        # Fail honestly instead of sending a fictional message.
         raise HTTPException(
-            status_code=400,
-            detail=f"File injection failed (requires Resonite build ≥ 2026.1.8.6): {exc}",
-        ) from exc
+            status_code=501,
+            detail=(
+                "not_implemented: ResoniteLink (0.13.1) has no generic file import. "
+                "Model import must be done in-game; a future importMeshJSON "
+                "conversion pipeline may cover glTF/GLB."
+            ),
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"File injection failed: {exc}") from exc
     finally:
         # Clean up the temporary file after import attempt
         if temp_path.exists():
@@ -1331,11 +1344,10 @@ async def list_vrm_files():
 @app.post("/rl/world/import-vrm")
 async def import_vrm(req: VRMImportRequest):
     """
-    Inject a VRM avatar into the connected world via ResoniteLink importFile
-    (available in Resonite build 2026.1.8.6+).
+    Inject a VRM avatar into the connected world.
 
-    The file_path must be accessible on the machine running Resonite.
-    For local dev setups this is the same machine as the backend.
+    NOT IMPLEMENTED: ResoniteLink (protocol 0.13.1) has no generic model/file
+    import. This endpoint validates the file, then returns 501 honestly.
     """
     client = _get_rl_client()
     if not client.connected:
@@ -1348,22 +1360,16 @@ async def import_vrm(req: VRMImportRequest):
     if vrm_path.suffix.lower() != ".vrm":
         raise HTTPException(status_code=400, detail="File must be a .vrm file")
 
-    try:
-        resp = await client._send(
-            {
-                "type": "importFile",
-                "filePath": str(vrm_path),
-                "targetSlotId": req.target_slot,
-                "position": req.position,
-            }
-        )
-        return {"status": "ok", "response": resp}
-    except Exception as exc:
-        # importFile may not be supported in older builds — surface the error clearly
-        raise HTTPException(
-            status_code=400,
-            detail=f"VRM import failed (requires Resonite build ≥ 2026.1.8.6): {exc}",
-        ) from exc
+    # ResoniteLink (0.13.1) has no generic file import — VRM injection over the
+    # link is not possible. Fail honestly (Implementation Honesty standard).
+    raise HTTPException(
+        status_code=501,
+        detail=(
+            "not_implemented: ResoniteLink (0.13.1) cannot import VRM/model files "
+            f"('{vrm_path.name}' validated OK). Import in-game, or track upstream "
+            "for model-import support."
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------

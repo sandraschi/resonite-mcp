@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "resonite-mcp"
-version = "1.0.0"
+version = "1.2.0"
 description = "Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting"
 authors = [
     {name = "Sandra Schipal", email = "sandra@example.com"}
@@ -25,7 +25,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "fastmcp>=3.2.0",
+    "fastmcp>=3.4.4,<4",
     "fastapi>=0.100.0",
     "httpx>=0.25.0",
     "python-osc>=1.8.0",

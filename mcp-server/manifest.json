@@ -1,7 +1,7 @@
 {
   "manifest_version": "0.2",
   "name": "resonite-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "display_name": "Resonite MCP",
   "description": "Resonite social VR MCP server: OSC, ResoniteLink, avatar/session control, Agent Lab fleet handoffs (FastMCP 3.2+).",
   "author": {

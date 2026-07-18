@@ -1,5 +1,9 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
 jobs:
   check:
     runs-on: windows-latest

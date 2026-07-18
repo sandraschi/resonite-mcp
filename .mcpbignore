@@ -29,3 +29,4 @@ zed-extension/
 monitoring/
 docker-compose.yml
 Dockerfile
+*.bak

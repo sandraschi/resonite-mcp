@@ -8,6 +8,7 @@ enabling avatar control, world management, ProtoFlux scripting, and social inter
 import asyncio
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import webbrowser
@@ -76,7 +77,9 @@ _is_stdio_mode = (
 server = FastMCP(
     name="Resonite MCP",
     version="0.8.0",
-    instructions="""You are a Resonite social VR platform assistant. You can help users control avatars, manage worlds, execute ProtoFlux scripts, and handle social interactions through natural language commands.
+    instructions="""You are a Resonite social VR platform assistant. You can help users control
+avatars, manage worlds, execute ProtoFlux scripts, and handle social interactions through
+natural language commands.
 
 Key capabilities:
 - Avatar control: Load avatars, set parameters, control animations
@@ -98,12 +101,12 @@ if bridge_urls:
             try:
                 server.add_provider(create_proxy(url))
                 _bridge_proxies.append(url)
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning("Failed to add MCP bridge proxy %s: %s", url, exc)
 
 # Import tools after server exists to avoid circular import (tools need server for @server.tool())
 # Register FastMCP 3.2+ prompt templates
-from . import (
+from . import (  # noqa: E402
     prompts,  # noqa: F401
     tools,  # noqa: F401
 )
@@ -214,7 +217,10 @@ def is_resonite_running() -> bool:
 
     try:
         # Simple tasklist check to avoid extra dependencies if psutil is missing
-        output = subprocess.check_output('tasklist /FI "IMAGENAME eq Resonite.exe"', shell=True).decode()
+        tasklist_path = shutil.which("tasklist") or "tasklist"
+        output = subprocess.check_output(  # noqa: S603 -- fixed args, no user input
+            [tasklist_path, "/FI", "IMAGENAME eq Resonite.exe"], shell=False
+        ).decode()
         return "Resonite.exe" in output
     except Exception:
         return False

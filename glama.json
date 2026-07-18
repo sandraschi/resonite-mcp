@@ -5,7 +5,7 @@
   "description": "Complete Resonite social VR platform control with avatar management, world building, ProtoFlux scripting, WorldLabs Marble import, and real-time social interactions.",
   "type": "mcp_server",
   "status": "beta",
-  "framework": "FastMCP 2.13+",
+  "framework": "FastMCP 3.4+",
   "tools": 42,
   "transport": ["stdio", "http"],
   "keywords": [

@@ -1,8 +1,25 @@
 # resonite-mcp — Project Assessment
 
-**Category**: MCP Server  
-**Assessment Date**: 2026-05-28  
-**Version**: v1.0.0 (Agent Lab Phase 6 complete)
+**Category**: MCP Server
+**Assessment Date**: 2026-07-11 (updated same day after protocol upgrade; previous: 2026-05-28)
+**Version**: v1.1.0
+
+---
+
+## 2026-07-11 (evening): ResoniteLink protocol upgrade — DONE
+
+The P1 item is resolved, and the finding was worse than "outdated": the old
+client implemented a **fictional wire format** (`ReadField`/`WriteField`/
+`GetNode`/`Reflect`/`Batch` with `type`/`id` keys) that never existed upstream —
+it could never have talked to real Resonite. v1.1.0 replaces it with the real
+protocol, verified against the upstream C# reference (0.13.1): `$type`
+discriminators, `messageId` correlation, typed value wrappers, camelCase
+messages. Added: LAN session discovery (UDP 12512), sync method calls,
+reflection family, honest not_implemented for generic model import (which the
+protocol does not offer). 22 wire-format regression tests lock the shapes;
+84/84 tests green. Remaining: live E2E against a running Resonite session
+(operator task), and wrapping the asset-import messages (mesh-JSON/texture/
+audio) for the import pipeline.
 
 ---
 
@@ -15,37 +32,73 @@
 | CI/CD | `.github/workflows/ci.yml` (lint, mypy, E2E smoke, pytest) |
 | Docker / monitoring | Dockerfile, compose, Prometheus/Grafana/Loki profile |
 | Test suite | 52 unit tests; fleet E2E offline + strict |
-| Coverage gate | 50% on `tools/` + `utils/` (via `just test`; HTTP stack excluded) |
+| Coverage gate | 50% on `tools/` + `utils/` (HTTP stack excluded) |
+| Upstream tracking | ResoniteLink client at 0.8.3; **upstream 0.13.1** — gap documented |
 
-**Overall**: Production-ready for fleet Agent Lab and stdio MCP; live Resonite validation remains operator-driven.
-
----
-
-## Standards compliance
-
-| Area | Notes |
-|------|-------|
-| FastMCP 3.2+ | Portmanteau tools, async handlers, `Context` where applicable |
-| MCPB | `mcp-server/manifest.json`, prompts, sync/pack scripts — see `docs/MCPB.md` |
-| Fleet staging | `D:/Temp/fleet_pipeline/...` defaults documented in fleet ops |
-| Central docs | `mcp-central-docs/projects/resonite-mcp/STATUS.md` |
+**Overall**: Production-ready for fleet Agent Lab and stdio MCP. Upstream ResoniteLink has moved five minor versions ahead; a compatibility review is the top technical priority. Live Resonite validation remains operator-driven.
 
 ---
 
-## Remaining gaps (post-1.0)
+## 2026-07-11 audit findings
 
-| Priority | Item |
-|----------|------|
-| High | Live E2E with Resonite + inkscape HTTP (`--live --strict`) |
-| High | Real inventory OSC responses (adapter live mode) |
-| Medium | Voice macros mapped to in-world ProtoFlux bindings |
-| Medium | MCPB release workflow on git tags |
-| Low | Raise coverage on `integrations.py`, `osc.py` toward 70%+ |
+### Fixed in this pass (v1.0.1)
+- **Version mismatch**: `__init__.py` was 0.8.0 vs pyproject/manifest 1.0.0 → all 1.0.1.
+- **CHANGELOG scrambled**: duplicate 0.2.0, non-chronological order, unreleased blocks mid-file → rebuilt.
+- **Em dash in `web_sota/start.ps1`** (Unicode Safety standard) → fixed.
+- **`glama.json`** claimed "FastMCP 2.13+" → 3.4+.
+- **`.gitignore`** missing `htmlcov/`, `.coverage`, `.lancedb/`, `*.bak`, `*.py.backup`, `test_output.txt` → added.
+- **RESONITELINK_GUIDE.md factual error**: claimed ResoniteLink requires ResoniteModLoader — it is official/built-in since Dec 2025 → corrected; upstream gap table added.
+- **CHANGELOG_LATEST.md** created (fleet release convention).
+
+### Upstream: Resonite / ResoniteLink (they release frequently)
+- **ResoniteLink 0.8.3 → 0.13.1** since Feb 2026. Still labeled beta; breaking changes possible.
+  - **Compatibility risk**: 0.9.0 changed member definition types to type references (affects `Reflect`); 0.9.2 removed redundant type fields. Our client may parse current-Resonite `Reflect` responses incorrectly. Needs a live wire-format test.
+  - **High-value adds**: 0.12.0 LAN session discovery (kills the hardcoded port-4242 assumption), 0.11.0 sync method calls, 0.10.0 dictionaries.
+  - Steam notes also mention fixes to `RemoveSlot` batch ordering and bone bindings for raw-data mesh imports — both relevant to our import pipeline.
+- **Cloud API** (`api.resonite.com`): wiki-documented `/sessions` endpoints (incl. `includeEmptyHeadless`) still match our proxy usage — no action needed.
+- **No local REST API** has materialized; the `USE_REST_API` scaffold in `resonite_link.py` stays dormant.
+- **Headless**: now on .NET 10; still Patreon-gated Steam beta. No changes affecting us.
+
+### Standards compliance (June/July 2026 bar)
+
+| Area | Status | Notes |
+|------|--------|-------|
+| FastMCP 3.2+ | ✅ | `fastmcp>=3.4.2,<4`, prefab-ui>=0.14.0, portmanteau tools |
+| MCPB packaging | ✅ | `mcp-server/manifest.json`, sync/pack scripts |
+| uv + justfile + llms.txt/llms-full.txt | ✅ | present |
+| Implementation honesty | ✅ | mocks confined to E2E harnesses + labeled inventory adapter modes |
+| Unicode safety | ✅ (after fix) | em dash removed from start.ps1 |
+| **DXT deprecation** | ❌ | `dxt/` folder still present — MCPB only since June bar |
+| **Webapp Directory Standard** (2026-07-11, v1.34) | ❌ | frontend is `web_sota/`, must be `webapp/` |
+| **Bun Adoption Standard** | ❌ | justfile + scripts use npm/npx; `package-lock.json` committed, no `bun.lock` |
+| **Biome replaces ESLint** | ⚠️ | Both configured; ESLint config + deps still present |
+| **Release Tiers** | ❌ | no `RELEASE_TIER.md` (this repo is T3 — has NSIS) |
+| Repo hygiene | ⚠️ | `htmlcov/`, `.lancedb/`, `.coverage`, `*.py.backup`, `test_output.txt`, `src/lib.rs`+root `Cargo.toml` (Zed ext) clutter root; egg-info in tree |
+| glama.json health metadata | ⚠️ | no fleet-grading health block |
+
+---
+
+## Improvement plan (priority order)
+
+| Priority | Item | Effort (AI-assisted) |
+|----------|------|----------------------|
+| ~~P1~~ ✅ | ~~ResoniteLink 0.9–0.13 compatibility pass~~ — **done in v1.1.0** (full rewrite to the real wire format + discovery + sync methods; live wire test against a running session still pending) | done 2026-07-11 |
+| **P1** | Remove `dxt/` (DXT retired fleet-wide) | minutes |
+| **P2** | `web_sota/` → `webapp/` rename (new fleet standard v1.34; touches justfile, start.ps1, gitignore, tauri/native scripts, docs) | half day, mechanical |
+| **P2** | Bun migration: `bun install`/`bunx` in justfile + scripts, commit `bun.lock`, delete `package-lock.json`; drop ESLint config/deps (Biome only) | half day |
+| **P2** | `RELEASE_TIER.md` (T3) + glama.json health metadata | minutes |
+| **P3** | Purge committed artifacts (`htmlcov/`, `.lancedb/`, `.coverage`, `*.py.backup`, `test_output.txt`) from git index — gitignore now covers them | minutes |
+| **P3** | Live E2E with Resonite (`--live --strict`); real inventory OSC responses (adapter live mode) | operator session |
+| **P3** | Voice macros mapped to in-world ProtoFlux bindings | 1 day |
+| **P4** | Raise coverage on `integrations.py`, `osc.py` toward 70%+ | 1 day |
 
 ---
 
 ## References
 
 - [ROADMAP.md](docs/ROADMAP.md)
+- [RESONITELINK_GUIDE.md](docs/RESONITELINK_GUIDE.md) — upstream gap table
 - [MCPB.md](docs/MCPB.md)
 - [MCP Central — MCPB standards](file:///D:/Dev/repos/mcp-central-docs/standards/MCPB_PACKAGING_STANDARDS.md)
+- [Webapp Directory Standard](file:///D:/Dev/repos/mcp-central-docs/standards/WEBAPP_DIRECTORY_STANDARD.md)
+- [Release Tiers](file:///D:/Dev/repos/mcp-central-docs/standards/RELEASE_TIERS.md)

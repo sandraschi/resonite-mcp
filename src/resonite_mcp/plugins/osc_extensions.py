@@ -91,7 +91,10 @@ class OSCExtensionsPlugin(BasePlugin):
             {"success": bool, "message": str, "data": {"sent": int, "failed": int}}
 
             ## Examples
-            osc_batch_send(port=9000, messages=[{"address": "/avatar/parameter/Happy", "values": [0.8]}, {"address": "/avatar/parameter/Surprise", "values": [0.5]}], delay_ms=100)
+            osc_batch_send(port=9000, messages=[
+                {"address": "/avatar/parameter/Happy", "values": [0.8]},
+                {"address": "/avatar/parameter/Surprise", "values": [0.5]},
+            ], delay_ms=100)
             """
             import asyncio
 
@@ -136,7 +139,8 @@ class OSCExtensionsPlugin(BasePlugin):
             Uses the real osc_recordings buffer. Returns the captured messages.
 
             ## Return Format
-            {"success": bool, "message": str, "data": {"recording_id": str, "messages_captured": int, "duration": float}}
+            {"success": bool, "message": str, "data":
+                {"recording_id": str, "messages_captured": int, "duration": float}}
 
             ## Examples
             osc_record_session(port=9001, session_name="avatar_demo", duration_seconds=30.0)
@@ -175,7 +179,8 @@ class OSCExtensionsPlugin(BasePlugin):
             Returns address frequency, message rate, and unique address count.
 
             ## Return Format
-            {"success": bool, "message": str, "data": {"total_messages": int, "unique_addresses": int, "messages_per_second": float, "top_addresses": list}}
+            {"success": bool, "message": str, "data": {"total_messages": int, "unique_addresses": int,
+                "messages_per_second": float, "top_addresses": list}}
 
             ## Examples
             osc_analyze_traffic(port=9001, analysis_duration=5.0)

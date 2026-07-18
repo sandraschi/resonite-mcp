@@ -16,7 +16,7 @@ class OSCServerInput(BaseModel):
     """Input model for starting OSC server."""
 
     port: int = Field(gt=0, le=65535, description="UDP port to listen on (1-65535)")
-    address: str = Field(default="0.0.0.0", description="Network interface to bind to")
+    address: str = Field(default="0.0.0.0", description="Network interface to bind to")  # noqa: S104
 
 
 class OSCServerStopInput(BaseModel):
