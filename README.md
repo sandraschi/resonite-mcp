@@ -25,6 +25,16 @@ Resonite MCP is an integration bridge and state-of-the-art web dashboard that co
 
 ---
 
+## 🌐 The Build-and-Inhabit Fleet Ecosystem
+
+This repository is not just a standalone connector, but a vital node in a wider **Multi-Agent Fleet Ecosystem**:
+
+* **Multi-Node Federation**: Supports federated asset caching under the standard directory `~/.avatarmcp/` and uses `MCP_BRIDGE_URLS` for cross-network state synchronization between developer nodes.
+* **Build-and-Inhabit Pipeline**: Integrates external design environments (such as **Blender, GIMP, and Inkscape**) directly into VR platforms (such as **Resonite, VRChat, and Vircadia**). Assets are automatically compiled, staged, spawned in-world over WebSockets, and inhabited by the agent via real-time OSC telemetry. 
+* *For complete details on the architecture, setup stages, and platform behaviors, read the **[Build-and-Inhabit Pipeline Guide](BUILD_AND_INHABIT_PIPELINE.md)** and **[VR Worlds Comparison Guide](VR_WORLDS_COMPARISON.md)**.*
+
+---
+
 ## ⛩️ The Miko's Digital Shrine
 
 In the spirit of kami and miko — this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The kawaii and clever miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
