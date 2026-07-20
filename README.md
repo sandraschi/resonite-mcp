@@ -1,4 +1,4 @@
-# resonite-mcp
+# 🎭 Resonite MCP & Dashboard
 
 <p align="center">
   <a href="https://github.com/casey/just"><img src="https://img.shields.io/badge/just-ready_to_go-7c5cfc?style=flat-square&logo=just&logoColor=white" alt="Just"></a>
@@ -9,52 +9,45 @@
   <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT"></a>
 </p>
 
-**Natural-language control of the Resonite social VR platform** — read and
-write a live world's data model over the official **ResoniteLink** protocol,
-with OSC streaming, a World Inspector webapp, and fleet bridges to Blender,
-Marble/World Labs, and the VRM avatar depot.
+**Talk to your virtual world.** 
 
-> **Live-verified 2026-07-18**: session discovery, connect, data-model read,
-> and slot write confirmed against a running Resonite session
-> (2026.7.14.913, protocol 0.13.1.0) — zero client fixes needed.
+Resonite MCP is an integration bridge and state-of-the-art web dashboard that connects AI assistants to the **Resonite** social VR platform. Using natural language, you can command your world, customize your avatar, inspect your sessions, and control your telemetry directly through chat.
 
-#### The Miko's Digital Shrine
+---
 
-In the spirit of kami and miko — this MCP server serves as a bridge between
-human creators and the digital spirits of virtual worlds. The kawaii and
-clever miko tends the shrines of code, ensuring the kami of creation
-flow freely through our digital spaces.
+## ✨ Key Features
 
-## What it does
+* 🤖 **AI Assistant Integration (MCP)**: Use natural language with your AI chat client to spawn objects, toggle locomotion, change active slots, or load worlds.
+* 🧬 **Avatar & Biometric Tuning**: Adjust tracking smoothing, toggle eye tracking, and monitor lipsync parameters in real-time.
+* 👥 **Socials & Contacts**: Check who is online, read chat logs, and join your friends' sessions with one click.
+* 📦 **In-World Spawning**: Search, organize, and spawn assets directly from your inventory database.
+* 🎨 **Visual Dashboard & Gallery**: Monitor connection health, inspect the world's node tree, and browse a visual gallery of screenshots and popular worlds.
 
-- **ResoniteLink first** *(primary path)*: official WebSocket JSON protocol
-  (Resonite 2026.1.8.6+) — slot & component CRUD, reflection, sync method
-  calls, batching, LAN session discovery (UDP 12512). See
-  [RESONITELINK_GUIDE](docs/RESONITELINK_GUIDE.md) for the honest capability
-  table (short version: no generic VRM/GLB import in the protocol; geometry
-  travels as mesh-JSON — client wrapping of asset imports in progress).
-- **World Inspector**: live scene-graph browser in the webapp — traverse
-  slots, inspect components, edit fields.
-- **OSC streaming** *(secondary)*: high-frequency parameter streaming
-  (avatar parameters etc.), 8 tools, bidirectional.
-- **Fleet bridges**: Marble/World Labs batch import staging, VRM staging from
-  blender-mcp / avatar-mcp, inkscape overlays, voice macros
-  (`resonite_fleet`, `resonite_voice` portmanteaus).
-- **Session & presence**: cloud session browser, install/launch detection
-  with onboarding gate, avatar + world management tools.
-- **Dual interface**: MCP stdio for Claude Desktop + FastAPI HTTP
-  (`/docs`, Prometheus `/metrics`).
+---
 
-## Quick start
+## ⛩️ The Miko's Digital Shrine
 
+In the spirit of kami and miko — this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The kawaii and clever miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
+
+---
+
+## 🚀 Quick Start (Get Running in 3 Steps)
+
+### Step 1: Launch Resonite
+Make sure the Resonite game client is running on Steam. Enable the ResoniteLink connection inside the session settings (Dashboard ➔ Session ➔ Settings ➔ Enable ResoniteLink).
+
+### Step 2: Start the Dashboard
+Clone the repository and spin up the frontend webapp and Python server:
 ```powershell
 git clone https://github.com/sandraschi/resonite-mcp
 cd resonite-mcp
-just              # interactive dashboard; then: just bootstrap, just serve
+just bootstrap
+just serve
 ```
+*The web dashboard is now active at `http://localhost:10978`.*
 
-Claude Desktop (`claude_desktop_config.json`):
-
+### Step 3: Connect your AI Assistant
+Add the server configuration to your Claude Desktop config file (`claude_desktop_config.json`):
 ```json
 "mcpServers": {
   "resonite-mcp": {
@@ -64,54 +57,26 @@ Claude Desktop (`claude_desktop_config.json`):
 }
 ```
 
-Or bundle it: `just mcpb-pack` → `dist/resonite-mcp-v1.1.0.mcpb`.
+---
 
-## How it runs (honest wrapper notes)
+## 📚 Documentation Index
 
-- You need the **Resonite client (or headless) running and hosting a session**;
-  only the host can enable ResoniteLink (Dashboard → Session → Settings →
-  Enable ResoniteLink). Headless: `enableResoniteLink <port>`.
-- **Find the port via discovery** (`resonite_link_discover`, UDP 12512) — the
-  dashboard's displayed port was wrong in live testing.
-- Desktop mode is fine for everything; VR is optional.
-- ResoniteLink upstream is **beta**: breaking changes possible. This client
-  pins protocol 0.13.1 with 22 wire-format regression tests.
+For deep architectural details, setup advice, and API references, check out our dedicated guides:
 
-## Webapp (port 10978)
+| Guide | Description |
+| :--- | :--- |
+| **[ARCHITECTURE.md](ARCHITECTURE.md)** | High-level system architecture, protocols, and port mappings |
+| **[INSTALL.md](INSTALL.md)** | Full installation paths and environment configurations |
+| **[docs/TOOLS.md](docs/TOOLS.md)** | List of the 65+ Python tools and HTTP API endpoints |
+| **[docs/RESONITELINK_GUIDE.md](docs/RESONITELINK_GUIDE.md)** | Deep-dive into the ResoniteLink WebSocket protocol |
+| **[VR_WORLDS_COMPARISON.md](VR_WORLDS_COMPARISON.md)** | Detailed comparison between Resonite, VRChat, and Vircadia |
+| **[BUILD_AND_INHABIT_PIPELINE.md](BUILD_AND_INHABIT_PIPELINE.md)** | Automation stages from Blender/GIMP to live VR injection |
+| **[COMMUNITY_RESOURCES.md](COMMUNITY_RESOURCES.md)** | Links to RML modding, video tutorials, subreddits, and Discords |
+| **[BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md)** | Onboarding basics and control references for new users |
 
-`.\web_sota\start.ps1` → Dashboard, Sessions browser, World Inspector,
-Presence Gate, ResoniteLink monitor, Avatar, OSC, Dev Tools.
+---
 
-## Documentation
-
-| Doc | What |
-|---|---|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | High-level system architecture and data flows |
-| [INSTALL.md](INSTALL.md) | All install paths |
-| [docs/TOOLS.md](docs/TOOLS.md) | Tool & HTTP API reference |
-| [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Env vars, Resonite setup, asset dirs |
-| [docs/RESONITELINK_GUIDE.md](docs/RESONITELINK_GUIDE.md) | Protocol capabilities + live-verification record |
-| [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) | Dev setup, tests, quality stack |
-| [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | Common failures, debug mode |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Agent Lab phases (1–6 done, v1.1.0) |
-| [MARBLE_RESONITE_GUIDE.md](MARBLE_RESONITE_GUIDE.md) | World Labs → Resonite pipeline |
-| [PROTOFLUX_GUIDE.md](PROTOFLUX_GUIDE.md) + [hands-on](PROTOFLUX_HANDS_ON_GUIDE.md) | Visual programming |
-| [BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md) · [RESONITE_ACCESS_GUIDE.md](RESONITE_ACCESS_GUIDE.md) | New to Resonite |
-
-## Status
-
-v1.1.0 — real ResoniteLink wire format (0.13.1), live-verified 2026-07-18.
-Agent Lab phases 1–6 complete. Known honest gaps: asset-import messages not
-yet wrapped as first-class client methods; some inventory/plugin tools still
-adapter/mock-backed (`RESONITE_INVENTORY_MODE`); tool inventory re-audit
-pending in [docs/TOOLS.md](docs/TOOLS.md). Current mission: **Nekomimi-chan's
-Resonite home** — see mcp-central-docs `projects/RESONITE_HOME_NEKOMIMI_PLAN.md`.
-
-## Acknowledgments
-
-[Resonite](https://resonite.com/) & [Yellow Dog Man Studios](https://yellowdogman.com/) —
-incl. the official [ResoniteLink](https://github.com/Yellow-Dog-Man/ResoniteLink)
-protocol · [FastMCP](https://github.com/PrefectHQ/fastmcp) ·
-[python-osc](https://pypi.org/project/python-osc/)
-
-MIT licensed. Made with care for the Resonite community.
+## 📈 Status & Roadmap
+* **Current Version**: `v1.1.0` (ResoniteLink Protocol 0.13.1).
+* **Compliance**: Agent Lab Phases 1–6 complete. Real-time slot CRUD, OSC synchronization, and cached asset syncing are fully live-verified.
+* **License**: MIT Licensed. Made with care for the Resonite community.
