@@ -21,8 +21,8 @@ Marble/World Labs, and the VRM avatar depot.
 #### The Miko's Digital Shrine
 
 In the spirit of kami and miko — this MCP server serves as a bridge between
-human creators and the digital spirits of virtual worlds. The somewhat
-superannuated miko tends the shrines of code, ensuring the kami of creation
+human creators and the digital spirits of virtual worlds. The kawaii and
+clever miko tends the shrines of code, ensuring the kami of creation
 flow freely through our digital spaces.
 
 ## What it does
