@@ -23,6 +23,7 @@ import { SearchPage } from "@/pages/search";
 import { Sessions } from "@/pages/sessions";
 import { Settings } from "@/pages/settings";
 import { Status } from "@/pages/status";
+import { Gallery } from "@/pages/gallery";
 import { Tools } from "@/pages/tools";
 import { World } from "@/pages/world";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -48,6 +49,7 @@ function App() {
 						<Route path="/" element={<Dashboard />} />
 						<Route path="/agent-tools" element={<AgentTools />} />
 						<Route path="/status" element={<Status />} />
+						<Route path="/gallery" element={<Gallery />} />
 						<Route
 							path="*"
 							element={

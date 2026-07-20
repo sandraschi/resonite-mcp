@@ -57,3 +57,20 @@ Unlike other VR platforms, Resonite assets are saved and shared *directly in-wor
 
 ### 3. **OSC Controllers**
 * **What it is**: Standalone utilities (like mobile apps or Python scripts) designed to send `/avatar/parameters/*` OSC signals to control avatar face tracking or world elements.
+
+---
+
+## 📚 Community Bibliography & Link Collection
+
+### 🌐 Forums & Discussion Hubs
+* **r/resonite Subreddit**: [https://www.reddit.com/r/resonite/](https://www.reddit.com/r/resonite/) — The central community board for news, setup advice, avatar releases, and hardware discussions.
+* **r/neosvr Subreddit**: [https://www.reddit.com/r/neosvr/](https://www.reddit.com/r/neosvr/) — Historic repository containing thousands of threads on complex visual programming (ProtoFlux/Logix) and component rigging.
+
+### 🎥 Video Guides & Onboarding Channels
+* **ProbablePrime YouTube Channel**: [https://www.youtube.com/@ProbablePrime](https://www.youtube.com/@ProbablePrime) — The definitive learning channel. Hosts over 1,000 video tutorials detailing nearly every component, tool, and ProtoFlux node in the game engine.
+* **Resonite Official YouTube**: [https://www.youtube.com/@Resonite](https://www.youtube.com/@Resonite) — Official channel providing platform updates, developer logs, and quick start guides.
+
+### 💬 Active Discord Servers
+* **Resonite Official Discord**: [https://discord.gg/resonite](https://discord.gg/resonite) — Main meeting hub for developer updates, world creator showcases, asset sharing, and user support.
+* **Resonite Modding Discord**: [https://discord.gg/resonite-modding](https://discord.gg/resonite-modding) — Dedicated to the development and installation of C# mods, client UI overrides, and custom integration plugins.
+

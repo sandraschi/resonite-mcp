@@ -895,6 +895,26 @@ export function Help() {
 							href="https://discord.gg/resonite"
 						/>
 						<RefCard
+							title="r/resonite Subreddit"
+							desc="Reddit community forum"
+							href="https://www.reddit.com/r/resonite/"
+						/>
+						<RefCard
+							title="r/neosvr Subreddit"
+							desc="Historic ProtoFlux & rigging discussions"
+							href="https://www.reddit.com/r/neosvr/"
+						/>
+						<RefCard
+							title="ProbablePrime YouTube"
+							desc="1,000+ detailed video tutorials"
+							href="https://www.youtube.com/@ProbablePrime"
+						/>
+						<RefCard
+							title="Resonite Modding Discord"
+							desc="Client mods (RML) developer server"
+							href="https://discord.gg/resonite-modding"
+						/>
+						<RefCard
 							title="OSC Documentation"
 							desc="OSC protocol in Resonite"
 							href="https://wiki.resonite.com/OSC"

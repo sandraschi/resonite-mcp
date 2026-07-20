@@ -887,6 +887,21 @@ async def get_inventory_item_info(item_id: str):
         raise HTTPException(status_code=500, detail=str(e)) from e
 
 
+@app.get("/api/resonite/gallery")
+async def get_resonite_gallery():
+    """Retrieve gallery items (screenshots)."""
+    try:
+        from .http_functions import resonite_gallery_list_http
+
+        result = await resonite_gallery_list_http()
+        if result["status"] == "error":
+            raise HTTPException(status_code=400, detail=result["message"])
+        return result
+    except Exception as e:
+        logger.error(f"Gallery retrieval failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 # Plugin management API endpoints
 @app.get("/api/plugins/list")
 async def list_plugins():
