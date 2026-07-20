@@ -48,30 +48,35 @@ pip install -e .
 python -c "import resonite_mcp; print('✅ Installation successful')"
 ```
 
-### Method 2: DXT Package (Claude Desktop)
+### Method 2: MCPB Package (Claude Desktop)
 
-#### 1. Build the DXT Package
+DXT packaging was retired fleet-wide (mid-2026) in favor of MCPB. If you're
+looking for a `.dxt` file or `build_dxt.ps1`, they no longer exist — build
+an `.mcpb` package instead:
 
 ```powershell
 # On Windows PowerShell
-.\scripts\build_dxt.ps1
+just mcpb-pack
 ```
 
-#### 2. Install in Claude Desktop
+#### 1. Install in Claude Desktop
 
 1. Locate your Claude Desktop extensions directory:
    - **Windows**: `%APPDATA%\Claude\extensions\`
    - **macOS**: `~/Library/Application Support/Claude/extensions/`
    - **Linux**: `~/.config/Claude/extensions/`
 
-2. Copy the `dist` folder to the extensions directory:
-   ```bash
-   cp -r dist /path/to/claude/extensions/resonite-mcp
-   ```
+2. Copy the built `.mcpb` file (from `dist/`) into the extensions directory.
 
 3. Restart Claude Desktop
 
 4. The Resonite MCP tools should now be available
+
+### Method 3: Tauri Desktop App
+
+A full desktop shell with a bundled webapp is also available — see
+`native/` and `docs/WEBAPP_UPDATE_PLAN.md`. Build via `just build-native`
+(produces a Windows NSIS installer).
 
 ## Configuration
 
@@ -256,7 +261,7 @@ Restart Claude Desktop/Cursor IDE after updating.
 pip uninstall resonite-mcp
 rm -rf /path/to/resonite-mcp
 
-# Remove DXT package
+# Remove MCPB package
 rm -rf /path/to/claude/extensions/resonite-mcp
 ```
 

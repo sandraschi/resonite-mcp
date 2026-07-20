@@ -12,6 +12,10 @@ import {
 	Monitor,
 	Headphones,
 	Cpu,
+	Globe2,
+	User,
+	Wand2,
+	Move,
 } from "lucide-react";
 
 function RefCard({
@@ -55,8 +59,10 @@ export function Help() {
 				<TabsList className="w-full justify-start gap-1 bg-transparent border-b border-border/30 rounded-none pb-0 mb-6 overflow-x-auto">
 					{[
 						{ id: "setup", label: "Setup" },
+						{ id: "beginner", label: "Beginner Guide" },
+						{ id: "comparison", label: "Comparison & Pipeline" },
 						{ id: "protocols", label: "Protocols" },
-						{ id: "vr", label: "VR &amp; Pico" },
+						{ id: "vr", label: "VR & Pico" },
 						{ id: "faq", label: "FAQ" },
 						{ id: "links", label: "Links" },
 					].map(({ id, label }) => (
@@ -201,6 +207,290 @@ export function Help() {
 							</CardContent>
 						</Card>
 					</div>
+				</TabsContent>
+
+				{/* ── Beginner Guide Tab ──────────────────────────────────── */}
+				<TabsContent value="beginner" className="space-y-6">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						{/* Basic Controls Card */}
+						<Card className="border-border/50 bg-card/30 glass">
+							<CardContent className="p-6 space-y-4">
+								<div className="flex items-center gap-3">
+									<Move className="h-5 w-5 text-indigo-400" />
+									<h3 className="text-sm font-black text-foreground">
+										Basic Controls
+									</h3>
+								</div>
+								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+									<p>
+										Resonite has two main modes of interaction depending on your setup:
+									</p>
+									<div className="space-y-2 font-mono text-[11px] bg-black/30 p-3 rounded-lg border border-white/[0.03]">
+										<div className="flex justify-between border-b border-white/[0.05] pb-1">
+											<span className="text-slate-400">W, A, S, D</span>
+											<span className="text-white">Walk around</span>
+										</div>
+										<div className="flex justify-between border-b border-white/[0.05] pb-1">
+											<span className="text-slate-400">Mouse Move</span>
+											<span className="text-white">Look around</span>
+										</div>
+										<div className="flex justify-between border-b border-white/[0.05] pb-1">
+											<span className="text-slate-400">Left-Click (Desktop)</span>
+											<span className="text-white">Interact / Click / Grab</span>
+										</div>
+										<div className="flex justify-between border-b border-white/[0.05] pb-1">
+											<span className="text-slate-400">Right-Click (Desktop)</span>
+											<span className="text-white">Open Context Menu</span>
+										</div>
+										<div className="flex justify-between border-b border-white/[0.05] pb-1">
+											<span className="text-slate-400">Tab Key (Desktop)</span>
+											<span className="text-white">Toggle Dash Menu</span>
+										</div>
+										<div className="flex justify-between">
+											<span className="text-slate-400">VR Trigger / Grip</span>
+											<span className="text-white">Click / Grab in VR</span>
+										</div>
+									</div>
+								</div>
+							</CardContent>
+						</Card>
+
+						{/* Avatars & Customization */}
+						<Card className="border-border/50 bg-card/30 glass">
+							<CardContent className="p-6 space-y-4">
+								<div className="flex items-center gap-3">
+									<User className="h-5 w-5 text-indigo-400" />
+									<h3 className="text-sm font-black text-foreground">
+										Finding &amp; Changing Avatars
+									</h3>
+								</div>
+								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+									<p>
+										Avatars define your virtual appearance and biometric tracking capabilities:
+									</p>
+									<ul className="list-disc list-inside space-y-2">
+										<li>
+											<span className="font-bold text-white">Default Avatars:</span> Open the <span className="font-bold text-white">Inventory</span> tab, navigate to <span className="font-bold text-white">Resonite Essentials</span>, then open <span className="font-bold text-white">Avatars</span> to spawn default public models.
+										</li>
+										<li>
+											<span className="font-bold text-white">Equipping:</span> Point at a spawned avatar in the world, hold your controller Grip or Right-Click (desktop) to open the context radial menu, and click the T-posing <span className="font-bold text-white">Equip</span> button.
+										</li>
+										<li>
+											<span className="font-bold text-white">Saving:</span> Once wearing an avatar, open the Dash, navigate to your personal folder in the Inventory tab, and click <span className="font-bold text-white">Save Avatar</span>.
+										</li>
+									</ul>
+								</div>
+							</CardContent>
+						</Card>
+
+						{/* Social & Voice Chat */}
+						<Card className="border-border/50 bg-card/30 glass">
+							<CardContent className="p-6 space-y-4">
+								<div className="flex items-center gap-3">
+									<Headphones className="h-5 w-5 text-indigo-400" />
+									<h3 className="text-sm font-black text-foreground">
+										Voice &amp; Social Connections
+									</h3>
+								</div>
+								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+									<p>
+										Resonite is a highly interactive social platform. Here is how to speak and connect:
+									</p>
+									<ul className="list-disc list-inside space-y-2">
+										<li>
+											<span className="font-bold text-white">Microphone Mute:</span> Press <span className="font-bold text-white">F9</span> to quickly toggle your microphone mute state, or configure push-to-talk in Settings.
+										</li>
+										<li>
+											<span className="font-bold text-white">Text Chat:</span> Press the <span className="font-bold text-white">T</span> key on desktop to open text chat bubble overlays.
+										</li>
+										<li>
+											<span className="font-bold text-white">Contacts Page:</span> Use the <span className="font-bold text-white">Contacts</span> tab on this dashboard to see your friends list and copy links to jump directly into their active sessions.
+										</li>
+									</ul>
+								</div>
+							</CardContent>
+						</Card>
+
+						{/* Portals & Navigation */}
+						<Card className="border-border/50 bg-card/30 glass">
+							<CardContent className="p-6 space-y-4">
+								<div className="flex items-center gap-3">
+									<Globe2 className="h-5 w-5 text-indigo-400" />
+									<h3 className="text-sm font-black text-foreground">
+										Portals &amp; World Travel
+									</h3>
+								</div>
+								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+									<p>
+										Resonite worlds are connected by immersive, real-time 3D portal links:
+									</p>
+									<ul className="list-disc list-inside space-y-2">
+										<li>
+											<span className="font-bold text-white">Real-Time Previews:</span> Look through portal windows to see a live view of the destination world before crossing.
+										</li>
+										<li>
+											<span className="font-bold text-white">Spawning Portals:</span> Open the Dash, find a world or session inside the Worlds tab, and click <span className="font-bold text-white">Spawn Portal</span>.
+										</li>
+										<li>
+											<span className="font-bold text-white">Crossing Portals:</span> Walk directly through the portal opening to trigger loading into the target world.
+										</li>
+									</ul>
+								</div>
+							</CardContent>
+						</Card>
+					</div>
+
+					<Card className="border-border/50 bg-card/30 glass">
+						<CardContent className="p-6 space-y-4">
+							<div className="flex items-center gap-3">
+								<Wand2 className="h-5 w-5 text-indigo-400" />
+								<h3 className="text-sm font-black text-foreground">
+									Troubleshooting Tips
+								</h3>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+								<div className="space-y-1">
+									<p className="font-bold text-white">I cannot move my avatar!</p>
+									<p>Ensure you do not have any menus open (press Esc). If you are stuck inside an object, try jumping (Space) or crouching (Ctrl).</p>
+								</div>
+								<div className="space-y-1">
+									<p className="font-bold text-white">People cannot hear me!</p>
+									<p>Ensure you are unmuted (press F9). Check your default audio input device inside the Settings tab of your Dash menu.</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+				</TabsContent>
+
+				{/* ── Comparison & Pipeline Tab ─────────────────────────── */}
+				<TabsContent value="comparison" className="space-y-6">
+					{/* Platform Comparison */}
+					<Card className="border-border/50 bg-card/30 glass">
+						<CardContent className="p-6 space-y-4">
+							<div className="flex items-center gap-3">
+								<Globe2 className="h-5 w-5 text-indigo-400" />
+								<h3 className="text-sm font-black text-foreground">
+									VR Platforms Comparison
+								</h3>
+							</div>
+							<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
+								<div className="space-y-2 p-4 rounded-xl bg-black/20 border border-white/[0.03]">
+									<div className="flex items-center gap-2 mb-2">
+										<div className="w-2 h-2 rounded-full bg-indigo-400" />
+										<h4 className="text-xs font-bold text-foreground">Resonite</h4>
+									</div>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Focus:</span> Real-time, in-world collaborative creation and visual programming (ProtoFlux).
+									</p>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Strengths:</span> Immediate asset imports, live scripting, and bi-directional OSC integration.
+									</p>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Fleet Connection:</span> Handled via the Resonite-MCP server using <strong>ResoniteLink WebSocket</strong> and bi-directional OSC.
+									</p>
+								</div>
+
+								<div className="space-y-2 p-4 rounded-xl bg-black/20 border border-white/[0.03]">
+									<div className="flex items-center gap-2 mb-2">
+										<div className="w-2 h-2 rounded-full bg-emerald-400" />
+										<h4 className="text-xs font-bold text-foreground">VRChat</h4>
+									</div>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Focus:</span> Massive social communities, club events, and public worlds.
+									</p>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Strengths:</span> High concurrent user count and an extensive marketplace of pre-made avatars.
+									</p>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Fleet Connection:</span> Passive control via unidirectional OSC parameters and offline Unity SDK build/upload automation.
+									</p>
+								</div>
+
+								<div className="space-y-2 p-4 rounded-xl bg-black/20 border border-white/[0.03]">
+									<div className="flex items-center gap-2 mb-2">
+										<div className="w-2 h-2 rounded-full bg-amber-400" />
+										<h4 className="text-xs font-bold text-foreground">Vircadia</h4>
+									</div>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Focus:</span> Open-source, self-hosted, fully decentralized domain grids.
+									</p>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Strengths:</span> Native JavaScript scripting engine and server-side audio mixing.
+									</p>
+									<p className="text-[11px] text-muted-foreground leading-relaxed">
+										<span className="font-bold text-white">Fleet Connection:</span> Automated JS script injection and domain REST management connections.
+									</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* Ecosystem & Community Resources */}
+					<Card className="border-border/50 bg-card/30 glass">
+						<CardContent className="p-6 space-y-4">
+							<div className="flex items-center gap-3">
+								<BookOpen className="h-5 w-5 text-indigo-400" />
+								<h3 className="text-sm font-black text-foreground">
+									Resonite Community Resources
+								</h3>
+							</div>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
+								<div className="p-4 rounded-xl bg-black/20 border border-white/[0.03] space-y-2">
+									<p className="font-bold text-white">Development Tools &amp; Modding</p>
+									<ul className="list-disc list-inside space-y-1">
+										<li><span className="font-bold text-white">Resonite Mod Loader (RML):</span> Modding framework for custom C# client DLLs.</li>
+										<li><span className="font-bold text-white">Resonite Wiki:</span> Official reference guide for ProtoFlux nodes and components.</li>
+										<li><span className="font-bold text-white">ResoniteLink:</span> WebSocket bridge connecting the game engine to external APIs.</li>
+									</ul>
+								</div>
+								<div className="p-4 rounded-xl bg-black/20 border border-white/[0.03] space-y-2">
+									<p className="font-bold text-white">In-World Libraries &amp; Assets</p>
+									<ul className="list-disc list-inside space-y-1">
+										<li><span className="font-bold text-white">Resonite Essentials:</span> Default folder featuring avatars, building tools, and prefabs.</li>
+										<li><span className="font-bold text-white">Community Depots:</span> Public world storage hosting thousands of scripts and models.</li>
+										<li><span className="font-bold text-white">Blender Exporters:</span> Custom plugins streamlining asset imports.</li>
+									</ul>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
+
+					{/* VR Build-and-Inhabit Fleet Pipeline */}
+					<Card className="border-border/50 bg-card/30 glass">
+						<CardContent className="p-6 space-y-4">
+							<div className="flex items-center gap-3">
+								<Zap className="h-5 w-5 text-indigo-400" />
+								<h3 className="text-sm font-black text-foreground">
+									VR Build-and-Inhabit Fleet Pipeline
+								</h3>
+							</div>
+							<p className="text-xs text-muted-foreground leading-relaxed">
+								The fleet pipeline automates the lifecycle of virtual assets from external design tools straight to active inhabitance inside Resonite:
+							</p>
+							<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
+								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 1</div>
+									<div className="text-xs font-bold text-white">Design &amp; Export</div>
+									<p className="text-[10px] text-muted-foreground mt-1">Export meshes from Blender or textures from GIMP.</p>
+								</div>
+								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 2</div>
+									<div className="text-xs font-bold text-white">Staging Cache</div>
+									<p className="text-[10px] text-muted-foreground mt-1">Assets are staged in <code>~/.avatarmcp/models/</code>.</p>
+								</div>
+								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 3</div>
+									<div className="text-xs font-bold text-white">Live Spawning</div>
+									<p className="text-[10px] text-muted-foreground mt-1">ResoniteLink WebSocket spawns the asset into a slot.</p>
+								</div>
+								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 4</div>
+									<div className="text-xs font-bold text-white">OSC Inhabit</div>
+									<p className="text-[10px] text-muted-foreground mt-1">OSC feeds biometrics (face, voice, eyes) into the slot.</p>
+								</div>
+							</div>
+						</CardContent>
+					</Card>
 				</TabsContent>
 
 				{/* ── Protocols Tab ────────────────────────────────────────── */}

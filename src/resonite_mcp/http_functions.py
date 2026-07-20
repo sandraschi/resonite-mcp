@@ -171,6 +171,18 @@ async def resonite_session_start_http(
     return {"status": "success", "message": "Session started", "session_name": session_name}
 
 
+async def resonite_contacts_list_http() -> list[dict[str, Any]] | dict[str, Any]:
+    """HTTP wrapper for listing Resonite contacts.
+
+    Returns:
+        JSON list of friends/contacts or error dictionary
+    """
+    result = await rest_api.resonite_friends_list()
+    if result["status"] == "ok":
+        return result["friends"]
+    return result
+
+
 async def resonite_platform_info_http() -> dict[str, Any]:
     """HTTP wrapper for fetching Resonite platform information.
 
@@ -210,7 +222,7 @@ async def resonite_start_app_http() -> dict[str, Any]:
     Returns:
         Status message
     """
-    steam_uri = "steam://rungameid/251980"
+    steam_uri = "steam://rungameid/2519830"
     try:
         logger.info(f"Attempting to launch Resonite via {steam_uri}")
         webbrowser.open(steam_uri)
@@ -340,9 +352,12 @@ async def resonite_inventory_list_http(
     offset: int = 0,
 ) -> dict[str, Any]:
     """List inventory items (HTTP version)."""
+    from .models import InventoryListInput
     from .tools import inventory
 
-    return await inventory.resonite_inventory_list(item_type, search_query, limit, offset)
+    return await inventory.resonite_inventory_list(
+        InventoryListInput(item_type=item_type, search_query=search_query, limit=limit, offset=offset)
+    )
 
 
 async def resonite_inventory_search_http(query: str, item_type: str | None = None) -> dict[str, Any]:
@@ -359,9 +374,12 @@ async def resonite_inventory_spawn_http(
     scale: list[float] | None = None,
 ) -> dict[str, Any]:
     """Spawn inventory item (HTTP version)."""
+    from .models import InventorySpawnInput
     from .tools import inventory
 
-    return await inventory.resonite_inventory_spawn(item_id, position, rotation, scale)
+    return await inventory.resonite_inventory_spawn(
+        InventorySpawnInput(item_id=item_id, position=position, rotation=rotation, scale=scale)
+    )
 
 
 async def resonite_inventory_upload_http(
@@ -372,25 +390,36 @@ async def resonite_inventory_upload_http(
     is_public: bool = False,
 ) -> dict[str, Any]:
     """Upload to inventory (HTTP version)."""
+    from .models import InventoryUploadInput
     from .tools import inventory
 
-    return await inventory.resonite_inventory_upload(item_path, item_name, item_type, description, is_public)
+    return await inventory.resonite_inventory_upload(
+        InventoryUploadInput(
+            item_path=item_path, item_name=item_name, item_type=item_type, description=description, is_public=is_public
+        )
+    )
 
 
 async def resonite_inventory_delete_http(item_id: str, confirm_deletion: bool = True) -> dict[str, Any]:
     """Delete from inventory (HTTP version)."""
+    from .models import InventoryDeleteInput
     from .tools import inventory
 
-    return await inventory.resonite_inventory_delete(item_id, confirm_deletion)
+    return await inventory.resonite_inventory_delete(
+        InventoryDeleteInput(item_id=item_id, confirm_deletion=confirm_deletion)
+    )
 
 
 async def resonite_inventory_share_http(
     item_id: str, share_with: str, permission_level: str = "read"
 ) -> dict[str, Any]:
     """Share inventory item (HTTP version)."""
+    from .models import InventoryShareInput
     from .tools import inventory
 
-    return await inventory.resonite_inventory_share(item_id, share_with, permission_level)
+    return await inventory.resonite_inventory_share(
+        InventoryShareInput(item_id=item_id, share_with=share_with, permission_level=permission_level)
+    )
 
 
 async def resonite_inventory_info_http(item_id: str) -> dict[str, Any]:

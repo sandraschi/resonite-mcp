@@ -86,6 +86,7 @@ Presence Gate, ResoniteLink monitor, Avatar, OSC, Dev Tools.
 
 | Doc | What |
 |---|---|
+| [ARCHITECTURE.md](ARCHITECTURE.md) | High-level system architecture and data flows |
 | [INSTALL.md](INSTALL.md) | All install paths |
 | [docs/TOOLS.md](docs/TOOLS.md) | Tool & HTTP API reference |
 | [docs/CONFIGURATION.md](docs/CONFIGURATION.md) | Env vars, Resonite setup, asset dirs |

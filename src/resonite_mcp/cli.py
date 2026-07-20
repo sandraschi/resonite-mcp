@@ -6,6 +6,7 @@ import asyncio
 import logging
 import os
 
+from . import __version__
 from .server import initialize_server, server
 
 
@@ -58,7 +59,7 @@ def main():
         help="Enable CodeMode BM25 agentic skill discovery (FastMCP 3.2+)",
     )
 
-    parser.add_argument("--version", action="version", version="%(prog)s 1.0.0")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
     args = parser.parse_args()
 
@@ -88,6 +89,12 @@ def main():
     asyncio.run(initialize_server())
     logger.info(f"Starting Resonite MCP server on {args.host}:{args.port}")
     import uvicorn
+
+    # uvicorn imports the app by string path ("module:app"), so http_server.py
+    # can't receive these as direct arguments -- thread them through env vars
+    # instead, read by the /health endpoint (HEALTH_ENDPOINT_STANDARD).
+    os.environ["RESONITE_MCP_HOST"] = args.host
+    os.environ["RESONITE_MCP_PORT"] = str(args.port)
 
     uvicorn.run(
         "resonite_mcp.http_server:app",

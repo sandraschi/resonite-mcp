@@ -68,7 +68,7 @@ audio) for the import pipeline.
 | uv + justfile + llms.txt/llms-full.txt | ✅ | present |
 | Implementation honesty | ✅ | mocks confined to E2E harnesses + labeled inventory adapter modes |
 | Unicode safety | ✅ (after fix) | em dash removed from start.ps1 |
-| **DXT deprecation** | ❌ | `dxt/` folder still present — MCPB only since June bar |
+| **DXT deprecation** | ✅ (2026-07-19) | `dxt/` folder removed; `docs/INSTALLATION.md` and `docs/API_REFERENCE.md` updated to point at MCPB/Tauri instead |
 | **Webapp Directory Standard** (2026-07-11, v1.34) | ❌ | frontend is `web_sota/`, must be `webapp/` |
 | **Bun Adoption Standard** | ❌ | justfile + scripts use npm/npx; `package-lock.json` committed, no `bun.lock` |
 | **Biome replaces ESLint** | ⚠️ | Both configured; ESLint config + deps still present |
@@ -83,7 +83,7 @@ audio) for the import pipeline.
 | Priority | Item | Effort (AI-assisted) |
 |----------|------|----------------------|
 | ~~P1~~ ✅ | ~~ResoniteLink 0.9–0.13 compatibility pass~~ — **done in v1.1.0** (full rewrite to the real wire format + discovery + sync methods; live wire test against a running session still pending) | done 2026-07-11 |
-| **P1** | Remove `dxt/` (DXT retired fleet-wide) | minutes |
+| ~~P1~~ ✅ | ~~Remove `dxt/` (DXT retired fleet-wide)~~ — **done 2026-07-19** | done |
 | **P2** | `web_sota/` → `webapp/` rename (new fleet standard v1.34; touches justfile, start.ps1, gitignore, tauri/native scripts, docs) | half day, mechanical |
 | **P2** | Bun migration: `bun install`/`bunx` in justfile + scripts, commit `bun.lock`, delete `package-lock.json`; drop ESLint config/deps (Biome only) | half day |
 | **P2** | `RELEASE_TIER.md` (T3) + glama.json health metadata | minutes |

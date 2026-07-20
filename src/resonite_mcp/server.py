@@ -215,13 +215,24 @@ def is_resonite_running() -> bool:
     if os.name != "nt":
         return False
 
+    # Try psutil first for high reliability and avoidance of command encoding issues
     try:
-        # Simple tasklist check to avoid extra dependencies if psutil is missing
+        import psutil
+
+        for proc in psutil.process_iter(["name"]):
+            name = (proc.info.get("name") or "").lower()
+            if "resonite" in name:
+                return True
+    except Exception:
+        pass
+
+    # Fallback to tasklist with safe decoding and case insensitivity
+    try:
         tasklist_path = shutil.which("tasklist") or "tasklist"
         output = subprocess.check_output(  # noqa: S603 -- fixed args, no user input
             [tasklist_path, "/FI", "IMAGENAME eq Resonite.exe"], shell=False
-        ).decode()
-        return "Resonite.exe" in output
+        ).decode(errors="ignore")
+        return "resonite.exe" in output.lower()
     except Exception:
         return False
 

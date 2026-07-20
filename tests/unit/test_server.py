@@ -172,3 +172,49 @@ class TestResoniteTools:
 
             assert result["status"] == "success"
             assert "executed" in result["message"]
+
+
+class TestIsResoniteRunning:
+    """Test is_resonite_running function."""
+
+    @patch("os.name", "nt")
+    def test_is_resonite_running_psutil(self):
+        """Test detection via psutil."""
+        from resonite_mcp.server import is_resonite_running
+
+        mock_proc = MagicMock()
+        mock_proc.info = {"name": "Resonite.exe"}
+
+        with patch("psutil.process_iter", return_value=[mock_proc]):
+            assert is_resonite_running() is True
+
+    @patch("os.name", "nt")
+    def test_is_resonite_running_tasklist_fallback(self):
+        """Test fallback to tasklist when psutil fails or does not match."""
+        from resonite_mcp.server import is_resonite_running
+
+        with (
+            patch("psutil.process_iter", side_effect=Exception("psutil error")),
+            patch("subprocess.check_output") as mock_check_output,
+        ):
+            mock_check_output.return_value = b"Image Name                     PID Session Name        Session#    Mem Usage\r\n========================= ======== ================ =========== ============\r\nResonite.exe                 16856 Console                    1    265,492 K\r\n"
+            assert is_resonite_running() is True
+            mock_check_output.assert_called_once()
+
+    @patch("os.name", "nt")
+    def test_is_resonite_running_not_running(self):
+        """Test when resonite is not running."""
+        from resonite_mcp.server import is_resonite_running
+
+        with (
+            patch("psutil.process_iter", return_value=[]),
+            patch("subprocess.check_output") as mock_check_output,
+        ):
+            mock_check_output.return_value = b"INFO: No tasks are running which match the specified criteria.\r\n"
+            assert is_resonite_running() is False
+
+    @patch("os.name", "posix")
+    def test_is_resonite_running_non_windows(self):
+        """Test that it returns False on non-Windows systems."""
+        from resonite_mcp.server import is_resonite_running
+        assert is_resonite_running() is False

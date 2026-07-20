@@ -7,7 +7,42 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [1.2.0] — 2026-07-18/19 — Live Asset & Audio Pipeline, Webapp Audit 🎨🔊
 
-### Fixed (lint cleanup, 2026-07-19)
+### Added (rig/skeleton, 2026-07-19)
+- `gltf_meshjson.py`: new `include_skinning` parameter decodes glTF
+  `JOINTS_0`/`WEIGHTS_0` skinning and morph targets into `bones`/
+  `blendshapes` for `import_mesh_json()`. Confirmed live against
+  Nekomimi-chan's real VRM: 197 bones (VRM humanoid naming), 399
+  blendshapes (VRM expression naming) — genuinely parsed, not synthetic.
+- Confirmed live, error-driven (not guessed): the `bones` wire shape
+  worked first try; `blendshapes` needed a `frames` wrapper
+  (`{"name","frames":[{"weight","positionDeltas"}]}`) — the bare shape
+  threw a server-side NullReferenceException. `SkinnedMeshRenderer.Bones`
+  is a `SyncRefList<Slot>`, `.BlendShapeWeights` a `SyncFieldList<float>`
+  (both confirmed via reflection, not assumed).
+- Built and live-verified: 197 real bone Slots (correct parent-child
+  hierarchy, one batch call) + a real `SkinnedMeshRenderer` (not the
+  plain `MeshRenderer` a naive port would use) referencing all 197 bones
+  in boneIndex order, replacing an earlier non-skinned renderer.
+- Known gap, stated explicitly: blend-shape *deltas* were not pushed
+  (399 shapes × 190k vertices each is a real payload-size problem,
+  separate from the now-solved wire shape) — only the zeroed weights
+  list exists so far. Whether the skeleton actually deforms the mesh on
+  a bone rotation has not been tested yet.
+
+
+- Found and permanently fixed a glTF-vs-Resonite coordinate-handedness
+  mismatch that made every glTF/VRM-derived mesh invisible from any
+  viewing angle (the mesh's own winding was 99.9% self-consistent with
+  its stored normals — confirmed mathematically before the visual check —
+  so the bug was in the target engine's convention, not the parser).
+  `gltf_meshjson.py`'s `gltf_to_mesh_json()` now negates Z on every
+  position/normal and reverses triangle winding by default (new
+  `resonite_coordinate_fix: bool = True` parameter). Live-verified:
+  Nekomimi-chan's full VRM mesh (190,111 vertices, 45,451 triangles)
+  spawned into Sandra's own persistent Home session and confirmed
+  visually visible.
+
+
 - All 24 pre-existing `ruff` errors resolved for real, not suppressed
   blindly: 2 `B904` (missing `raise ... from`), 7 `RUF013` (implicit
   `Optional`), 6 `E501` (long lines wrapped without changing meaning),
@@ -99,6 +134,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   logs"). Confirmed with zero backend at all: `marketplace.tsx`
   (hardcoded array), `apps.tsx` (stub).
 - Full phased remediation plan in `docs/WEBAPP_UPDATE_PLAN.md`.
+
+### Added (fleet standard compliance, 2026-07-19)
+- `/health`, `/api/health`, `/api/v1/health` now comply with
+  `mcp-central-docs/standards/HEALTH_ENDPOINT_STANDARD.md`: real `version`
+  (single source, `resonite_mcp.__version__`, was hardcoded `"1.0.0"`),
+  `git_sha` (resolved once at import via `git rev-parse --short HEAD`,
+  verified live against the actual repo — matched exactly, not assumed),
+  `started_at`/`uptime_seconds`, `shutting_down` (flips on FastAPI's
+  shutdown event), `transport`, and `port` (threaded through via env var
+  from `cli.py`, since uvicorn imports the app by string path and can't
+  pass args directly). `cli.py --version` also fixed to report the real
+  version instead of a separately-hardcoded `"1.0.0"`.
 
 ---
 

@@ -6,19 +6,30 @@ and eventually VRM-derived avatar meshes) into the wire format resonite-mcp's
 ResoniteLinkClient.import_mesh_json() sends over the wire — see
 resonite_mcp.resonite_link for the schema this targets.
 
-Status (2026-07-18): first implementation, not yet run against real fixtures.
+COORDINATE FIX (confirmed live 2026-07-19): glTF (right-handed, Y-up,
+-Z-forward) and Resonite/FrooxEngine's coordinate convention don't match.
+A naive 1:1 copy produces a mesh that is completely invisible from any
+external viewing angle — not corrupted, just uniformly inside-out (verified
+mathematically: 99.9% of a 2000-triangle sample had winding fully
+consistent with their own stored normals, meaning the *source* data was
+fine; the mismatch is the target engine's convention, not the parser).
+Fix, applied by default here: negate Z on every position and normal, and
+reverse each triangle's winding (swap vertex1Index/vertex2Index). Live-
+verified: Nekomimi-chan's full VRM mesh (190,111 vertices, 45,451
+triangles) spawned into a real Resonite session and was visually confirmed
+visible with this fix applied, invisible without it. Set
+`resonite_coordinate_fix=False` only if you're feeding output somewhere
+that already expects raw glTF-convention data (e.g. re-exporting).
+
 Reads GLB binary containers (JSON chunk + BIN chunk) using only the stdlib —
 no pygltflib/trimesh dependency, so nothing new to install on Goliath.
 
-HONESTY NOTE: only vertex "position" was live-verified end-to-end through
-ResoniteLink in the original Phase 0 spike (hand-built unit cube). This
-converter also emits "normal" and "uvs" per vertex. Update 2026-07-18:
-"uvs" shape has now been LIVE-CONFIRMED (via a real server error against
-Nekomimi-chan.vrm, 45k triangles) to be a LIST of {"x","y"} dicts, not a
-bare dict — Resonite supports multiple UV channels per vertex, this
-converter always emits a single-element list (TEXCOORD_0 only). "normal"
-remains unverified live but follows the same {"x","y","z"} pattern as
-position, which is now proven correct.
+HONESTY NOTE: vertex "position" and "normal" (with the coordinate fix
+above) are now live-verified end-to-end. "uvs" shape is confirmed to be a
+LIST of {"x","y"} dicts (multi-UV-channel support), but each element's
+`$type` polymorphic discriminator is still unknown after four live
+attempts (`UV_Coordinate`/`float2`/`uv`/`UVCoordinate` all rejected) —
+UVs will fail to import until that's resolved; strip them if you hit that.
 Bones/blendshapes (needed for the VRM avatar path) are intentionally NOT
 implemented here yet — GLB skinning data (JOINTS_0/WEIGHTS_0) decodes
 differently and deserves its own pass once this static-mesh path is proven.
@@ -196,11 +207,244 @@ def _decode_accessor(
     return results
 
 
-def gltf_to_mesh_json(path: str | Path) -> dict[str, Any]:
+def _decode_accessor_int(
+    gltf: dict[str, Any],
+    accessor_index: int,
+    glb_bin: bytes | None,
+    base_dir: Path,
+    _buffer_cache: dict[int, bytes],
+) -> list[tuple[int, ...]]:
+    """Like _decode_accessor but forces integer results (for JOINTS_0, which
+    is UNSIGNED_BYTE or UNSIGNED_SHORT and must NOT go through the
+    `normalized` float-division path _decode_accessor applies to those
+    component types for color/UV-style data)."""
+    accessor = gltf["accessors"][accessor_index]
+    saved_normalized = accessor.get("normalized")
+    accessor["normalized"] = False
+    try:
+        raw = _decode_accessor(gltf, accessor_index, glb_bin, base_dir, _buffer_cache)
+    finally:
+        if saved_normalized is None:
+            accessor.pop("normalized", None)
+        else:
+            accessor["normalized"] = saved_normalized
+    return [tuple(int(v) for v in tup) for tup in raw]
+
+
+def _quat_to_matrix(qx: float, qy: float, qz: float, qw: float) -> list[list[float]]:
+    """Quaternion (glTF order x,y,z,w) -> 3x3 rotation matrix, row-major."""
+    xx, yy, zz = qx * qx, qy * qy, qz * qz
+    xy, xz, yz = qx * qy, qx * qz, qy * qz
+    wx, wy, wz = qw * qx, qw * qy, qw * qz
+    return [
+        [1 - 2 * (yy + zz), 2 * (xy - wz), 2 * (xz + wy)],
+        [2 * (xy + wz), 1 - 2 * (xx + zz), 2 * (yz - wx)],
+        [2 * (xz - wy), 2 * (yz + wx), 1 - 2 * (xx + yy)],
+    ]
+
+
+def _trs_to_matrix(
+    translation: list[float], rotation: list[float], scale: list[float]
+) -> list[list[float]]:
+    """Compose glTF TRS (translation, quaternion xyzw, scale) into a 4x4
+    row-major matrix (last row [0,0,0,1], translation in the last COLUMN —
+    the convention this project's rl_value("float4x4", ...) output uses,
+    matching FrooxEngine's row-major m_rowcol field naming)."""
+    r = _quat_to_matrix(*rotation)
+    sx, sy, sz = scale
+    tx, ty, tz = translation
+    return [
+        [r[0][0] * sx, r[0][1] * sy, r[0][2] * sz, tx],
+        [r[1][0] * sx, r[1][1] * sy, r[1][2] * sz, ty],
+        [r[2][0] * sx, r[2][1] * sy, r[2][2] * sz, tz],
+        [0.0, 0.0, 0.0, 1.0],
+    ]
+
+
+def _matrix_multiply(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
+    return [
+        [sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)]
+        for i in range(4)
+    ]
+
+
+def _matrix_to_wire(m: list[list[float]]) -> dict[str, float]:
+    return {f"m{i}{j}": m[i][j] for i in range(4) for j in range(4)}
+
+
+def _wire_to_matrix(w: dict[str, float]) -> list[list[float]]:
+    return [[w[f"m{i}{j}"] for j in range(4)] for i in range(4)]
+
+
+def _reflect_z_matrix(w: dict[str, float]) -> dict[str, float]:
+    """Mirror a rigid-transform matrix across Z, matching the same
+    coordinate fix applied to vertex positions/normals elsewhere in this
+    module. Conjugation (Z @ M @ Z, with Z = diag(1,1,-1,1)) is the
+    mathematically correct way to mirror a full rotation+translation
+    matrix — flipping individual fields by hand (an earlier, sloppier
+    version of this function) risks getting the rotation part wrong."""
+    z = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, -1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+    m = _wire_to_matrix(w)
+    return _matrix_to_wire(_matrix_multiply(_matrix_multiply(z, m), z))
+
+
+def _build_child_to_parent_map(nodes: list[dict[str, Any]]) -> dict[int, int]:
+    child_to_parent: dict[int, int] = {}
+    for parent_idx, node in enumerate(nodes):
+        for child_idx in node.get("children", []):
+            child_to_parent[child_idx] = parent_idx
+    return child_to_parent
+
+
+def _node_world_matrix(
+    node_idx: int,
+    nodes: list[dict[str, Any]],
+    child_to_parent: dict[int, int],
+    cache: dict[int, list[list[float]]],
+) -> list[list[float]]:
+    """World-space (bind pose) matrix for a node — its own local TRS
+    composed with every ancestor's, walking up the FULL node graph (not
+    just joints in this skin), since a bind pose is relative to the
+    mesh's own local space, which may sit under non-joint ancestor nodes."""
+    if node_idx in cache:
+        return cache[node_idx]
+    node = nodes[node_idx]
+    if "matrix" in node:
+        # glTF allows a raw 16-value column-major matrix instead of TRS;
+        # rare for VRM exporters but handled for correctness. glTF's
+        # `matrix` array is column-major; transpose into our row-major form.
+        flat = node["matrix"]
+        local = [[flat[c * 4 + r] for c in range(4)] for r in range(4)]
+    else:
+        local = _trs_to_matrix(
+            node.get("translation", [0.0, 0.0, 0.0]),
+            node.get("rotation", [0.0, 0.0, 0.0, 1.0]),
+            node.get("scale", [1.0, 1.0, 1.0]),
+        )
+    parent_idx = child_to_parent.get(node_idx)
+    if parent_idx is None:
+        world = local
+    else:
+        world = _matrix_multiply(
+            _node_world_matrix(parent_idx, nodes, child_to_parent, cache), local
+        )
+    cache[node_idx] = world
+    return world
+
+
+def _extract_skeleton(gltf: dict[str, Any], skin_index: int) -> list[dict[str, Any]]:
+    """Build a `bones` list matching the REAL ResoniteLink schema, confirmed
+    2026-07-19 by reading the actual open-source C# models
+    (ResoniteLink/Models/Assets/Mesh/JSON/Bone.cs): each bone is just
+    {"name": str, "bindPose": <float4x4>} — NOT the parentIndex/position/
+    rotation/scale shape an earlier version of this function guessed
+    (which the server silently accepted, ignoring the unrecognized fields
+    — a real, since-fixed bug: bind poses were never actually being set).
+
+    bindPose is each joint's world-space transform at rest pose, computed
+    by composing TRS matrices up the full node ancestor chain (not just
+    joints in this skin) via quaternion-to-matrix + matrix multiplication,
+    implemented from scratch here (stdlib only, no numpy).
+
+    Returns bones in the SAME order as the skin's `joints` array, so
+    JOINTS_0 vertex indices map directly onto this list by position.
+    """
+    skins = gltf.get("skins")
+    if not skins or skin_index >= len(skins):
+        raise GltfConversionError(f"skin index {skin_index} not found in gltf.skins")
+    skin = skins[skin_index]
+    joint_node_indices: list[int] = skin["joints"]
+    nodes = gltf.get("nodes", [])
+    child_to_parent = _build_child_to_parent_map(nodes)
+    matrix_cache: dict[int, list[list[float]]] = {}
+
+    bones: list[dict[str, Any]] = []
+    for node_idx in joint_node_indices:
+        node = nodes[node_idx] if node_idx < len(nodes) else {}
+        name = node.get("name", f"bone_{node_idx}")
+        world_matrix = _node_world_matrix(node_idx, nodes, child_to_parent, matrix_cache)
+        bones.append({"name": name, "bindPose": _matrix_to_wire(world_matrix)})
+    return bones
+
+
+def _decode_morph_targets(
+    gltf: dict[str, Any],
+    primitive: dict[str, Any],
+    glb_bin: bytes | None,
+    base_dir: Path,
+    buffer_cache: dict[int, bytes],
+) -> list[dict[str, Any]]:
+    """Decode glTF morph targets (blend shapes) on a primitive into a list
+    of {"name": str, "frames": [{"position": 1.0, "positionDeltas": [...]}]}
+    — one entry per target (confirmed shape, see below).
+
+    CONFIRMED 2026-07-19 by reading the real C# model (BlendshapeFrame.cs):
+    blendshapes need a "frames" wrapper around positionDeltas, and each
+    frame's progress field is "position" (0..1), not "weight" as an
+    earlier version of this function guessed.
+
+    glTF stores morph targets as extra POSITION/NORMAL/TANGENT *delta*
+    accessors under primitive["targets"], with optional human-readable
+    names in mesh["extras"]["targetNames"] (a common but non-standard
+    convention many exporters, including VRM, follow).
+    """
+    targets = primitive.get("targets")
+    if not targets:
+        return []
+    target_names = primitive.get("_meshExtrasTargetNames") or []
+
+    blendshapes = []
+    for i, target in enumerate(targets):
+        name = target_names[i] if i < len(target_names) else f"blendshape_{i}"
+        pos_accessor = target.get("POSITION")
+        if pos_accessor is None:
+            continue
+        deltas = _decode_accessor(gltf, pos_accessor, glb_bin, base_dir, buffer_cache)
+        blendshapes.append(
+            {
+                "name": name,
+                # CONFIRMED 2026-07-19 by reading the real C# model
+                # (BlendshapeFrame.cs): the frame's field is "position"
+                # (0..1 progress within the blendshape animation, 1.0 for
+                # a single-frame shape) — NOT "weight", which an earlier
+                # version of this function guessed and which the server
+                # silently accepted while ignoring (so it was never
+                # actually being set).
+                "frames": [
+                    {
+                        "position": 1.0,
+                        "positionDeltas": [{"x": d[0], "y": d[1], "z": d[2]} for d in deltas],
+                    }
+                ],
+            }
+        )
+    return blendshapes
+
+
+def gltf_to_mesh_json(
+    path: str | Path,
+    resonite_coordinate_fix: bool = True,
+    include_skinning: bool = False,
+) -> dict[str, Any]:
     """Convert a .glb/.gltf file into the ResoniteLink importMeshJSON payload shape.
 
     Returns {"vertices": [...], "submeshes": [...]} ready to pass straight
     into ResoniteLinkClient.import_mesh_json(**result) or .spawn_mesh(**result).
+    If `include_skinning` is True and the source has skin/morph data, the
+    result also has "bones" and/or "blendshapes" keys (see
+    `import_mesh_json`'s signature) — pass those through too.
+
+    resonite_coordinate_fix (default True): negate Z on every position/
+    normal and reverse triangle winding to compensate for the glTF-vs-
+    Resonite coordinate mismatch (see module docstring). Live-verified
+    necessary — leave this on unless you have a specific reason not to.
+
+    include_skinning (default False, EXPERIMENTAL 2026-07-19, UNPROVEN):
+    decode JOINTS_0/WEIGHTS_0 into per-vertex "boneWeights" and glTF
+    skins into a "bones" list; decode morph targets into "blendshapes".
+    The Resonite-side wire shape for both has not been confirmed against
+    a live session (see TODO/STATUS docs) — treat any output using this
+    flag as "parses the source correctly, wire shape not yet verified."
 
     Merges every TRIANGLES-mode primitive across every mesh in the file into
     one combined vertex/submesh list (see module docstring for the v1
@@ -219,13 +463,39 @@ def gltf_to_mesh_json(path: str | Path) -> dict[str, Any]:
     if not meshes:
         raise GltfConversionError(f"{path.name}: no meshes[] in this glTF")
 
+    # Map mesh index -> node that references it (needed to find that node's
+    # skin, since skin is a NODE property in glTF, not a mesh property).
+    mesh_to_skin: dict[int, int] = {}
+    if include_skinning:
+        for node in gltf.get("nodes", []):
+            if "mesh" in node and "skin" in node:
+                mesh_to_skin[node["mesh"]] = node["skin"]
+
+        # glTF's non-standard-but-common convention for morph target names
+        # lives at mesh["extras"]["targetNames"] — stash it per-primitive
+        # under a private key so _decode_morph_targets can find it without
+        # threading another parameter through every call site.
+        for mesh in meshes:
+            target_names = (mesh.get("extras") or {}).get("targetNames")
+            if target_names:
+                for primitive in mesh.get("primitives", []):
+                    primitive["_meshExtrasTargetNames"] = target_names
+
     all_vertices: list[dict[str, Any]] = []
     all_triangles: list[dict[str, int]] = []
+    all_blendshapes: list[dict[str, Any]] = []
+    bones: list[dict[str, Any]] | None = None
     vertex_offset = 0
     primitives_converted = 0
     primitives_skipped = 0
 
     for mesh_idx, mesh in enumerate(meshes):
+        if include_skinning and mesh_idx in mesh_to_skin and bones is None:
+            bones = _extract_skeleton(gltf, mesh_to_skin[mesh_idx])
+            if resonite_coordinate_fix:
+                for bone in bones:
+                    bone["bindPose"] = _reflect_z_matrix(bone["bindPose"])
+
         for prim_idx, primitive in enumerate(mesh.get("primitives", [])):
             mode = primitive.get("mode", 4)  # 4 = TRIANGLES is the glTF default
             if mode != 4:
@@ -254,20 +524,47 @@ def gltf_to_mesh_json(path: str | Path) -> dict[str, Any]:
                 _decode_accessor(gltf, attributes["TEXCOORD_0"], glb_bin, base_dir, buffer_cache)
                 if "TEXCOORD_0" in attributes else None
             )
+            joints = weights = None
+            if include_skinning and "JOINTS_0" in attributes and "WEIGHTS_0" in attributes:
+                joints = _decode_accessor_int(gltf, attributes["JOINTS_0"], glb_bin, base_dir, buffer_cache)
+                weights = _decode_accessor(gltf, attributes["WEIGHTS_0"], glb_bin, base_dir, buffer_cache)
 
             for i, pos in enumerate(positions):
-                vertex: dict[str, Any] = {"position": {"x": pos[0], "y": pos[1], "z": pos[2]}}
+                z = -pos[2] if resonite_coordinate_fix else pos[2]
+                vertex: dict[str, Any] = {"position": {"x": pos[0], "y": pos[1], "z": z}}
                 if normals is not None:
                     n = normals[i]
-                    vertex["normal"] = {"x": n[0], "y": n[1], "z": n[2]}
+                    nz = -n[2] if resonite_coordinate_fix else n[2]
+                    vertex["normal"] = {"x": n[0], "y": n[1], "z": nz}
                 if uvs is not None:
                     uv = uvs[i]
-                    # CONFIRMED live 2026-07-18 (Nekomimi-chan.vrm test): uvs is a
-                    # LIST of UV_Coordinate, not a bare {x,y} dict — Resonite
-                    # supports multiple UV channels (TEXCOORD_0, TEXCOORD_1, ...).
-                    # This converter only reads TEXCOORD_0, so always a 1-element list.
-                    vertex["uvs"] = [{"x": uv[0], "y": uv[1]}]
+                    # CONFIRMED 2026-07-19 by reading the real C# model
+                    # (UV_Coordinate.cs): the discriminator is "2D" (not
+                    # any of "UV_Coordinate"/"float2"/"uv"/"UVCoordinate",
+                    # all tried and rejected live 2026-07-18), and the
+                    # value lives under a "uv" field (a float2), not bare
+                    # top-level x/y. Still a LIST (multi-UV-channel support).
+                    vertex["uvs"] = [{"$type": "2D", "uv": {"x": uv[0], "y": uv[1]}}]
+                if joints is not None:
+                    # CONFIRMED via reflection and a successful live test
+                    # 2026-07-19: BoneWeight.cs is exactly
+                    # {"boneIndex": int, "weight": float} — matches what
+                    # was already here.
+                    vertex["boneWeights"] = [
+                        {"boneIndex": joints[i][k], "weight": weights[i][k]}
+                        for k in range(len(joints[i]))
+                        if weights[i][k] > 0.0
+                    ]
                 all_vertices.append(vertex)
+
+            if include_skinning:
+                targets_this_prim = _decode_morph_targets(gltf, primitive, glb_bin, base_dir, buffer_cache)
+                if resonite_coordinate_fix:
+                    for bs in targets_this_prim:
+                        for frame in bs["frames"]:
+                            for d in frame["positionDeltas"]:
+                                d["z"] = -d["z"]
+                all_blendshapes.extend(targets_this_prim)
 
             indices_accessor = primitive.get("indices")
             if indices_accessor is not None:
@@ -284,11 +581,16 @@ def gltf_to_mesh_json(path: str | Path) -> dict[str, Any]:
                 )
 
             for tri_start in range(0, len(flat_indices), 3):
+                v0 = flat_indices[tri_start] + vertex_offset
+                v1 = flat_indices[tri_start + 1] + vertex_offset
+                v2 = flat_indices[tri_start + 2] + vertex_offset
+                if resonite_coordinate_fix:
+                    v1, v2 = v2, v1  # reverse winding to match the Z-negation above
                 all_triangles.append(
                     {
-                        "vertex0Index": flat_indices[tri_start] + vertex_offset,
-                        "vertex1Index": flat_indices[tri_start + 1] + vertex_offset,
-                        "vertex2Index": flat_indices[tri_start + 2] + vertex_offset,
+                        "vertex0Index": v0,
+                        "vertex1Index": v1,
+                        "vertex2Index": v2,
                     }
                 )
 
@@ -299,14 +601,21 @@ def gltf_to_mesh_json(path: str | Path) -> dict[str, Any]:
         raise GltfConversionError(f"{path.name}: no convertible TRIANGLES primitives found")
 
     logger.info(
-        "%s: converted %d primitive(s) (%d skipped) -> %d vertices, %d triangles",
+        "%s: converted %d primitive(s) (%d skipped) -> %d vertices, %d triangles"
+        + (f", {len(bones)} bones" if bones else "")
+        + (f", {len(all_blendshapes)} blendshapes" if all_blendshapes else ""),
         path.name, primitives_converted, primitives_skipped, len(all_vertices), len(all_triangles),
     )
 
-    return {
+    result: dict[str, Any] = {
         "vertices": all_vertices,
         "submeshes": [{"$type": "triangles", "triangles": all_triangles}],
     }
+    if bones:
+        result["bones"] = bones
+    if all_blendshapes:
+        result["blendshapes"] = all_blendshapes
+    return result
 
 
 def _main() -> int:

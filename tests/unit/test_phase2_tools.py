@@ -57,3 +57,29 @@ class TestLiveSmokeHelpers:
             report = await run_live_smoke(work_dir=tmp_path / "live")
         assert report["success"] is False
         assert report["mode"] == "http_live"
+
+
+class TestContactsEndpoint:
+    """Test /api/contacts endpoint."""
+
+    def test_get_contacts_success(self, api_client: TestClient):
+        """Test successful contacts fetch."""
+        mock_contacts = [{"id": "U-sandra", "contactUsername": "sandra"}]
+        with patch("resonite_mcp.tools.rest_api.resonite_friends_list", new=AsyncMock(return_value={
+            "status": "ok",
+            "friends": mock_contacts,
+            "count": 1
+        })):
+            response = api_client.get("/api/contacts")
+            assert response.status_code == 200
+            assert response.json() == mock_contacts
+
+    def test_get_contacts_unauthenticated(self, api_client: TestClient):
+        """Test contacts fetch when not authenticated."""
+        with patch("resonite_mcp.tools.rest_api.resonite_friends_list", new=AsyncMock(return_value={
+            "status": "error",
+            "detail": "Not authenticated. Call resonite_rest_login first."
+        })):
+            response = api_client.get("/api/contacts")
+            assert response.status_code == 401
+            assert "Not authenticated" in response.json()["detail"]

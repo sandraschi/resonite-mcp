@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { cn } from "@/common/utils";
 import {
 	Activity,
 	Archive,
 	ChevronLeft,
 	ChevronRight,
+	ChevronDown,
 	Cloud,
 	Cpu,
 	FlaskConical,
@@ -108,6 +110,31 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 		grouped[item.section].push(item);
 	}
 
+	// Dynamic initial state: expand any section containing the active path
+	const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+		const initial: Record<string, boolean> = {
+			main: true,
+			world: false,
+			identity: false,
+			systems: false,
+			social: false,
+			dev: false,
+		};
+		for (const item of navItems) {
+			if (location.pathname === item.href) {
+				initial[item.section] = true;
+			}
+		}
+		return initial;
+	});
+
+	const toggleSection = (sectionId: string) => {
+		setExpandedSections((prev) => ({
+			...prev,
+			[sectionId]: !prev[sectionId],
+		}));
+	};
+
 	return (
 		<aside
 			className={cn(
@@ -138,49 +165,66 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 				className="flex-1 overflow-y-auto py-3 space-y-4 px-2 scrollbar-none"
 				aria-label="Site navigation"
 			>
-				{Object.entries(grouped).map(([sec, items]) => (
-					<div key={sec} className="space-y-0.5">
-						{!collapsed && (
-							<p className="px-3 pb-1 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-50">
-								{sections[sec]}
-							</p>
-						)}
-						{items.map((item) => {
-							const active = location.pathname === item.href;
-							const Icon = item.icon;
-							return (
-								<Link
-									key={item.href}
-									to={item.href}
-									title={collapsed ? item.label : undefined}
-									aria-current={active ? "page" : undefined}
-									className={cn(
-										"group relative flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300",
-										active
-											? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30"
-											: "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground",
-										collapsed ? "justify-center" : "gap-3",
-									)}
+				{Object.entries(grouped).map(([sec, items]) => {
+					const isExpanded = expandedSections[sec] || collapsed;
+
+					return (
+						<div key={sec} className="space-y-0.5">
+							{!collapsed && (
+								<button
+									onClick={() => toggleSection(sec)}
+									className="w-full flex items-center justify-between px-3 pb-1.5 pt-1 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-50 hover:opacity-90 hover:text-white transition-all duration-200 text-left"
 								>
-									<Icon
+									<span>{sections[sec]}</span>
+									<ChevronDown
 										className={cn(
-											"h-4.5 w-4.5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110",
-											active && "text-indigo-400",
+											"h-3.5 w-3.5 transition-transform duration-200",
+											expandedSections[sec] ? "rotate-0" : "-rotate-90"
 										)}
-										aria-hidden="true"
 									/>
-									{!collapsed && <span>{item.label}</span>}
-									{/* Collapsed tooltip */}
-									{collapsed && (
-										<span className="absolute left-full ml-2 hidden rounded-md bg-background border border-border px-2 py-1 text-xs text-foreground group-hover:block z-50 whitespace-nowrap shadow-2xl glass animate-in fade-in slide-in-from-left-1">
-											{item.label}
-										</span>
-									)}
-								</Link>
-							);
-						})}
-					</div>
-				))}
+								</button>
+							)}
+							{isExpanded && (
+								<div className="space-y-0.5 animate-in fade-in slide-in-from-top-1 duration-200">
+									{items.map((item) => {
+										const active = location.pathname === item.href;
+										const Icon = item.icon;
+										return (
+											<Link
+												key={item.href}
+												to={item.href}
+												title={collapsed ? item.label : undefined}
+												aria-current={active ? "page" : undefined}
+												className={cn(
+													"group relative flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300",
+													active
+														? "bg-indigo-500/15 text-indigo-300 border border-indigo-500/30"
+														: "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground",
+													collapsed ? "justify-center" : "gap-3",
+												)}
+											>
+												<Icon
+													className={cn(
+														"h-4.5 w-4.5 flex-shrink-0 transition-transform duration-300 group-hover:scale-110",
+														active && "text-indigo-400",
+													)}
+													aria-hidden="true"
+												/>
+												{!collapsed && <span>{item.label}</span>}
+												{/* Collapsed tooltip */}
+												{collapsed && (
+													<span className="absolute left-full ml-2 hidden rounded-md bg-background border border-border px-2 py-1 text-xs text-foreground group-hover:block z-50 whitespace-nowrap shadow-2xl glass animate-in fade-in slide-in-from-left-1">
+														{item.label}
+													</span>
+												)}
+											</Link>
+										);
+									})}
+								</div>
+							)}
+						</div>
+					);
+				})}
 			</nav>
 
 			{/* Collapse toggle */}

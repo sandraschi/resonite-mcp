@@ -610,7 +610,7 @@ const resoniteAPI = {
 - Inventory management
 - Plugin system
 - HTTP REST API
-- Claude Desktop DXT packaging
+- Claude Desktop MCPB packaging (DXT retired fleet-wide, mid-2026)
 
 ---
 

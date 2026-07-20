@@ -56,7 +56,7 @@ export function Contacts() {
 		refetchInterval: 60_000,
 	});
 
-	const contacts = (data ?? []).filter(
+	const contacts = (Array.isArray(data) ? data : []).filter(
 		(c) =>
 			(tab === "all" ||
 				c.userStatus?.onlineStatus?.toLowerCase() === "online") &&

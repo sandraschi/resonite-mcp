@@ -109,6 +109,163 @@ actually runs. Grepped both files directly to confirm this, not assumed.
 - `apps.tsx`: recommend cutting or repurposing as a real "connected fleet
   servers" status page.
 
+## Phase A progress (2026-07-19)
+
+- [x] Fixed `dashboard.tsx`/`status.tsx`'s wrong `/api/resonite/launch` and
+      `/api/start` → real `/api/resonite/start`.
+- [x] Found and fixed a separate real bug while in there: Resonite's Steam
+      launch URI was `steam://rungameid/251980` (missing a digit) —
+      confirmed the real App ID (`2519830`) against SteamDB and the
+      official store page.
+- [x] Replaced fabricated "65 tools" (two places in `dashboard.tsx`) with
+      an honest "not live-counted yet" state.
+- [x] Removed `status.tsx`'s hardcoded mock log block (own code comment
+      admitted it was fake) — now points to the real Logging page.
+- [x] Resolved the duplicate `/api/sessions` route — moved the shadowed
+      cloud-API proxy to `/api/resonite/cloud-sessions[/{id}]` so it's
+      actually reachable.
+- [x] `Logging.tsx` decision made: **ported**, not retired. New
+      `src/resonite_mcp/activity_log.py` module (the same `ActivityLog`
+      class, now actually importable from the real server), wired
+      `/api/logs`, `/api/logs/stats`, `/api/logs/export`,
+      `DELETE /api/logs` into `http_server.py`. Verified functionally
+      (not just import-clean): called `get_logs()`/`logs_stats()`
+      directly, confirmed the startup log entry flows through both.
+- [x] Fixed stale "v0.8.x"/"port 4242 default" claims in `http_server.py`'s
+      comments/docstrings and the FastAPI app's own declared version
+      (was `0.8.0`, now `1.2.0`) to match the real 0.13.1 protocol.
+- [x] Cleaned up a confusing double-definition of `RLWriteRequest` (same
+      class name, two different shapes, one for `/rl/field` one for
+      `/rl/world/write-field`) — renamed the second to
+      `RLWorldWriteFieldRequest`. Worked correctly before due to Python's
+      sequential class binding, but was a real fragility risk.
+- [x] `resonite_link.tsx`: added a real "Discover Sessions" flow — calls
+      `/rl/discover`, lists real sessions, click one to auto-fill host/port.
+      Removed the meaningless hardcoded port default (`"37166"`, no basis
+      at all) and replaced with an honest empty state + hint placeholder.
+      Fixed the "Protocol v0.8.3" header claim to v0.13.1. Updated the
+      Quick Reference table to include `/rl/discover` and clarify
+      `/rl/field`'s real write requirement. Verified: `ruff`/`biome` both
+      clean on every touched file, `tsc --noEmit` shows no new errors.
+
+**Still open from Phase A**: `world.tsx`/`protoflux.tsx` could use the
+same discover-first treatment (currently only `resonite_link.tsx` has
+it); `integrations.tsx`'s wrong paths + missing request body;
+`inventory.tsx`/`io.tsx`'s wrong list-fetch path; deciding
+`web_sota/backend/server.py`'s fate (recommend deleting now that
+`Logging.tsx`'s real logic has been ported out of it).
+
+### Phase A, round 3 (2026-07-19)
+
+- [x] **Found a genuinely worse bug in `world.tsx`'s Inspector than a
+      wrong path**: its inline-edit fields (slot name, position, scale)
+      called `/rl/world/write-field`, which — per tonight's own earlier
+      finding — is *guaranteed* to always fail (`write_field()`
+      deliberately raises with guidance, it isn't a real capability).
+      Worse: the Inspector had **no error display at all**, so every
+      edit silently did nothing with zero user feedback.
+- [x] **Real fix, not a workaround**: `resonite_link.py` already has a
+      working `update_slot()` method (used throughout tonight's
+      Nekomimi-chan debugging to move/rotate real slots) that was never
+      exposed via the webapp. Added `PATCH /rl/slot/{slot_id}` wired to
+      it, rewired the Inspector to call that instead, and added real
+      error display (was completely missing before). Position/Scale
+      edits now use proper partial updates (merge into the existing
+      vector, not full replacement). The "Active" toggle was removed
+      rather than wired to a guessed field name — the correct protocol
+      key for slot active-state wasn't confirmed, and after tonight's
+      UV-discriminator experience, guessing at another undocumented
+      field name isn't the right call; flagging as a known gap rather
+      than silently keeping broken functionality.
+      Verified: `ruff`/import-smoke on `http_server.py` (88 routes now),
+      `biome --write` + manual `type="button"` fixes on `world.tsx`
+      (6→3 remaining, all pre-existing drag-drop a11y issues
+      deliberately left alone), `tsc --noEmit` shows no new errors.
+
+### Phase A, round 4 (2026-07-19) — `integrations.tsx` + `inventory.tsx`
+
+- [x] **`integrations.tsx`**: same class of bug as before — wrong paths
+      (`/api/integrations/worldlabs/import` → real
+      `/api/resonite/integrations/worldlabs`) AND missing request bodies
+      the real endpoints require (`splat_url`, `object_name`,
+      `avatar_path` are all mandatory fields, previously never sent).
+      Added real input fields for each, wired to the correct bodies.
+      Also removed a fully fabricated "Fleet Discovery Active" card
+      claiming `worldlabs-mcp`/`blender-mcp`/`unity3d-mcp` are all
+      "active" — there's no actual discovery mechanism behind it at all;
+      replaced with an honest "not auto-detected" note.
+- [x] **`inventory.tsx` — deeper than a path fix.** Traced the real
+      backend (`tools/inventory.py`) and found the entire subsystem
+      (list/spawn/upload/delete/share) is built on an OSC round-trip
+      protocol requiring a custom in-world ProtoFlux responder that isn't
+      confirmed to exist anywhere — a fundamentally different, much less
+      mature mechanism than the real, working ResoniteLink capabilities
+      built earlier tonight. On top of that, found and fixed a **real
+      crash bug** affecting 5 of 7 inventory functions: `http_functions.py`
+      called them with positional arguments, but the actual functions
+      (in `tools/inventory.py`) each take a single Pydantic model —
+      guaranteed `TypeError` on every call, before ever reaching the
+      (also-questionable) OSC logic. Fixed all 5 call sites to construct
+      the correct model. **Verified functionally, not just import-clean**:
+      called `resonite_inventory_list_http()` directly — no more crash,
+      returns the honest `{"status": "warning", "message": "Timed out
+      waiting for Resonite..."}` response, which is the correct behavior
+      when no responder exists.
+      **Found something deeper while verifying**: the OSC send itself
+      failed separately (`Infered arg_value type is not supported`) —
+      the code passes a raw Python dict as an OSC argument value, which
+      OSC's wire format doesn't support. This means `list`/`spawn`/
+      `upload`/`share` (all of which pass dicts) are broken at the
+      protocol-serialization layer too, independent of whether any
+      responder exists. **Did not fix this** — it's real redesign work
+      (e.g. JSON-encode the dict as a string arg, or split into
+      primitive OSC args), correctly out of scope for a Phase A path-fix
+      pass; documented here so it isn't lost.
+      Rewired `inventory.tsx`'s fetch to the correct (now non-crashing)
+      endpoint and response shape, and replaced the fabricated "Neural
+      Storage Nexus" empty-state copy with the honest warning message
+      surfaced from the backend.
+      Verified: `ruff` clean on `http_functions.py`, `biome`+`tsc` clean
+      on `inventory.tsx` (12 pre-existing button-type issues fixed via a
+      safe bulk regex pass; 3 structural a11y issues on the record-grid's
+      clickable-div pattern left alone, pre-existing, not part of this fix).
+
+### Phase A round 5 (2026-07-19) — visual polish: hero + contrast
+
+Sandra asked to avoid tiny/low-contrast fonts and improve the dashboard
+hero specifically.
+
+- [x] **`dashboard.tsx` hero rebuilt** — it previously had none of the
+      visual treatment every other page uses (no icon box, no glow
+      backdrop, no gradient title). Brought it in line: icon box, glow
+      blur, `text-3xl font-black tracking-tighter` title matching
+      `resonite_link.tsx`/`world.tsx`/`inventory.tsx`'s headers. Status
+      badges changed from plain muted text to actual pill chips
+      (background + border), which is both more legible and more
+      visually prominent.
+- [x] **Found and fixed a systemic contrast bug**: several places stacked
+      `text-muted-foreground` *and* `opacity-50` on the same element —
+      double-dimming already-muted text past comfortable reading
+      contrast, on top of already-tiny sizes (8px/9px/10px). Fixed in
+      `dashboard.tsx` (KPI card captions, System Status panel, LLM
+      provider row, "Active" pill) and `status.tsx` (session ID hash,
+      session stat row, "LIVE" badge) — sizes bumped to a 10px floor,
+      opacity stacking removed, colors bumped one step brighter
+      (`text-slate-400`/`text-indigo-300`/etc. instead of muted+50%).
+- [x] Verified: `biome`+`tsc` clean on both files (pre-existing,
+      unrelated `useExhaustiveDependencies`/`noArrayIndexKey` issues on
+      `dashboard.tsx` left alone, same policy as every other file
+      tonight).
+
+**Not done — flagging as a real, separate scope**: the same
+tiny-text/opacity-stacking pattern (`text-[8px]`/`text-[9px]` combined
+with `opacity-50` on top of an already-muted color) almost certainly
+exists across some of the other 20+ pages not touched tonight. A full
+sweep is a legitimate, bounded follow-up task — a simple repo-wide grep
+for `text-\[[89]px\]` and `opacity-50` co-occurring with text color
+classes would find them all quickly; not attempted here since it's a
+different scope than tonight's Phase A functional-bug fixes.
+
 ## Estimate
 
 Phase A: ~0.5 day. Phase B: ~1-2 hours. Phase C: per-item, roughly

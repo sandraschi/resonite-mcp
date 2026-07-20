@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """HTTP server for Resonite MCP - FastAPI interface for web-based control."""
 
+# --- HEALTH_ENDPOINT_STANDARD (mcp-central-docs/standards/HEALTH_ENDPOINT_STANDARD.md) ---
+import datetime
 import logging
 
 # Functions will be imported inside endpoints to avoid tool wrapping
@@ -8,6 +10,7 @@ import logging
 import os
 import shutil
 import subprocess
+import subprocess as _subprocess
 import tempfile
 import time
 from pathlib import Path
@@ -18,8 +21,33 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from . import __version__
+from .activity_log import activity_log
 from .utils.structured_logging import configure_file_logging, configure_json_logging_if_enabled
 from .utils.telemetry import init_metrics, metrics_enabled, register_metrics_routes, start_metrics_server
+
+_STARTED = datetime.datetime.now(datetime.UTC)
+
+
+def _git_sha() -> str:
+    """Short git SHA, resolved once at import -- never per-request, never
+    crashes health on a missing git (per the standard)."""
+    try:
+        repo_root = Path(__file__).resolve().parents[2]  # src/resonite_mcp/http_server.py -> repo root
+        git_path = shutil.which("git") or "git"
+        result = _subprocess.run(  # noqa: S603 -- fixed args (rev-parse --short HEAD), no user input
+            [git_path, "-C", str(repo_root), "rev-parse", "--short", "HEAD"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+        )
+        return result.stdout.strip() or "unknown"
+    except Exception:
+        return "unknown"
+
+
+_GIT_SHA = _git_sha()
+_SHUTTING_DOWN = {"value": False}
 
 configure_json_logging_if_enabled()
 if os.getenv("RESONITE_MCP_LOG_DIR"):
@@ -36,12 +64,14 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Resonite MCP Server",
     description="HTTP API for Resonite social VR platform control",
-    version="0.8.0",
+    version="1.2.0",
     docs_url="/docs",
     redoc_url="/redoc",
 )
 
 register_metrics_routes(app)
+
+activity_log.info("server", "Server started")
 
 _RESONITE_TAURI = os.environ.get("RESONITE_TAURI", "").lower() in ("1", "true", "yes")
 
@@ -201,11 +231,25 @@ class MCPToolRequest(BaseModel):
 @app.get("/api/health")
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
+    """Health check endpoint (HEALTH_ENDPOINT_STANDARD-compliant, 2026-07-19).
+
+    Required fields per mcp-central-docs/standards/HEALTH_ENDPOINT_STANDARD.md:
+    status, server, version, git_sha, started_at, uptime_seconds,
+    shutting_down, transport, port. Extra fields (capabilities,
+    metrics_enabled, agent_lab_phase) kept as additions -- the standard
+    says "at minimum", not "only these".
+    """
+    now = datetime.datetime.now(datetime.UTC)
     return {
         "status": "ok",
         "server": "resonite-mcp-sota",
-        "version": "1.0.0",
+        "version": __version__,
+        "git_sha": _GIT_SHA,
+        "started_at": _STARTED.isoformat(),
+        "uptime_seconds": (now - _STARTED).total_seconds(),
+        "shutting_down": _SHUTTING_DOWN["value"],
+        "transport": "streamable-http",
+        "port": int(os.environ.get("RESONITE_MCP_PORT", "10979")),
         "agent_lab_phase": 6,
         "metrics_enabled": metrics_enabled(),
         "capabilities": [
@@ -222,6 +266,15 @@ async def health_check():
             "inventory_adapter",
         ],
     }
+
+
+@app.on_event("shutdown")
+async def _mark_shutting_down():
+    """Flip the health endpoint's shutting_down flag (graceful-shutdown
+    standard, 2026-07-13 rollout) -- best-effort, FastAPI's shutdown event
+    fires before the process actually exits, giving health checks a
+    window to see this."""
+    _SHUTTING_DOWN["value"] = True
 
 
 @app.post("/api/v1/tool")
@@ -266,6 +319,52 @@ async def api_v1_tool(body: MCPToolRequest) -> dict[str, Any]:
     except Exception as exc:
         logger.exception("Tool %s failed", tool)
         return {"success": False, "error": str(exc), "data": None}
+
+
+# Activity log endpoints — ported 2026-07-19 from web_sota/backend/server.py
+# (which defined this same logic but was never actually launched — see
+# docs/WEBAPP_UPDATE_PLAN.md). Logging.tsx's /api/logs* calls now hit real code.
+@app.get("/api/logs")
+async def get_logs(
+    limit: int = 50,
+    offset: int = 0,
+    level: str | None = None,
+    kind: str | None = None,
+    search: str | None = None,
+    sort: str = "desc",
+    after_id: str | None = None,
+):
+    """Query the activity log."""
+    return activity_log.query(
+        limit=limit, offset=offset, level=level, kind=kind, search=search, sort=sort, after_id=after_id
+    )
+
+
+@app.get("/api/logs/stats")
+async def logs_stats():
+    """Get activity log statistics (counts by level/kind)."""
+    return activity_log.stats()
+
+
+@app.get("/api/logs/export")
+async def logs_export(
+    format: str = "json", level: str | None = None, kind: str | None = None, search: str | None = None
+):
+    """Export the activity log as JSON or CSV."""
+    from fastapi.responses import Response
+
+    content = activity_log.export(format=format, level=level, kind=kind, search=search)
+    media = "text/csv" if format == "csv" else "application/json"
+    return Response(
+        content=content, media_type=media, headers={"Content-Disposition": f'attachment; filename="logs.{format}"'}
+    )
+
+
+@app.delete("/api/logs")
+async def clear_logs():
+    """Clear the activity log."""
+    activity_log.clear()
+    return {"success": True, "message": "Logs cleared."}
 
 
 @app.post("/api/v1/fleet/launch", response_model=FleetLaunchResponse)
@@ -602,6 +701,25 @@ async def list_sessions(
     )
 
 
+@app.get("/api/contacts")
+async def get_contacts():
+    """Get Resonite contacts list."""
+    try:
+        from .http_functions import resonite_contacts_list_http
+
+        result = await resonite_contacts_list_http()
+        if isinstance(result, dict) and result.get("status") == "error":
+            # If not authenticated, return a 401 Unauthorized
+            status_code = 401 if "Not authenticated" in result.get("detail", "") else 400
+            raise HTTPException(status_code=status_code, detail=result.get("detail", "Error fetching contacts"))
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Contacts list failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
 @app.post("/api/resonite/start")
 async def start_resonite():
     """Launch Resonite application."""
@@ -861,7 +979,9 @@ async def get_plugin_info(plugin_name: str | None = None):
 
 
 # ---------------------------------------------------------------------------
-# ResoniteLink API  (WebSocket bridge — official protocol v0.8.x)
+# ResoniteLink API  (WebSocket bridge — protocol 0.13.1, confirmed live
+# 2026-07-18/19 against a real session; "v0.8.x" was the pre-rewrite
+# fictional API version, no longer accurate — see docs/RESONITELINK_GUIDE.md)
 #
 # All endpoints share a single persistent ResoniteLinkClient instance.
 # The client connects lazily on first use and reconnects on demand.
@@ -927,7 +1047,10 @@ def _get_rl_client():
 
 @app.post("/rl/connect")
 async def rl_connect(req: RLConnectRequest):
-    """Connect to ResoniteLink WebSocket in Resonite (port 4242 default)."""
+    """Connect to ResoniteLink WebSocket in Resonite. Prefer calling
+    /rl/discover first and passing its result — port 4242 is only a
+    fallback default, not a guarantee (sessions announce their real
+    port via UDP broadcast, discovered dynamically)."""
     from .resonite_link import ResoniteLinkClient
 
     client = ResoniteLinkClient(host=req.host, port=req.port)
@@ -1046,6 +1169,39 @@ async def rl_add_component(req: RLAddComponentRequest):
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
+class RLUpdateSlotRequest(BaseModel):
+    """Partial slot update — include only the fields you want to change.
+    Real, working (client.update_slot()) — unlike /rl/world/write-field,
+    which the protocol has no equivalent for."""
+
+    name: str | None = None
+    position: dict[str, float] | None = None
+    rotation: dict[str, float] | None = None
+    scale: dict[str, float] | None = None
+
+
+@app.patch("/rl/slot/{slot_id}")
+async def rl_update_slot(slot_id: str, req: RLUpdateSlotRequest):
+    """Update a slot's name/position/rotation/scale. Only send fields you want changed."""
+    from .resonite_link import rl_value
+
+    client = _get_rl_client()
+    data: dict[str, Any] = {"id": slot_id}
+    if req.name is not None:
+        data["name"] = rl_value("string", req.name)
+    if req.position is not None:
+        data["position"] = rl_value("float3", req.position)
+    if req.rotation is not None:
+        data["rotation"] = rl_value("floatQ", req.rotation)
+    if req.scale is not None:
+        data["scale"] = rl_value("float3", req.scale)
+    try:
+        resp = await client.update_slot(data)
+        return {"status": "ok", "response": resp}
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @app.delete("/rl/slot/{slot_id}")
 async def rl_destroy_slot(slot_id: str, preserve_assets: bool = False):
     """Destroy a slot and all its children."""
@@ -1059,7 +1215,7 @@ async def rl_destroy_slot(slot_id: str, preserve_assets: bool = False):
 
 @app.post("/rl/batch")
 async def rl_batch(req: RLBatchRequest):
-    """Execute multiple ResoniteLink operations atomically (v0.8.3+ batch support)."""
+    """Execute multiple ResoniteLink operations atomically (dataModelOperationBatch, protocol 0.13.1)."""
     client = _get_rl_client()
     try:
         results = await client.batch(req.operations)
@@ -1071,7 +1227,7 @@ async def rl_batch(req: RLBatchRequest):
 @app.post("/rl/reflect")
 async def rl_reflect(req: RLReflectRequest):
     """
-    Reflection API (v0.8.3+).
+    Reflection API (protocol 0.13.1).
     Without component_type: list all supported component types.
     With component_type: list all fields/members for that type.
     """
@@ -1089,7 +1245,7 @@ async def rl_reflect(req: RLReflectRequest):
 RESONITE_API_BASE = "https://api.resonite.com"
 
 
-@app.get("/api/sessions")
+@app.get("/api/resonite/cloud-sessions")
 async def list_cloud_sessions(
     name: str = Query("", description="Filter by session name"),
     host: str = Query("", description="Filter by host username"),
@@ -1118,7 +1274,7 @@ async def list_cloud_sessions(
         raise HTTPException(status_code=502, detail=f"Could not reach Resonite API: {exc}") from exc
 
 
-@app.get("/api/sessions/{session_id}")
+@app.get("/api/resonite/cloud-sessions/{session_id}")
 async def get_cloud_session(session_id: str):
     """Get full metadata for a specific public session."""
     try:
@@ -1200,14 +1356,14 @@ ASSET_CATEGORIES = {
 }
 
 
-class RLWriteRequest(BaseModel):
+class RLWorldWriteFieldRequest(BaseModel):
     ref_id: str
     value: Any
     value_type: str | None = None
 
 
 @app.post("/rl/world/write-field")
-async def world_write_field(req: RLWriteRequest):
+async def world_write_field(req: RLWorldWriteFieldRequest):
     """Update a specific field/property in Resonite."""
     client = _get_rl_client()
     try:
