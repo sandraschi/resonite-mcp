@@ -1,4 +1,4 @@
-set windows-shell := ["pwsh.exe", "-NoLogo", "-Command"]
+set windows-shell := ["powershell.exe", "-NoProfile", "-Command"]
 set allow-duplicate-recipes := true
 
 import 'scripts/just/fleet.just'
@@ -13,13 +13,17 @@ default:
 install:
     uv sync
 
-# Install frontend dependencies
 install-fe:
-    Set-Location '{{justfile_directory()}}\web_sota'; npm install
+    Set-Location '{{justfile_directory()}}\web_sota'; npm ci
 
-# Initialize full project (deps + dev deps)
-init: install install-fe
+bootstrap:
     uv sync --group dev
+    uv run pre-commit install
+    Set-Location web_sota; npm ci; if ($LASTEXITCODE -ne 0) { npm install }
+    Write-Host "Pre-commit hooks installed." -ForegroundColor Green
+
+# Initialize full project (deps + dev deps) — alias for bootstrap
+init: bootstrap
 
 # ── Development ────────────────────────────────────────────────────────────────
 
@@ -90,35 +94,26 @@ build-fe:
 build-zed:
     ./build.ps1
 
-# Build MCPB bundle
-mcpb-pack:
-    uv run python tools/sync_mcpb_src.py
-    uv run python tools/pack_mcpb.py
-
 # PyInstaller sidecar for Tauri -> native/binaries/
 build-sidecar:
-    pwsh -NoLogo -File '{{justfile_directory()}}\native\build-sidecar.ps1'
+    powershell.exe -NoProfile -File '{{justfile_directory()}}\native\build-sidecar.ps1'
 
 # Tauri desktop app (requires sidecar for release)
 build-native:
-    pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
+    powershell.exe -NoProfile -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
     Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli build
-
-# Run CUA smoke test against installed NSIS app
-cua-nsis-test:
-    C:\Windows\py.exe scripts/cua-smoke.py
 
 # Full release: web_sota + sidecar + NSIS installer
 build-all:
-    pwsh -NoLogo -File '{{justfile_directory()}}\native\build.ps1'
+    powershell.exe -NoProfile -File '{{justfile_directory()}}\native\build.ps1'
 
 # Tauri dev (start backend separately or build-sidecar first)
 tauri-dev:
-    pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
+    powershell.exe -NoProfile -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
     Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli dev
 
 build-native-debug:
-    pwsh -NoLogo -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
+    powershell.exe -NoProfile -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
     Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli build --debug
 
 # ── Cleanup ────────────────────────────────────────────────────────────────────
