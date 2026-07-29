@@ -23,7 +23,7 @@ self = <test_server.TestOSCTools object at 0x00000219D55175E0>
         """Test successful OSC message sending."""
 >       with patch("resonite_mcp.server.SimpleUDPClient") as mock_client_class:
 
-tests\unit\test_server.py:17: 
+tests\unit\test_server.py:17:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <unittest.mock._patch object at 0x00000219D5588DF0>
@@ -34,7 +34,7 @@ self = <unittest.mock._patch object at 0x00000219D5588DF0>
         autospec, kwargs = self.autospec, self.kwargs
         new_callable = self.new_callable
         self.target = self.getter()
-    
+
         # normalise False to None
         if spec is False:
             spec = None
@@ -42,16 +42,16 @@ self = <unittest.mock._patch object at 0x00000219D5588DF0>
             spec_set = None
         if autospec is False:
             autospec = None
-    
+
         if spec is not None and autospec is not None:
             raise TypeError("Can't specify spec and autospec")
         if ((spec is not None or autospec is not None) and
             spec_set not in (True, None)):
             raise TypeError("Can't provide explicit spec_set *and* spec or autospec")
-    
+
 >       original, local = self.get_original()
 
-C:\Users\sandr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1447: 
+C:\Users\sandr\AppData\Local\Programs\Python\Python310\lib\unittest\mock.py:1447:
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 self = <unittest.mock._patch object at 0x00000219D5588DF0>
@@ -59,20 +59,20 @@ self = <unittest.mock._patch object at 0x00000219D5588DF0>
     def get_original(self):
         target = self.getter()
         name = self.attribute
-    
+
         original = DEFAULT
         local = False
-    
+
         try:
             original = target.__dict__[name]
         except (AttributeError, KeyError):
             original = getattr(target, name, DEFAULT)
         else:
             local = True
-    
+
         if name in _builtins and isinstance(target, ModuleType):
             self.create = True
-    
+
         if not self.create and original is DEFAULT:
 >           raise AttributeError(
                 "%s does not have the attribute %r" % (target, name)

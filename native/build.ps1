@@ -18,7 +18,7 @@ if (Test-Path $apiFile) {
         if ($apiPort -ne $BACKEND_PORT) {
             throw "API_BASE in $apiFile points to port $apiPort but backend serves on $BACKEND_PORT. In dev Vite proxies work, in prod/NSIS this gives 'Failed to fetch'."
         }
-        Write-Host "  API_BASE port: $apiPort (matches backend) ✓" -ForegroundColor Green
+        Write-Host "  API_BASE port: $apiPort (matches backend) OK" -ForegroundColor Green
     }
 }
 
@@ -35,9 +35,9 @@ foreach ($dir in $frontendDirs) {
         $tscOut = npx tsc --noEmit 2>&1
         $tscExit = $LASTEXITCODE
         if ($tscExit -ne 0) {
-            Write-Host "  TypeScript compilation FAILED — fix errors before building NSIS" -ForegroundColor Red
+            Write-Host "  TypeScript compilation FAILED - fix errors before building NSIS" -ForegroundColor Red
             Write-Host $tscOut
-            throw "TypeScript compilation failed — fix all errors before building NSIS installer"
+            throw "TypeScript compilation failed - fix all errors before building NSIS installer"
         }
 
         npm run build
@@ -51,10 +51,10 @@ foreach ($dir in $frontendDirs) {
 Write-Host "-> [2/5] PyInstaller backend..." -ForegroundColor Yellow
 $specFile = "$Root\${RepoName}-backend.spec"
 if (Test-Path $specFile) {
-    # Pre-check: the spec references run_server.py at repo root — verify it exists
+    # Pre-check: the spec references run_server.py at repo root - verify it exists
     $entryFile = "$Root\run_server.py"
     if (-not (Test-Path $entryFile)) {
-        throw "run_server.py not found at $entryFile — the spec file '$specFile' references this as the entry point."
+        throw "run_server.py not found at $entryFile - the spec file '$specFile' references this as the entry point."
     }
 
     Push-Location $Root
@@ -101,28 +101,28 @@ if (Test-Path $specFile) {
     Write-Host "  Frozen binary smoke test PASSED" -ForegroundColor Green
     Pop-Location
 } else {
-    throw "Backend spec file not found at $specFile — create ${RepoName}-backend.spec before building NSIS installer."
+    throw "Backend spec file not found at $specFile - create ${RepoName}-backend.spec before building NSIS installer."
 }
 
 # Step 3: Embed in Tauri resources (+ dev fallback) with size gate
 Write-Host "-> [3/5] Embedding backend..." -ForegroundColor Yellow
 $src = "$Root\dist\${RepoName}-backend.exe"
-if (-not (Test-Path $src)) { throw "Backend exe not found at $src — PyInstaller step failed" }
+if (-not (Test-Path $src)) { throw "Backend exe not found at $src - PyInstaller step failed" }
 
 # Size gate: a real onefile PyInstaller binary is >= 5 MB.
 $sizeMB = (Get-Item $src).Length / 1MB
 if ($sizeMB -lt 5) {
-    throw "Backend exe is only $([math]::Round($sizeMB, 1)) MB at $src — PyInstaller produced an empty/broken binary. Common causes: (1) run_server.py missing when spec was written, (2) spec 'pathex' doesn't resolve imports, (3) SKIP list in spec is too aggressive and stripped uvicorn/httpx/fastapi."
+    throw "Backend exe is only $([math]::Round($sizeMB, 1)) MB at $src - PyInstaller produced an empty/broken binary. Common causes: (1) run_server.py missing when spec was written, (2) spec 'pathex' doesn't resolve imports, (3) SKIP list in spec is too aggressive and stripped uvicorn/httpx/fastapi."
 }
 Copy-Item $src "$ResourceDir\${RepoName}-backend.exe" -Force
 Copy-Item $src "$DevDir\${RepoName}-backend-$Triple.exe" -Force
 Write-Host "  Backend exe: $([math]::Round($sizeMB, 1)) MB" -ForegroundColor Green
 
-# Bundle .env.example (NOT .env — dev .env has personal API keys)
+# Bundle .env.example (NOT .env - dev .env has personal API keys)
 $envExample = "$Root\.env.example"
 if (Test-Path $envExample) {
     Copy-Item $envExample "$ResourceDir\.env.example" -Force
-    Write-Host "  Bundled .env.example ✓" -ForegroundColor Green
+    Write-Host "  Bundled .env.example OK" -ForegroundColor Green
 } else {
     Write-Host "  WARNING: .env.example not found at repo root" -ForegroundColor DarkYellow
 }

@@ -440,7 +440,7 @@ Resonite worlds and avatars work across platforms with some limitations:
 
 ---
 
-**Resonite's multi-platform support means you can start on any device and grow your experience over time!** 
+**Resonite's multi-platform support means you can start on any device and grow your experience over time!**
 
 **Your Quest and Pico 4 give you excellent VR access - try Standalone mode first for the easiest introduction to VR social worlds.**
 

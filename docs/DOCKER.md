@@ -9,7 +9,7 @@ cd D:\Dev\repos\resonite-mcp
 docker compose up resonite-mcp
 ```
 
-MCP: `http://127.0.0.1:10979`  
+MCP: `http://127.0.0.1:10979`
 Metrics sidecar: `http://127.0.0.1:9079/metrics`
 
 ## With monitoring stack
@@ -31,5 +31,5 @@ docker compose --profile monitoring up -d
 
 ## GHCR
 
-Image: `ghcr.io/sandraschi/resonite-mcp:latest`  
+Image: `ghcr.io/sandraschi/resonite-mcp:latest`
 Published via `.github/workflows/docker-publish.yml`.

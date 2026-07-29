@@ -1,7 +1,7 @@
 # Resonite as a Robotics Simulation & HRI Testbed
 
-**Status**: Research Note · February 2026  
-**Author**: Antigravity / Sandra Schipal  
+**Status**: Research Note · February 2026
+**Author**: Antigravity / Sandra Schipal
 **Relevance**: OpenFang · robotics-mcp · Unitree G1 · resonite-mcp
 
 ---
@@ -153,7 +153,7 @@ Resonite record assets are at `assets.resonite.com/{hash}` — hash from `resdb:
 
 The server is at `d:/Dev/repos/resonite-mcp`.
 
-**Transport**: Dual — stdio MCP + HTTP bridge (port TBD — needs assigning in WEBAPP_PORTS.md)  
+**Transport**: Dual — stdio MCP + HTTP bridge (port TBD — needs assigning in WEBAPP_PORTS.md)
 **Webapp**: `web_sota/` — rebuilt Feb 2026 with 9 pages:
 - Dashboard · Status · Sessions · Inventory · Contacts · Chat · Tools · Help · Settings
 

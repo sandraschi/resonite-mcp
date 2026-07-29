@@ -45,10 +45,10 @@ Create float fields on the root:
 
 For each OSC address, add an **OSC Data Source** (or equivalent in your Resonite version):
 
-1. **Spawn** — `/resonite/vbot/spawn`  
+1. **Spawn** — `/resonite/vbot/spawn`
    When `robot_id` string matches your id: set Position (x,y,z), Scale, zero cmds.
 
-2. **Move** — `/robot/vbot_yahboom_01/move`  
+2. **Move** — `/robot/vbot_yahboom_01/move`
    `LinearCmd` ← float arg0, `AngularCmd` ← float arg1, refresh `LastMoveTime`.
 
 3. **Stop / reset / estop** — zero `LinearCmd` and `AngularCmd`.

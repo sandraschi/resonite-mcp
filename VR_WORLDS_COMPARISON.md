@@ -35,7 +35,7 @@ Vircadia emerged in 2019 as a decentralized, open-source fork of **High Fidelity
 ## ⚖️ Strengths & Weaknesses
 
 ### 🧬 Resonite
-* **Strengths**: 
+* **Strengths**:
   - Collaborative real-time creation: modify scripts, assets, and shaders inside the world while talking to your team.
   - Native asset import: Drag-and-drop 3D files, images, and audio directly into the window.
   - Deep OSC integration allowing bi-directional state synchronization.
