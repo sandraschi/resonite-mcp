@@ -422,9 +422,7 @@ class ResoniteLinkClient:
             data["id"] = component_id
         if members:
             data["members"] = _encode_members(members)
-        resp = await self._send(
-            {"$type": "addComponent", "containerSlotId": container_slot_id, "data": data}
-        )
+        resp = await self._send({"$type": "addComponent", "containerSlotId": container_slot_id, "data": data})
         return str(component_id or resp.get("entityId") or "")
 
     async def update_component(self, component_id: str, members: dict[str, Any]) -> dict[str, Any]:
@@ -483,9 +481,7 @@ class ResoniteLinkClient:
             payload["categoryPath"] = category_path
         return await self._send(payload)
 
-    async def get_component_definition(
-        self, component_type: str, flattened: bool = True
-    ) -> dict[str, Any]:
+    async def get_component_definition(self, component_type: str, flattened: bool = True) -> dict[str, Any]:
         """Get member definitions for a component type.
 
         Note (0.9.0 breaking change upstream): member definitions reference
@@ -519,9 +515,7 @@ class ResoniteLinkClient:
         """
         for op in operations:
             if "$type" not in op:
-                raise ResoniteLinkError(
-                    f"batch: every operation needs '$type' (got keys {sorted(op.keys())})"
-                )
+                raise ResoniteLinkError(f"batch: every operation needs '$type' (got keys {sorted(op.keys())})")
         return await self._send({"$type": "dataModelOperationBatch", "operations": operations})
 
     # -- Asset import (mesh / texture) -----------------------------------------------

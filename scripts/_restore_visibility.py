@@ -1,9 +1,12 @@
-import asyncio, sys
+import asyncio
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_ref, rl_list
+from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_list, rl_ref
 
 CHARACTER_SLOT = "Reso_4"
+
 
 async def main():
     sessions = await discover_sessions(timeout=15.0)
@@ -22,7 +25,8 @@ async def main():
     # Restore a plain MeshRenderer -- known-good, static, visible.
     try:
         renderer_id = await client.add_component(
-            CHARACTER_SLOT, "[FrooxEngine]FrooxEngine.MeshRenderer",
+            CHARACTER_SLOT,
+            "[FrooxEngine]FrooxEngine.MeshRenderer",
             {"Mesh": rl_ref("Reso_5")},
         )
         await client.update_component(renderer_id, {"Materials": rl_list([rl_ref("Reso_7")])})
@@ -31,5 +35,6 @@ async def main():
         print(f"Restore FAILED: {exc}")
 
     await client.disconnect()
+
 
 asyncio.run(main())

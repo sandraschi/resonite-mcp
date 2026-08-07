@@ -250,7 +250,7 @@ async def plugin_info(plugin_name: str | None = None) -> dict[str, Any]:
 
 
 # Import server for tool registration
-from ..server import server  # noqa: E402
+from ..server import server
 
 server.tool()(plugin_list)
 server.tool()(plugin_load)

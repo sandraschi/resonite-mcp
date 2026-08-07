@@ -265,9 +265,7 @@ def test_rl_auto_rejects_unknown_shapes():
 def test_discovery_protocol_parses_announcements():
     assert DISCOVERY_PORT == 12512
     proto = _DiscoveryProtocol()
-    announce = json.dumps(
-        {"sessionName": "My World", "sessionID": "S-1", "linkPort": 40123}
-    ).encode()
+    announce = json.dumps({"sessionName": "My World", "sessionID": "S-1", "linkPort": 40123}).encode()
     proto.datagram_received(announce, ("192.168.1.7", 55555))
     proto.datagram_received(announce, ("192.168.1.7", 55556))  # re-announce dedupes
     proto.datagram_received(b"not json", ("192.168.1.9", 1))  # ignored

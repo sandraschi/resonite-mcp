@@ -1,12 +1,75 @@
 # resonite-mcp — Project Assessment
 
 **Category**: MCP Server
-**Assessment Date**: 2026-07-11 (updated same day after protocol upgrade; previous: 2026-05-28)
+**Assessment Date**: 2026-07-30 (added ProtoFlux honesty findings; previous: 2026-07-11)
 **Version**: v1.1.0
 
 ---
 
+## 2026-07-30 — ProtoFlux tooling honesty audit (for opencode / local-deepseek pickup)
+
+Prompted by a cross-check against `overte-mcp` (same fleet, same pattern of
+bug). Read this before touching `plugins/protoflux_helpers.py`.
+
+**Finding**: `protoflux_helpers.py`'s docstring claims "real ProtoFlux
+scripting tools via OSC and ResoniteLink," but two of its four tools are not
+real yet:
+
+- `protoflux_analyze_script` and `protoflux_debug_session` send OSC to
+  `/protoflux/analyze` and `/protoflux/debug`. **These addresses do not exist
+  in Resonite by default** — they would only respond if a ProtoFlux graph
+  had already been hand-built in-world specifically to listen on those
+  addresses. No such graph ships with this repo. Today these tools always
+  report a plausible-looking success against nothing real.
+- `protoflux_generate_template` and `protoflux_optimize_script` are pure
+  static text — hardcoded node-name lists and canned optimization tips, not
+  actual script inspection.
+
+This is the same class of bug the 2026-07-11 ResoniteLink rewrite already
+fixed once in this repo (see below — the old client spoke a wire format that
+never existed upstream). Fix it the same way: verify against what's real,
+don't assume.
+
+### Fix plan
+- [ ] Rewrite `protoflux_analyze_script` / `protoflux_document_script` to
+      query real slot/component/ProtoFlux-node data via `resonite_link.py`'s
+      existing reflection and sync-method-call support, instead of the
+      fictional OSC addresses.
+- [ ] Ship a companion ProtoFlux "MCP bridge" graph (importable
+      `.resonitepackage`) that actually implements listener nodes for
+      whatever OSC addresses the tools still need — mirrors the
+      `overte-mcp-bridge.js` approach on the Overte side. Without this,
+      OSC-side ProtoFlux control is inherently unfulfillable no matter how
+      the Python side is written.
+- [ ] Once fixed, update this file's tool-status language and
+      `protoflux_helpers.py`'s docstring to state plainly what's verified —
+      don't leave "real ProtoFlux scripting tools" standing if only two of
+      four tools are real.
+
+### Feature gaps found (not started)
+- **Dynamic bone chains / physics** — no tool references `DynamicBoneChain`
+  or collision/physics control anywhere in `src/resonite_mcp`. Relevant if
+  [[nekomimi-chan]] wants natural avatar motion (tail, ears, hair).
+- **Voice macros → ProtoFlux bindings** — already flagged below as P3
+  (2026-07-11), still not done. Also relevant to nekomimi-chan's
+  voice-triggered NPC reactions for Japanese practice.
+- **First-party Twitch/Mastodon/Bluesky integration** — Resonite has native
+  ProtoFlux support for these; no MCP tool surfaces them. Low priority
+  unless a concrete use case shows up (these are usable directly in-world
+  via ProtoFlux without MCP involvement).
+
+### What's actually solid (don't re-litigate)
+`resonite_link.py`'s 2026-07-11 rewrite is the real deal — verified against
+upstream C# reference 0.13.1, with `$type` discriminators, typed reflection,
+sync method calls, and LAN session discovery. 22 wire-format regression
+tests lock the shapes. The remaining gap there is a live E2E session against
+a running Resonite client (operator task) — same category of blocker as
+`overte-mcp`'s "no Overte installed on Goliath yet."
+
+---
+
 ## 2026-07-11 (evening): ResoniteLink protocol upgrade — DONE
+
 
 The P1 item is resolved, and the finding was worse than "outdated": the old
 client implemented a **fictional wire format** (`ReadField`/`WriteField`/
@@ -84,6 +147,7 @@ audio) for the import pipeline.
 |----------|------|----------------------|
 | ~~P1~~ ✅ | ~~ResoniteLink 0.9–0.13 compatibility pass~~ — **done in v1.1.0** (full rewrite to the real wire format + discovery + sync methods; live wire test against a running session still pending) | done 2026-07-11 |
 | ~~P1~~ ✅ | ~~Remove `dxt/` (DXT retired fleet-wide)~~ — **done 2026-07-19** | done |
+| **P2** | Fix `protoflux_helpers.py` honesty gap: `analyze_script`/`debug_session` assume fictional `/protoflux/analyze` OSC listener; `generate_template`/`optimize_script` are static text, not real inspection (see 2026-07-30 section above) | half day |
 | **P2** | `web_sota/` → `webapp/` rename (new fleet standard v1.34; touches justfile, start.ps1, gitignore, tauri/native scripts, docs) | half day, mechanical |
 | **P2** | Bun migration: `bun install`/`bunx` in justfile + scripts, commit `bun.lock`, delete `package-lock.json`; drop ESLint config/deps (Biome only) | half day |
 | **P2** | `RELEASE_TIER.md` (T3) + glama.json health metadata | minutes |

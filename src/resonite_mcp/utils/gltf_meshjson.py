@@ -139,9 +139,7 @@ def _resolve_buffer(gltf: dict[str, Any], buffer_index: int, glb_bin: bytes | No
     uri = buffer_def.get("uri")
     if uri is None:
         if glb_bin is None:
-            raise GltfConversionError(
-                f"buffer {buffer_index} has no uri and this file has no GLB BIN chunk"
-            )
+            raise GltfConversionError(f"buffer {buffer_index} has no uri and this file has no GLB BIN chunk")
         return glb_bin
     if uri.startswith("data:"):
         header, _, encoded = uri.partition(",")
@@ -243,9 +241,7 @@ def _quat_to_matrix(qx: float, qy: float, qz: float, qw: float) -> list[list[flo
     ]
 
 
-def _trs_to_matrix(
-    translation: list[float], rotation: list[float], scale: list[float]
-) -> list[list[float]]:
+def _trs_to_matrix(translation: list[float], rotation: list[float], scale: list[float]) -> list[list[float]]:
     """Compose glTF TRS (translation, quaternion xyzw, scale) into a 4x4
     row-major matrix (last row [0,0,0,1], translation in the last COLUMN —
     the convention this project's rl_value("float4x4", ...) output uses,
@@ -262,10 +258,7 @@ def _trs_to_matrix(
 
 
 def _matrix_multiply(a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
-    return [
-        [sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)]
-        for i in range(4)
-    ]
+    return [[sum(a[i][k] * b[k][j] for k in range(4)) for j in range(4)] for i in range(4)]
 
 
 def _matrix_to_wire(m: list[list[float]]) -> dict[str, float]:
@@ -325,9 +318,7 @@ def _node_world_matrix(
     if parent_idx is None:
         world = local
     else:
-        world = _matrix_multiply(
-            _node_world_matrix(parent_idx, nodes, child_to_parent, cache), local
-        )
+        world = _matrix_multiply(_node_world_matrix(parent_idx, nodes, child_to_parent, cache), local)
     cache[node_idx] = world
     return world
 
@@ -501,7 +492,10 @@ def gltf_to_mesh_json(
             if mode != 4:
                 logger.warning(
                     "%s: mesh %d primitive %d has mode=%d (not TRIANGLES) — skipped",
-                    path.name, mesh_idx, prim_idx, mode,
+                    path.name,
+                    mesh_idx,
+                    prim_idx,
+                    mode,
                 )
                 primitives_skipped += 1
                 continue
@@ -510,7 +504,9 @@ def gltf_to_mesh_json(
             if "POSITION" not in attributes:
                 logger.warning(
                     "%s: mesh %d primitive %d has no POSITION attribute — skipped",
-                    path.name, mesh_idx, prim_idx,
+                    path.name,
+                    mesh_idx,
+                    prim_idx,
                 )
                 primitives_skipped += 1
                 continue
@@ -518,11 +514,13 @@ def gltf_to_mesh_json(
             positions = _decode_accessor(gltf, attributes["POSITION"], glb_bin, base_dir, buffer_cache)
             normals = (
                 _decode_accessor(gltf, attributes["NORMAL"], glb_bin, base_dir, buffer_cache)
-                if "NORMAL" in attributes else None
+                if "NORMAL" in attributes
+                else None
             )
             uvs = (
                 _decode_accessor(gltf, attributes["TEXCOORD_0"], glb_bin, base_dir, buffer_cache)
-                if "TEXCOORD_0" in attributes else None
+                if "TEXCOORD_0" in attributes
+                else None
             )
             joints = weights = None
             if include_skinning and "JOINTS_0" in attributes and "WEIGHTS_0" in attributes:
@@ -604,7 +602,11 @@ def gltf_to_mesh_json(
         "%s: converted %d primitive(s) (%d skipped) -> %d vertices, %d triangles"
         + (f", {len(bones)} bones" if bones else "")
         + (f", {len(all_blendshapes)} blendshapes" if all_blendshapes else ""),
-        path.name, primitives_converted, primitives_skipped, len(all_vertices), len(all_triangles),
+        path.name,
+        primitives_converted,
+        primitives_skipped,
+        len(all_vertices),
+        len(all_triangles),
     )
 
     result: dict[str, Any] = {
@@ -639,8 +641,10 @@ def _main() -> int:
     n_tris = sum(len(sm["triangles"]) for sm in result["submeshes"])
     has_normals = n_verts > 0 and "normal" in result["vertices"][0]
     has_uvs = n_verts > 0 and "uvs" in result["vertices"][0]
-    print(f"{src.name}: {n_verts} vertices, {n_tris} triangles "
-          f"(normals={'yes' if has_normals else 'no'}, uvs={'yes' if has_uvs else 'no'})")
+    print(
+        f"{src.name}: {n_verts} vertices, {n_tris} triangles "
+        f"(normals={'yes' if has_normals else 'no'}, uvs={'yes' if has_uvs else 'no'})"
+    )
 
     if len(sys.argv) >= 3:
         out_path = Path(sys.argv[2])

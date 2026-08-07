@@ -106,7 +106,7 @@ if bridge_urls:
 
 # Import tools after server exists to avoid circular import (tools need server for @server.tool())
 # Register FastMCP 3.2+ prompt templates
-from . import (  # noqa: E402
+from . import (
     prompts,  # noqa: F401
     tools,  # noqa: F401
 )
@@ -229,9 +229,9 @@ def is_resonite_running() -> bool:
     # Fallback to tasklist with safe decoding and case insensitivity
     try:
         tasklist_path = shutil.which("tasklist") or "tasklist"
-        output = subprocess.check_output(  # noqa: S603 -- fixed args, no user input
-            [tasklist_path, "/FI", "IMAGENAME eq Resonite.exe"], shell=False
-        ).decode(errors="ignore")
+        output = subprocess.check_output([tasklist_path, "/FI", "IMAGENAME eq Resonite.exe"], shell=False).decode(
+            errors="ignore"
+        )
         return "resonite.exe" in output.lower()
     except Exception:
         return False

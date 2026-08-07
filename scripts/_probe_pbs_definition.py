@@ -1,7 +1,11 @@
-import asyncio, json, sys
+import asyncio
+import json
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions
+
 
 async def main():
     sessions = await discover_sessions(timeout=15.0)
@@ -14,5 +18,5 @@ async def main():
     print(json.dumps(members, indent=2))
     await client.disconnect()
 
-asyncio.run(main())
 
+asyncio.run(main())

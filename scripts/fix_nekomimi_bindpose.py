@@ -4,13 +4,15 @@ and repoint her existing SkinnedMeshRenderer at it. The 197 bone Slots
 already in her Home are untouched -- those used real ResoniteLink Slot
 semantics all along and were never wrong, only the mesh asset's internal
 bones list was."""
+
 from __future__ import annotations
+
 import asyncio
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_ref, rl_value
+from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_value
 from resonite_mcp.utils.gltf_meshjson import gltf_to_mesh_json
 
 VRM_PATH = Path(r"C:\Users\sandr\.avatarmcp\models\Nekomimi-chan.vrm")
@@ -32,14 +34,10 @@ async def main():
         return
 
     try:
-        new_asset_url = await client.import_mesh_json(
-            mesh["vertices"], mesh["submeshes"], bones=mesh["bones"]
-        )
+        new_asset_url = await client.import_mesh_json(mesh["vertices"], mesh["submeshes"], bones=mesh["bones"])
         print(f"Re-imported mesh with correct bindPose: {new_asset_url}")
 
-        await client.update_component(
-            STATIC_MESH_ID, {"URL": rl_value("Uri", new_asset_url)}
-        )
+        await client.update_component(STATIC_MESH_ID, {"URL": rl_value("Uri", new_asset_url)})
         print(f"Repointed StaticMesh ({STATIC_MESH_ID}) at the corrected asset — done.")
     except Exception as exc:
         print(f"FAILED: {exc}")

@@ -1,7 +1,9 @@
 """Test: does a Z-flip + winding-reversal fix Nekomimi-chan's invisibility?
 Spawns a SECOND copy next to the original (which stays as-is) so both can
 be compared without losing the first attempt."""
+
 from __future__ import annotations
+
 import asyncio
 import json
 import sys
@@ -43,8 +45,10 @@ async def main():
     await client.connect()
 
     r = await client.spawn_mesh(
-        flipped["vertices"], flipped["submeshes"],
-        position={"x": -6, "y": 0, "z": 5}, name="nekomimi-chan-zflip-test",
+        flipped["vertices"],
+        flipped["submeshes"],
+        position={"x": -6, "y": 0, "z": 5},
+        name="nekomimi-chan-zflip-test",
         color={"r": 0.95, "g": 0.85, "b": 0.9, "a": 1.0},
     )
     print(f"Z-flip test spawn: {r}")

@@ -869,6 +869,6 @@ async def resonite_fleet(
         ).model_dump()
 
 
-from ..server import server  # noqa: E402
+from ..server import server
 
 server.tool()(resonite_fleet)

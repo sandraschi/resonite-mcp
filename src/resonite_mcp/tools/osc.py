@@ -17,7 +17,7 @@ from ..models import OSCMessageInput, OSCServerInput, OSCServerStopInput
 logger = logging.getLogger(__name__)
 
 # Import server for tool registration
-from ..server import server  # noqa: E402
+from ..server import server
 
 # Global OSC state management
 osc_clients: dict[str, udp_client.SimpleUDPClient] = {}

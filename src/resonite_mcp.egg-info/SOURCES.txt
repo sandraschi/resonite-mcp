@@ -2,6 +2,7 @@ README.md
 pyproject.toml
 src/resonite_mcp/__init__.py
 src/resonite_mcp/__main__.py
+src/resonite_mcp/activity_log.py
 src/resonite_mcp/agentic.py
 src/resonite_mcp/cli.py
 src/resonite_mcp/http_functions.py

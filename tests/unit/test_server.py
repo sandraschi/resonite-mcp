@@ -217,4 +217,5 @@ class TestIsResoniteRunning:
     def test_is_resonite_running_non_windows(self):
         """Test that it returns False on non-Windows systems."""
         from resonite_mcp.server import is_resonite_running
+
         assert is_resonite_running() is False

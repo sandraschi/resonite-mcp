@@ -2,7 +2,7 @@
 """HTTP server for Resonite MCP - FastAPI interface for web-based control."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -38,7 +38,7 @@ class OSCMessageRequest(BaseModel):
     host: str
     port: int
     address: str
-    values: List[Any] = []
+    values: list[Any] = []
 
 
 class OSCServerRequest(BaseModel):
@@ -59,7 +59,7 @@ class ResoniteSessionRequest(BaseModel):
 class AvatarLoadRequest(BaseModel):
     avatar_path: str
     slot: int = None
-    parameters: Dict[str, Any] = None
+    parameters: dict[str, Any] = None
 
 
 class ParameterSetRequest(BaseModel):
@@ -70,7 +70,7 @@ class ParameterSetRequest(BaseModel):
 
 class ProtoFluxExecuteRequest(BaseModel):
     script_name: str
-    parameters: Dict[str, Any] = None
+    parameters: dict[str, Any] = None
 
 
 class InventoryListRequest(BaseModel):
@@ -82,9 +82,9 @@ class InventoryListRequest(BaseModel):
 
 class InventorySpawnRequest(BaseModel):
     item_id: str
-    position: List[float] = None
-    rotation: List[float] = None
-    scale: List[float] = None
+    position: list[float] = None
+    rotation: list[float] = None
+    scale: list[float] = None
 
 
 class InventoryUploadRequest(BaseModel):
@@ -130,7 +130,7 @@ class BlenderImportRequest(BaseModel):
 
 class UnitySyncRequest(BaseModel):
     avatar_path: str
-    unity_package: Optional[str] = None
+    unity_package: str | None = None
 
 
 # API Routes
@@ -173,7 +173,7 @@ async def health_check():
 async def get_osc_status():
     """Get status of all running OSC servers."""
     try:
-        from .tools.osc import osc_servers, get_osc_server_stats
+        from .tools.osc import get_osc_server_stats, osc_servers
 
         results = []
         for port in list(osc_servers.keys()):
@@ -234,8 +234,8 @@ async def stop_osc_server_endpoint(request: OSCServerStopRequest):
 @app.get("/api/osc/received")
 async def get_received_messages_endpoint(
     port: int,
-    address_pattern: Optional[str] = None,
-    max_age_seconds: Optional[float] = None,
+    address_pattern: str | None = None,
+    max_age_seconds: float | None = None,
     limit: int = 100,
 ):
     """Get received OSC messages."""
@@ -269,9 +269,7 @@ async def start_resonite_session(request: ResoniteSessionRequest):
     try:
         from .http_functions import resonite_session_start_http
 
-        result = await resonite_session_start_http(
-            request.session_name, request.world_path, request.avatar_slot
-        )
+        result = await resonite_session_start_http(request.session_name, request.world_path, request.avatar_slot)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -301,9 +299,7 @@ async def load_avatar(request: AvatarLoadRequest):
     try:
         from .http_functions import resonite_avatar_load_http
 
-        result = await resonite_avatar_load_http(
-            request.avatar_path, request.slot, request.parameters
-        )
+        result = await resonite_avatar_load_http(request.avatar_path, request.slot, request.parameters)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -318,9 +314,7 @@ async def set_parameter(request: ParameterSetRequest):
     try:
         from .http_functions import resonite_parameter_set_http
 
-        result = await resonite_parameter_set_http(
-            request.parameter_name, request.value, request.avatar_slot
-        )
+        result = await resonite_parameter_set_http(request.parameter_name, request.value, request.avatar_slot)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -446,9 +440,7 @@ async def sync_unity_avatar(request: UnitySyncRequest):
 
 # Inventory API endpoints
 @app.get("/api/resonite/inventory/list")
-async def list_inventory(
-    item_type: str = None, search_query: str = None, limit: int = 50, offset: int = 0
-):
+async def list_inventory(item_type: str = None, search_query: str = None, limit: int = 50, offset: int = 0):
     """List inventory items."""
     try:
         from .http_functions import resonite_inventory_list_http
@@ -483,9 +475,7 @@ async def spawn_inventory_item(request: InventorySpawnRequest):
     try:
         from .http_functions import resonite_inventory_spawn_http
 
-        result = await resonite_inventory_spawn_http(
-            request.item_id, request.position, request.rotation, request.scale
-        )
+        result = await resonite_inventory_spawn_http(request.item_id, request.position, request.rotation, request.scale)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result
@@ -536,9 +526,7 @@ async def share_inventory_item(request: InventoryShareRequest):
     try:
         from .http_functions import resonite_inventory_share_http
 
-        result = await resonite_inventory_share_http(
-            request.item_id, request.share_with, request.permission_level
-        )
+        result = await resonite_inventory_share_http(request.item_id, request.share_with, request.permission_level)
         if result["status"] == "error":
             raise HTTPException(status_code=400, detail=result["message"])
         return result

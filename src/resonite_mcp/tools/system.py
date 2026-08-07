@@ -554,7 +554,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
 
 
 # Import server for tool registration
-from ..server import server  # noqa: E402
+from ..server import server
 
 # Register tools
 server.tool()(help)

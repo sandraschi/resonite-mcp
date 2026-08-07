@@ -327,9 +327,3 @@ Start with "Interactive Button" or "Color-Changing Light" from the guide.
 **For detailed script examples, see the [Useful ProtoFlux Scripts Guide](./USEFUL_PROTOFLUX_SCRIPTS.md).**
 
 **Happy ProtoFluxing!** 🤖🎭
-
-
-
-
-
-

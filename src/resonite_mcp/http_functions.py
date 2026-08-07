@@ -583,7 +583,7 @@ async def resonite_gallery_list_http() -> dict[str, Any]:
 
     if screenshots_dir.exists():
         for filename in os.listdir(screenshots_dir):
-            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.webp', '.gif')):
+            if filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif")):
                 file_path = screenshots_dir / filename
                 try:
                     stat = file_path.stat()
@@ -596,14 +596,16 @@ async def resonite_gallery_list_http() -> dict[str, Any]:
                     elif "avatar" in filename.lower():
                         category = "Avatars"
 
-                    items.append({
-                        "url": f"/screenshots/{filename}",
-                        "title": filename.rsplit('.', 1)[0].replace('_', ' ').replace('-', ' ').title(),
-                        "category": category,
-                        "date": time.strftime('%Y-%m-%d', time.localtime(mtime)),
-                        "size": f"{size_kb} KB",
-                        "is_local": True
-                    })
+                    items.append(
+                        {
+                            "url": f"/screenshots/{filename}",
+                            "title": filename.rsplit(".", 1)[0].replace("_", " ").replace("-", " ").title(),
+                            "category": category,
+                            "date": time.strftime("%Y-%m-%d", time.localtime(mtime)),
+                            "size": f"{size_kb} KB",
+                            "is_local": True,
+                        }
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to read stat for {filename}: {e}")
 
@@ -615,7 +617,7 @@ async def resonite_gallery_list_http() -> dict[str, Any]:
                 "category": "In-Resonite",
                 "date": "2026-07-20",
                 "size": "245.2 KB",
-                "is_local": False
+                "is_local": False,
             },
             {
                 "url": "https://images.unsplash.com/photo-1617396900799-f4ec2b43c7ae?q=80&w=600&auto=format&fit=crop",
@@ -623,7 +625,7 @@ async def resonite_gallery_list_http() -> dict[str, Any]:
                 "category": "Avatars",
                 "date": "2026-07-19",
                 "size": "189.4 KB",
-                "is_local": False
+                "is_local": False,
             },
             {
                 "url": "https://images.unsplash.com/photo-1614741118887-7a4ee193a5fa?q=80&w=600&auto=format&fit=crop",
@@ -631,7 +633,7 @@ async def resonite_gallery_list_http() -> dict[str, Any]:
                 "category": "Webapp",
                 "date": "2026-07-18",
                 "size": "312.0 KB",
-                "is_local": False
+                "is_local": False,
             },
             {
                 "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop",
@@ -639,12 +641,8 @@ async def resonite_gallery_list_http() -> dict[str, Any]:
                 "category": "Webapp",
                 "date": "2026-07-17",
                 "size": "154.6 KB",
-                "is_local": False
-            }
+                "is_local": False,
+            },
         ]
 
-    return {
-        "status": "success",
-        "count": len(items),
-        "items": items
-    }
+    return {"status": "success", "count": len(items), "items": items}

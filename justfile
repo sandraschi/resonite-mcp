@@ -7,7 +7,7 @@ import 'scripts/just/fleet.just'
 default:
     @just --list
 
-# ── Setup ─────────────────────────────────────────────────────────────────────
+# --- Setup ---
 
 # Install Python dependencies via uv
 install:
@@ -22,10 +22,10 @@ bootstrap:
     Set-Location web_sota; npm ci; if ($LASTEXITCODE -ne 0) { npm install }
     Write-Host "Pre-commit hooks installed." -ForegroundColor Green
 
-# Initialize full project (deps + dev deps) — alias for bootstrap
+# --- Initialize full project  deps  dev deps alias for bootstrap ---
 init: bootstrap
 
-# ── Development ────────────────────────────────────────────────────────────────
+# --- Development ---
 
 # Start the backend server (port 10979)
 start-be:
@@ -47,7 +47,7 @@ start:
 start-headless:
     ./web_sota/start.ps1 -Headless
 
-# ── Quality ────────────────────────────────────────────────────────────────────
+# --- Quality ---
 
 # Lint Python (Ruff) and TypeScript (Biome)
 lint:
@@ -70,7 +70,7 @@ test:
     uv run coverage run -m pytest tests/ -v
     uv run coverage report --include="src/resonite_mcp/tools/*,src/resonite_mcp/utils/*" --fail-under=50
 
-# ── Hardening ──────────────────────────────────────────────────────────────────
+# --- Hardening ---
 
 # Security audit (Bandit)
 check-sec:
@@ -84,7 +84,7 @@ audit-deps:
 check-all: lint typecheck test check-sec
     @Write-Host 'All checks passed!' -ForegroundColor Green
 
-# ── Build ──────────────────────────────────────────────────────────────────────
+# --- Build ---
 
 # Build the frontend for production
 build-fe:
@@ -116,7 +116,7 @@ build-native-debug:
     powershell.exe -NoProfile -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
     Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli build --debug
 
-# ── Cleanup ────────────────────────────────────────────────────────────────────
+# --- Cleanup ---
 
 # Clear Python cache and temp files
 clean:
@@ -140,3 +140,5 @@ kill-ports:
             Write-Host "Port $port cleared" -ForegroundColor Yellow \
         } \
     }
+
+# Bootstrap: install dev deps + pre-commit hook

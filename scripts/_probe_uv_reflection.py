@@ -1,6 +1,8 @@
 """One-off: query ResoniteLink's reflection API for the actual UV_Coordinate
 type discriminator instead of guessing blind."""
+
 from __future__ import annotations
+
 import asyncio
 import json
 import sys
@@ -8,6 +10,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions
+
 
 async def main():
     sessions = await discover_sessions(timeout=15.0)
@@ -32,6 +35,7 @@ async def main():
         print(f"getSyncObjectDefinition FAILED -> {exc}")
 
     await client.disconnect()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

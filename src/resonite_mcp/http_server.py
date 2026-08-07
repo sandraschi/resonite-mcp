@@ -35,7 +35,7 @@ def _git_sha() -> str:
     try:
         repo_root = Path(__file__).resolve().parents[2]  # src/resonite_mcp/http_server.py -> repo root
         git_path = shutil.which("git") or "git"
-        result = _subprocess.run(  # noqa: S603 -- fixed args (rev-parse --short HEAD), no user input
+        result = _subprocess.run(
             [git_path, "-C", str(repo_root), "rev-parse", "--short", "HEAD"],
             capture_output=True,
             text=True,
@@ -392,7 +392,7 @@ async def launch_app(request: FleetLaunchRequest) -> FleetLaunchResponse:
 
     try:
         powershell_path = shutil.which("powershell.exe") or "powershell.exe"
-        subprocess.Popen(  # noqa: S603 -- repo_path already validated against allowed_base above
+        subprocess.Popen(
             [powershell_path, "-ExecutionPolicy", "Bypass", "-File", str(start_script)],
             cwd=str(path),
             creationflags=subprocess.CREATE_NEW_CONSOLE,

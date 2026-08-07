@@ -53,8 +53,10 @@ async def main() -> None:
     print(f"\nAttempting live import: {n_verts} vertices, {n_tris} triangles (raw, no decimation)...")
     try:
         r = await client.spawn_mesh(
-            mesh["vertices"], mesh["submeshes"],
-            position={"x": -3, "y": 0, "z": 5}, name="nekomimi-chan-static-mesh",
+            mesh["vertices"],
+            mesh["submeshes"],
+            position={"x": -3, "y": 0, "z": 5},
+            name="nekomimi-chan-static-mesh",
         )
         print(f"SUCCESS (raw): {r}")
         result = {"status": "success", "decimated": False, "vertices": n_verts, "triangles": n_tris, **r}

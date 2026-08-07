@@ -73,4 +73,3 @@ Unlike other VR platforms, Resonite assets are saved and shared *directly in-wor
 ### 💬 Active Discord Servers
 * **Resonite Official Discord**: [https://discord.gg/resonite](https://discord.gg/resonite) — Main meeting hub for developer updates, world creator showcases, asset sharing, and user support.
 * **Resonite Modding Discord**: [https://discord.gg/resonite-modding](https://discord.gg/resonite-modding) — Dedicated to the development and installation of C# mods, client UI overrides, and custom integration plugins.
-

@@ -264,9 +264,3 @@
 ---
 
 *This comparison is current as of December 2025. VR platforms evolve rapidly - check latest features before deciding!* 🤖
-
-
-
-
-
-

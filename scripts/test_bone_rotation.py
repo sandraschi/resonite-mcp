@@ -1,10 +1,13 @@
-import asyncio, json, sys
+import asyncio
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions
 from resonite_mcp.utils.gltf_meshjson import gltf_to_mesh_json
 
 VRM_PATH = Path(r"C:\Users\sandr\.avatarmcp\models\Nekomimi-chan.vrm")
+
 
 async def main():
     mesh = gltf_to_mesh_json(VRM_PATH, include_skinning=True)
@@ -30,6 +33,7 @@ async def main():
 
     # Rotate the head bone 45 degrees around Y (a visible head-turn).
     import math
+
     angle = math.radians(45)
     qy = {"x": 0.0, "y": math.sin(angle / 2), "z": 0.0, "w": math.cos(angle / 2)}
     try:
@@ -39,6 +43,7 @@ async def main():
         print(f"FAILED: {exc}")
 
     await client.disconnect()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

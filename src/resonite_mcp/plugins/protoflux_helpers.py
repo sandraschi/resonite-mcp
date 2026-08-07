@@ -253,8 +253,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
             return {
                 "success": True,
                 "message": (
-                    f"Optimization suggestions ({optimization_level}): "
-                    f"{len(suggestions[optimization_level])} items"
+                    f"Optimization suggestions ({optimization_level}): {len(suggestions[optimization_level])} items"
                 ),
                 "data": {
                     "script_name": script_name,

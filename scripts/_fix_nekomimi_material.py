@@ -1,16 +1,19 @@
 """Fix: add a solid-color material to Nekomimi-chan's MeshRenderer, which
 was spawned with an empty Materials list (spawn_mesh() called without a
 `color` arg skips material creation entirely)."""
+
 from __future__ import annotations
+
 import asyncio
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_value, rl_list, rl_ref
+from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_list, rl_ref, rl_value
 
 SLOT_ID = "Reso_A1A"
 RENDERER_ID = "Reso_A1C"
+
 
 async def main():
     sessions = await discover_sessions(timeout=15.0)
@@ -29,6 +32,7 @@ async def main():
     print(f"Updated renderer Materials: {result}")
 
     await client.disconnect()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

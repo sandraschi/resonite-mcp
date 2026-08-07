@@ -4,14 +4,18 @@ d = json.load(open(r"C:\temp\nekomimi_meshjson_test.json"))
 verts = d["vertices"]
 tris = d["submeshes"][0]["triangles"]
 
+
 def sub(a, b):
     return (a["x"] - b["x"], a["y"] - b["y"], a["z"] - b["z"])
 
+
 def cross(a, b):
-    return (a[1]*b[2] - a[2]*b[1], a[2]*b[0] - a[0]*b[2], a[0]*b[1] - a[1]*b[0])
+    return (a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0])
+
 
 def dot(a, b):
-    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
 
 def avg_normal(i0, i1, i2):
     n0 = verts[i0].get("normal")
@@ -25,9 +29,10 @@ def avg_normal(i0, i1, i2):
         (n0["z"] + n1["z"] + n2["z"]) / 3,
     )
 
+
 agree = 0
 disagree = 0
-sample = tris[::max(1, len(tris)//2000)]  # sample ~2000 triangles spread across mesh
+sample = tris[:: max(1, len(tris) // 2000)]  # sample ~2000 triangles spread across mesh
 for t in sample:
     i0, i1, i2 = t["vertex0Index"], t["vertex1Index"], t["vertex2Index"]
     p0, p1, p2 = verts[i0]["position"], verts[i1]["position"], verts[i2]["position"]
@@ -45,5 +50,7 @@ for t in sample:
 
 total = agree + disagree
 print(f"Sampled {len(sample)} triangles, {total} had normals to compare")
-print(f"Winding agrees with stored normal (CCW-consistent): {agree} ({100*agree/total:.1f}%)")
-print(f"Winding disagrees with stored normal (would be backface-culled if CCW expected): {disagree} ({100*disagree/total:.1f}%)")
+print(f"Winding agrees with stored normal (CCW-consistent): {agree} ({100 * agree / total:.1f}%)")
+print(
+    f"Winding disagrees with stored normal (would be backface-culled if CCW expected): {disagree} ({100 * disagree / total:.1f}%)"
+)

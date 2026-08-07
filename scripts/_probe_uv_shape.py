@@ -1,7 +1,9 @@
 """One-off: isolate the correct UV_Coordinate wire shape via a tiny 3-vertex
 triangle with uvs, trying candidate shapes against the real server until one
 works. Throwaway diagnostic script, not part of the package."""
+
 from __future__ import annotations
+
 import asyncio
 import sys
 from pathlib import Path
@@ -15,6 +17,7 @@ CANDIDATES = [
     ("type=uv", lambda u, v: {"$type": "uv", "x": u, "y": v}),
     ("type=UVCoordinate", lambda u, v: {"$type": "UVCoordinate", "x": u, "y": v}),
 ]
+
 
 async def main():
     sessions = await discover_sessions(timeout=8.0)
@@ -43,6 +46,7 @@ async def main():
             print(f"{label}: FAILED -> {exc}")
         await client.disconnect()
     print("All candidates failed.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

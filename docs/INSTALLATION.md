@@ -287,5 +287,3 @@ After installation, you can:
 
 **Installation verified on**: Windows 10/11, macOS 12+, Ubuntu 20.04+
 **Last updated**: December 22, 2025
-
-

@@ -38,20 +38,30 @@ def build_house_mesh_json() -> dict:
         base = len(vertices)
         hx, hy, hz = sx / 2, sy / 2, sz / 2
         corners = [
-            (cx - hx, cy - hy, cz - hz), (cx + hx, cy - hy, cz - hz),
-            (cx + hx, cy + hy, cz - hz), (cx - hx, cy + hy, cz - hz),
-            (cx - hx, cy - hy, cz + hz), (cx + hx, cy - hy, cz + hz),
-            (cx + hx, cy + hy, cz + hz), (cx - hx, cy + hy, cz + hz),
+            (cx - hx, cy - hy, cz - hz),
+            (cx + hx, cy - hy, cz - hz),
+            (cx + hx, cy + hy, cz - hz),
+            (cx - hx, cy + hy, cz - hz),
+            (cx - hx, cy - hy, cz + hz),
+            (cx + hx, cy - hy, cz + hz),
+            (cx + hx, cy + hy, cz + hz),
+            (cx - hx, cy + hy, cz + hz),
         ]
         for x, y, z in corners:
             vertices.append({"position": {"x": x, "y": y, "z": z}})
         faces = [
-            (0, 1, 2), (0, 2, 3),  # bottom
-            (4, 6, 5), (4, 7, 6),  # top
-            (0, 5, 1), (0, 4, 5),  # front
-            (1, 6, 2), (1, 5, 6),  # right
-            (2, 7, 3), (2, 6, 7),  # back
-            (3, 4, 0), (3, 7, 4),  # left
+            (0, 1, 2),
+            (0, 2, 3),  # bottom
+            (4, 6, 5),
+            (4, 7, 6),  # top
+            (0, 5, 1),
+            (0, 4, 5),  # front
+            (1, 6, 2),
+            (1, 5, 6),  # right
+            (2, 7, 3),
+            (2, 6, 7),  # back
+            (3, 4, 0),
+            (3, 7, 4),  # left
         ]
         for a, b, c in faces:
             triangles.append({"vertex0Index": base + a, "vertex1Index": base + b, "vertex2Index": base + c})
@@ -73,10 +83,12 @@ def build_house_mesh_json() -> dict:
             vertices.append({"position": {"x": pt[0], "y": pt[1], "z": pt[2]}})
         idx = {"A": 0, "B": 1, "C": 2, "D": 3, "R0": 4, "R1": 5}
         faces = [
-            ("A", "B", "R0"),        # front gable
-            ("C", "D", "R1"),        # back gable
-            ("A", "R0", "R1"), ("A", "R1", "D"),   # left slope
-            ("B", "C", "R1"), ("B", "R1", "R0"),   # right slope
+            ("A", "B", "R0"),  # front gable
+            ("C", "D", "R1"),  # back gable
+            ("A", "R0", "R1"),
+            ("A", "R1", "D"),  # left slope
+            ("B", "C", "R1"),
+            ("B", "R1", "R0"),  # right slope
         ]
         for a, b, c in faces:
             triangles.append(
@@ -132,8 +144,10 @@ async def main() -> None:
     # house["submeshes"] (the whole wrapped list) instead.
     try:
         r = await client.spawn_mesh(
-            house["vertices"], house["submeshes"],
-            position={"x": 0, "y": 1, "z": 5}, name="phase1-test-house",
+            house["vertices"],
+            house["submeshes"],
+            position={"x": 0, "y": 1, "z": 5},
+            name="phase1-test-house",
             color={"r": 0.8, "g": 0.6, "b": 0.3, "a": 1.0},
         )
         print(f"House spawn SUCCESS: {r}")
@@ -160,8 +174,10 @@ async def main() -> None:
 
     try:
         r = await client.spawn_mesh(
-            decimated["vertices"], decimated["submeshes"],
-            position={"x": 3, "y": 1, "z": 5}, name="phase1-test-roscar-decimated",
+            decimated["vertices"],
+            decimated["submeshes"],
+            position={"x": 3, "y": 1, "z": 5},
+            name="phase1-test-roscar-decimated",
             color={"r": 0.2, "g": 0.5, "b": 0.9, "a": 1.0},
         )
         print(f"Decimated roscar spawn SUCCESS: {r}")

@@ -5,13 +5,15 @@ skinning works and Nekomimi's problem is specific to her mesh/hierarchy
 complexity. If THIS tiny case is also invisible, the bind-pose mechanism
 itself is broken regardless of complexity -- much cheaper to learn that
 here than on a 45k-triangle mesh."""
+
 from __future__ import annotations
+
 import asyncio
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_ref, rl_list, rl_value
+from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_list, rl_ref, rl_value
 
 
 async def main():
@@ -28,17 +30,30 @@ async def main():
         {"position": {"x": 0.5, "y": 1, "z": 0}, "boneWeights": [{"boneIndex": 1, "weight": 1.0}]},
         {"position": {"x": -0.5, "y": 1, "z": 0}, "boneWeights": [{"boneIndex": 1, "weight": 1.0}]},
     ]
-    submeshes = [{"$type": "triangles", "triangles": [
-        {"vertex0Index": 0, "vertex1Index": 1, "vertex2Index": 2},
-        {"vertex0Index": 0, "vertex1Index": 2, "vertex2Index": 3},
-    ]}]
+    submeshes = [
+        {
+            "$type": "triangles",
+            "triangles": [
+                {"vertex0Index": 0, "vertex1Index": 1, "vertex2Index": 2},
+                {"vertex0Index": 0, "vertex1Index": 2, "vertex2Index": 3},
+            ],
+        }
+    ]
     bones = [
-        {"name": "root", "parentIndex": None,
-         "position": {"x": 0, "y": 0, "z": 0}, "rotation": {"x": 0, "y": 0, "z": 0, "w": 1},
-         "scale": {"x": 1, "y": 1, "z": 1}},
-        {"name": "child", "parentIndex": 0,
-         "position": {"x": 0, "y": 0, "z": 0}, "rotation": {"x": 0, "y": 0, "z": 0, "w": 1},
-         "scale": {"x": 1, "y": 1, "z": 1}},
+        {
+            "name": "root",
+            "parentIndex": None,
+            "position": {"x": 0, "y": 0, "z": 0},
+            "rotation": {"x": 0, "y": 0, "z": 0, "w": 1},
+            "scale": {"x": 1, "y": 1, "z": 1},
+        },
+        {
+            "name": "child",
+            "parentIndex": 0,
+            "position": {"x": 0, "y": 0, "z": 0},
+            "rotation": {"x": 0, "y": 0, "z": 0, "w": 1},
+            "scale": {"x": 1, "y": 1, "z": 1},
+        },
     ]
 
     print("Importing tiny skinned quad...")
@@ -60,16 +75,18 @@ async def main():
         char_slot, "[FrooxEngine]FrooxEngine.StaticMesh", {"URL": rl_value("Uri", asset_url)}
     )
     renderer_id = await client.add_component(
-        char_slot, "[FrooxEngine]FrooxEngine.SkinnedMeshRenderer",
+        char_slot,
+        "[FrooxEngine]FrooxEngine.SkinnedMeshRenderer",
         {"Mesh": rl_ref(static_mesh_id), "Bones": rl_list([rl_ref(root_bone_id), rl_ref(child_bone_id)])},
     )
     material_id = await client.add_component(
-        char_slot, "[FrooxEngine]FrooxEngine.PBS_Metallic",
+        char_slot,
+        "[FrooxEngine]FrooxEngine.PBS_Metallic",
         {"AlbedoColor": rl_value("colorX", {"r": 1.0, "g": 0.2, "b": 0.2, "a": 1.0})},  # bright red, easy to spot
     )
     await client.update_component(renderer_id, {"Materials": rl_list([rl_ref(material_id)])})
     print(f"SkinnedMeshRenderer wired: {renderer_id}, material: {material_id}")
-    print(f"\nLook at position (-3, 1, 5) for a small BRIGHT RED quad.")
+    print("\nLook at position (-3, 1, 5) for a small BRIGHT RED quad.")
 
     await client.disconnect()
 

@@ -1,9 +1,12 @@
-import asyncio, json, sys
+import asyncio
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions, rl_value
 
 PLAYER_ID = "Reso_A3B"
+
 
 async def main():
     sessions = await discover_sessions(timeout=15.0)
@@ -18,5 +21,6 @@ async def main():
     print(f"Play triggered: {result}")
 
     await client.disconnect()
+
 
 asyncio.run(main())

@@ -3,7 +3,9 @@ winding-reversal fix applied (strong evidence from tonight's investigation:
 99.9% winding/normal self-consistency check, plus the untested Z-flip
 hypothesis) -- this is the real destination now, not the ephemeral Tutorial
 session."""
+
 from __future__ import annotations
+
 import asyncio
 import json
 import sys
@@ -40,7 +42,9 @@ async def main():
     for v in mesh["vertices"]:
         v.pop("uvs", None)  # UV discriminator still unresolved; solid material for now
     flipped = flip_z_and_reverse_winding(mesh)
-    print(f"Converted + flipped: {len(flipped['vertices'])} vertices, {len(flipped['submeshes'][0]['triangles'])} triangles")
+    print(
+        f"Converted + flipped: {len(flipped['vertices'])} vertices, {len(flipped['submeshes'][0]['triangles'])} triangles"
+    )
 
     print("Discovering ResoniteLink sessions...")
     sessions = await discover_sessions(timeout=15.0)
@@ -57,8 +61,10 @@ async def main():
 
     try:
         r = await client.spawn_mesh(
-            flipped["vertices"], flipped["submeshes"],
-            position={"x": 0, "y": 0, "z": 2}, name="nekomimi-chan",
+            flipped["vertices"],
+            flipped["submeshes"],
+            position={"x": 0, "y": 0, "z": 2},
+            name="nekomimi-chan",
             color={"r": 0.95, "g": 0.85, "b": 0.9, "a": 1.0},
         )
         print(f"SUCCESS: {json.dumps(r, indent=2)}")

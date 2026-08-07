@@ -1,7 +1,9 @@
 """Prove the rig actually works: rotate Nekomimi-chan's head bone and see
 if the mesh deforms with it. This is the real test -- everything before
 this only proved the DATA was accepted, not that skinning functions."""
+
 from __future__ import annotations
+
 import asyncio
 import math
 import sys
@@ -45,10 +47,15 @@ async def main():
     print(f"New head bone rotation (bind pose + 40deg nod): {new_rot}")
 
     try:
-        result = await client.update_slot({
-            "id": HEAD_BONE_SLOT,
-            "rotation": {"$type": "floatQ", "value": {"x": new_rot[0], "y": new_rot[1], "z": new_rot[2], "w": new_rot[3]}},
-        })
+        result = await client.update_slot(
+            {
+                "id": HEAD_BONE_SLOT,
+                "rotation": {
+                    "$type": "floatQ",
+                    "value": {"x": new_rot[0], "y": new_rot[1], "z": new_rot[2], "w": new_rot[3]},
+                },
+            }
+        )
         print(f"SUCCESS: head bone rotated. {result}")
     except Exception as exc:
         print(f"FAILED: {exc}")

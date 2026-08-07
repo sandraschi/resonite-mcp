@@ -1,10 +1,14 @@
-import asyncio, json, sys
+import asyncio
+import json
+import sys
 from pathlib import Path
+
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 from resonite_mcp.resonite_link import ResoniteLinkClient, discover_sessions
 
 ORIGINAL_SLOT = "Reso_A1A"
 ZFLIP_SLOT_HINT = None  # will search by name if needed
+
 
 async def main():
     sessions = await discover_sessions(timeout=15.0)
@@ -31,5 +35,6 @@ async def main():
             print(json.dumps(data, indent=2)[:3000])
 
     await client.disconnect()
+
 
 asyncio.run(main())

@@ -52,12 +52,8 @@ def _parse_binary_stl(raw: bytes) -> list[tuple[tuple[float, float, float], list
     triangles = []
     offset = 84
     for _ in range(tri_count):
-        nx, ny, nz, v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z = struct.unpack_from(
-            "<12f", raw, offset
-        )
-        triangles.append(
-            ((nx, ny, nz), [(v0x, v0y, v0z), (v1x, v1y, v1z), (v2x, v2y, v2z)])
-        )
+        nx, ny, nz, v0x, v0y, v0z, v1x, v1y, v1z, v2x, v2y, v2z = struct.unpack_from("<12f", raw, offset)
+        triangles.append(((nx, ny, nz), [(v0x, v0y, v0z), (v1x, v1y, v1z), (v2x, v2y, v2z)]))
         offset += 50  # 12 floats (48 bytes) + 2-byte attribute count
     return triangles
 
