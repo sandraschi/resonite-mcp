@@ -177,3 +177,6 @@ dev = [
     "prometheus-client>=0.20.0",
     "pre-commit>=4.6.1",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*" = ["B007", "S310", "S603", "S607"]
