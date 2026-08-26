@@ -101,7 +101,7 @@ build-sidecar:
 # Tauri desktop app (requires sidecar for release)
 build-native:
     powershell.exe -NoProfile -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
-    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; npx @tauri-apps/cli build
+    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; pwsh -NoProfile -File '{{justfile_directory()}}\native\build.ps1'
 
 # Full release: web_sota + sidecar + NSIS installer
 build-all:
