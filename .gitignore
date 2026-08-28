@@ -59,4 +59,10 @@ test_output.txt
 
 # Editor / fileops backup sidecars
 *.bak
+*.bak.*
+*.orig
+*.rej
 *.py.backup
+
+# MCPB staging copy (derived from src/ - never commit)
+mcpb/src/
