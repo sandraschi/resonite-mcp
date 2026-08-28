@@ -6,11 +6,73 @@ system-level operations for the Resonite MCP server.
 
 import asyncio
 import logging
+import os
 import platform
+import re
+import subprocess
 
 import psutil
 
 logger = logging.getLogger(__name__)
+
+# ── Webapp + full-install discovery (mcp-central-docs/standards/MCP_WEBAPP_ABOUT_STANDARD.md)
+_WEBAPP_PORT = 10978  # registered frontend port (see WEBAPP_PORTS.md)
+_WEBAPP_URL = os.environ.get("RESONITE_WEBAPP_URL", f"http://127.0.0.1:{_WEBAPP_PORT}")
+_REPO_URL = "https://github.com/sandraschi/resonite-mcp"
+
+
+def _repo_url(default: str) -> str:
+    """Return the GitHub repo URL, preferring the git remote (falls back to default)."""
+    try:
+        out = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        ).stdout.strip()
+        out = out.replace(".git", "").replace("git@github.com:", "https://github.com/")
+        if re.match(r"^https?://", out):
+            return out
+    except Exception:
+        pass
+    return default
+
+
+_REPO_URL = _repo_url(_REPO_URL)
+
+
+async def about() -> str:
+    """Explain this MCP server, its paired webapp, and where to get the full install.
+
+    Resonite MCP is the AI-tool surface; this repo also ships a web dashboard (the visual
+    product). This tool tells a registry/user who has only the MCP server about the webapp
+    and the repo link for the full install.
+
+    Returns:
+        A short markdown blurb: what this server is, the paired webapp + its URL, and the
+        full-install repo link.
+    """
+    return f"""# Resonite MCP
+
+**MCP server:** control the Resonite social VR platform from chat - sessions, avatars,
+inventory, OSC, ResoniteLink world editing, the cloud REST API, and the cross-fleet asset
+pipeline.
+
+## Paired webapp
+This server ships with a **web dashboard** that visualizes everything the tools can do:
+connection health, the live world node tree, inventory, gallery, and controls.
+
+Open it at: **{_WEBAPP_URL}**
+(Requires the webapp to be running - see the repo below for how.)
+
+## Full install
+The webapp and all setup docs live in the repo:
+{_REPO_URL}
+
+**Quick start:** INSTALL.md -> clone -> just bootstrap -> just serve (webapp on the URL
+above, backend + MCP alongside).
+"""
 
 
 async def help(level: str = "basic", topic: str | None = None) -> str:
@@ -32,6 +94,9 @@ async def help(level: str = "basic", topic: str | None = None) -> str:
         help("advanced")          # Technical architecture and API
         help("basic", "avatar")   # Basic avatar control help
     """
+    if topic and topic.lower() in ("about", "get_started"):
+        return await about()
+
     base_help = f"""
 # Resonite MCP Server - {level.title()} Help
 
@@ -341,7 +406,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
         "timestamp": asyncio.get_event_loop().time(),
     }
 
-    # Plugin status — query real PluginManager
+    # Plugin status - query real PluginManager
     if plugin_manager:
         plugin_status = {
             "total_plugins": len(plugin_manager.loaded_plugins),
@@ -357,7 +422,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
             "note": "PluginManager not available",
         }
 
-    # OSC status — query real osc module data
+    # OSC status - query real osc module data
     try:
         from .osc import osc_clients, osc_recordings, osc_servers
 
@@ -378,7 +443,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
             "total_recorded_messages": 0,
         }
 
-    # Session status — probe reality
+    # Session status - probe reality
     res_running = is_resonite_running()
     rl_connected = resonite_link_client.running if resonite_link_client else False
     session_status = {
@@ -559,3 +624,4 @@ from ..server import server
 # Register tools
 server.tool()(help)
 server.tool()(status)
+server.tool()(about)
