@@ -124,6 +124,18 @@ except ImportError:
 resonite_link_client = None
 
 
+# -- Skills --
+@server.resource("skill://resonite-user")
+def get_resonite_user_skill() -> str:
+    """Skill content for using resonite-mcp as a Resonite content creator/tester."""
+    from pathlib import Path
+
+    skill_path = Path(__file__).parent / "skills" / "resonite-user" / "SKILL.md"
+    if skill_path.exists():
+        return skill_path.read_text(encoding="utf-8")
+    return "# Resonite User\n\nSkill content not available."
+
+
 @server.tool()
 async def search_guides(query: str, limit: int = 5) -> dict[str, Any]:
     """Perform a semantic search over the Resonite technical guides and documentation."""

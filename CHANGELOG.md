@@ -5,6 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-09-03 — First FastMCP-native skill (resonite-user)
+
+### Added
+- `src/resonite_mcp/skills/resonite-user/SKILL.md`, registered as `skill://resonite-user` in
+  `server.py`. resonite-mcp had zero FastMCP-native skills before this - the only `SKILL.md`
+  files in the repo were under `.cursor/skills/` (generic Cursor-IDE dev-workflow skills for
+  people building the repo, unrelated to what the MCP server itself exposes to its clients).
+- Task-oriented recipes: discover/connect, build a slot from scratch, animate, spawn a test
+  fixture, manage the model/texture depot - plus an explicit "what ResoniteLink cannot do"
+  section (no local-user position query, no generic model-file import) so an agent doesn't
+  waste a turn trying to build around gaps that are protocol-level, not missing tool coverage.
+- **Verification**: offline - imported `server.py`'s module directly (via `sys.modules`,
+  since `resonite_mcp/__init__.py` shadows the `server` submodule name with the FastMCP
+  instance at the package level - a real gotcha worth knowing before writing another
+  verification script against this package) and called the resource function, confirmed it
+  reads the SKILL.md file correctly.
+
 ## [Unreleased] — 2026-09-02 — Model/texture depot + backup (backport from overte-mcp)
 
 ### Added
