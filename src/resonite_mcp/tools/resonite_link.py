@@ -1,4 +1,4 @@
-"""ResoniteLink Tools — real-protocol WebSocket control (target 0.13.1).
+"""ResoniteLink Tools - real-protocol WebSocket control (target 0.13.1).
 
 Surfaces the ResoniteLinkClient as MCP tools: LAN session discovery,
 slot/component CRUD, member read/write, sync method calls, reflection,
@@ -305,7 +305,7 @@ async def resonite_link_call_method(
     Args:
         target_id: ID of the object to call the method on
         method_name: Method name
-        arguments: {argName: value} — primitives auto-encoded
+        arguments: {argName: value} - primitives auto-encoded
 
     ## Return Format
     {"status": str, "target_id": str, "method": str, "result": {...}}
@@ -329,7 +329,7 @@ async def resonite_link_reflect(component_type: str = "") -> dict[str, Any]:
 
     Without component_type: getComponentTypeList (all available types).
     With component_type: getComponentDefinition (member definitions; note that
-    member types are type REFERENCES since protocol 0.9.0 — resolve them via
+    member types are type REFERENCES since protocol 0.9.0 - resolve them via
     the typeDefinition messages if needed).
 
     ## Return Format
@@ -385,7 +385,7 @@ async def resonite_link_import_mesh_json(
 ) -> dict[str, Any]:
     """Import a mesh asset from JSON vertex/submesh data (importMeshJSON).
 
-    Live-verified 2026-07-18. Returns an asset URL, not an entity ID — wire
+    Live-verified 2026-07-18. Returns an asset URL, not an entity ID - wire
     it into a StaticMesh component's URL member (type "Uri") to render it,
     or use resonite_link_spawn_mesh to do the whole chain in one call.
 
@@ -393,7 +393,7 @@ async def resonite_link_import_mesh_json(
         "normal"/"tangent"/"color"/"uvs"/"boneWeights").
     submeshes: [{"$type": "triangles", "triangles": [{"vertex0Index",
         "vertex1Index","vertex2Index"}, ...]}] (or "points"/"trianglesFlat").
-    bones/blendshapes: optional, for skinned meshes — schema supports it but
+    bones/blendshapes: optional, for skinned meshes - schema supports it but
         NOT live-tested yet (avatar-import spike is future work).
 
     ## Return Format
@@ -414,7 +414,7 @@ async def resonite_link_import_texture(file_path: str) -> dict[str, Any]:
     """Import a texture from a file path on the RESONITE HOST machine (importTexture2DFile).
 
     NOTE: file_path is resolved on the machine running Resonite, not the
-    machine running this MCP server — matters if they differ. Wire shape is
+    machine running this MCP server - matters if they differ. Wire shape is
     confirmed against the upstream C# source but has NOT been live-tested
     against a running session yet; treat results with appropriate caution
     until it has been run once for real.
@@ -554,3 +554,131 @@ async def resonite_link_get(input_data: ResoniteLinkGetInput) -> dict[str, Any]:
             "field": input_data.field,
             "message": str(e),
         }
+
+
+# ── Animation ────────────────────────────────────────────────────────────────
+# Backported 2026-09-02 from overte-mcp's overte_entity_animate, itself backported from
+# norirobotics-mcp's Resonite wave-demo script (scripts/spawn_nori_a3.py) - same closed-form
+# math, now available as a reusable tool instead of a one-off script.
+
+
+def _quat_mul(a: tuple, b: tuple) -> tuple:
+    """Hamilton product a*b, both (x,y,z,w) - matches ResoniteLink's floatQ convention
+    (proven by test_bone_rotation.py / test_nod_head_bone.py's live head-bone rotation)."""
+    ax, ay, az, aw = a
+    bx, by, bz, bw = b
+    return (
+        aw * bx + ax * bw + ay * bz - az * by,
+        aw * by - ax * bz + ay * bw + az * bx,
+        aw * bz + ax * by - ay * bx + az * bw,
+        aw * bw - ax * bx - ay * by - az * bz,
+    )
+
+
+def _axis_angle_quat(axis: tuple, angle: float) -> tuple:
+    import math
+
+    half = angle / 2.0
+    s = math.sin(half)
+    return (axis[0] * s, axis[1] * s, axis[2] * s, math.cos(half))
+
+
+def _bounce_height(t: float, amplitude: float, damping: float, speed: float) -> float:
+    """A real bounce, not a sine wave - see overte-mcp's http_server.py for the derivation
+    and numerical verification (peaks decay geometrically, settles instead of looping
+    forever). t=0 starts on the ground with upward velocity, rises to `amplitude`, falls,
+    and each landing's velocity *= sqrt(damping)."""
+    import math
+
+    g = 9.8 * max(speed, 0.05)
+    v = math.sqrt(2 * g * amplitude) if amplitude > 0 else 0.0
+    remaining = t
+    while v > 1e-4:
+        duration = 2 * v / g
+        if remaining <= duration:
+            return max(v * remaining - 0.5 * g * remaining * remaining, 0.0)
+        remaining -= duration
+        v *= math.sqrt(max(min(damping, 1.0), 0.0))
+    return 0.0
+
+
+@server.tool()
+async def resonite_link_animate(
+    slot_id: str,
+    mode: str = "spin",
+    axis_x: float = 0.0,
+    axis_y: float = 1.0,
+    axis_z: float = 0.0,
+    speed: float = 1.0,
+    amplitude: float = 0.1,
+    damping: float = 0.6,
+    duration_s: float = 5.0,
+    tick_hz: float = 10.0,
+) -> dict[str, Any]:
+    """Loop-animate a slot in place: 'spin' (continuous rotation), 'bob' (smooth sinusoidal
+    vertical oscillation), or 'bounce' (real drop-and-rebound physics with energy loss per
+    landing, not a sine wave). Server-driven - repeated updateSlot calls over the ResoniteLink
+    WebSocket, not a baked animation clip. Blocks for duration_s while it runs.
+
+    speed: 'spin' radians/second, 'bob' oscillations/second, 'bounce' overall pace (scales
+        effective gravity). amplitude: 'bob'/'bounce' peak height above rest, in meters.
+        damping: 'bounce' only, energy retained per bounce (0-1).
+
+    ## Return Format
+    {"status": str, "slot_id": str, "mode": str, "ticks": int}
+
+    ## Examples
+    resonite_link_animate(slot_id="nori_left_wrist_roll_link", mode="spin", speed=1.5, duration_s=6)
+    resonite_link_animate(slot_id="test_ball", mode="bounce", amplitude=0.3, damping=0.6, duration_s=6)
+    """
+    import asyncio
+    import time
+
+    if mode not in ("spin", "bob", "bounce"):
+        return {"status": "error", "message": "mode must be 'spin', 'bob', or 'bounce'"}
+
+    client = await get_client()
+    if not client.running:
+        return {"status": "error", "message": "ResoniteLink not connected."}
+
+    try:
+        start_data = await client.get_slot(slot_id, include_component_data=False, depth=0)
+        slot_data = start_data.get("data", start_data)
+        rest_rot = slot_data.get("rotation", {}).get("value") or {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0}
+        rest_rot_t = (rest_rot["x"], rest_rot["y"], rest_rot["z"], rest_rot["w"])
+        rest_pos = slot_data.get("position", {}).get("value") or {"x": 0.0, "y": 0.0, "z": 0.0}
+    except Exception as e:
+        return {"status": "error", "message": f"Could not read slot {slot_id!r}: {e}"}
+
+    axis = (axis_x, axis_y, axis_z)
+    start = time.monotonic()
+    tick_interval = 1.0 / max(tick_hz, 0.1)
+    ticks = 0
+    try:
+        while (t := time.monotonic() - start) < duration_s:
+            if mode == "spin":
+                delta = _axis_angle_quat(axis, speed * t)
+                x, y, z, w = _quat_mul(rest_rot_t, delta)
+                update = {"id": slot_id, "rotation": {"$type": "floatQ", "value": {"x": x, "y": y, "z": z, "w": w}}}
+            else:
+                import math
+
+                offset = (
+                    amplitude * math.sin(2 * math.pi * speed * t)
+                    if mode == "bob"
+                    else _bounce_height(t, amplitude, damping, speed)
+                )
+                update = {
+                    "id": slot_id,
+                    "position": {
+                        "$type": "float3",
+                        "value": {"x": rest_pos["x"], "y": rest_pos["y"] + offset, "z": rest_pos["z"]},
+                    },
+                }
+            await client.update_slot(update)
+            ticks += 1
+            await asyncio.sleep(tick_interval)
+    except Exception as e:
+        return {"status": "error", "message": f"Update failed mid-animation: {e}", "ticks": ticks}
+
+    return {"status": "success", "slot_id": slot_id, "mode": mode, "ticks": ticks}

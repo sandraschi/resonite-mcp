@@ -5,6 +5,24 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-09-02 — Animate tool (backport from overte-mcp)
+
+### Added
+- `resonite_link_animate(slot_id, mode, ...)` — loop-animate any slot: `spin` (continuous
+  rotation), `bob` (sinusoidal oscillation), or `bounce` (real drop-and-rebound physics with
+  energy loss per landing, not a sine wave). Server-driven repeated `updateSlot` calls, same
+  pattern as the wave-demo in `norirobotics-mcp/scripts/spawn_nori_a3.py` and (verified
+  independently) `overte-mcp`'s `overte_entity_animate` - this port reuses the identical
+  closed-form bounce-physics math, not a reimplementation.
+- Live-verified: spawned a real test box, read its rest position via `get_slot`, ran the
+  bounce loop for 3s (26 ticks at ~10Hz, matching the requested tick rate), cleaned up with
+  `destroy_slot`.
+- First step of a planned backport of overte-mcp's session (2026-09-02) additions across
+  resonite-mcp/godot-mcp/unity3d-mcp - fixture spawner, model/texture depot, backup/restore,
+  and a live-world "nearby" search are still open; resonite-mcp already had more of the
+  low-level primitives those would build on (`destroy_slot`, `set`/`get`, `import_texture`,
+  `batch`) than overte-mcp did before that session, so the gap here is narrower than it looks.
+
 ## [1.2.0] — 2026-07-18/19 — Live Asset & Audio Pipeline, Webapp Audit 🎨🔊
 
 ### Added (rig/skeleton, 2026-07-19)
