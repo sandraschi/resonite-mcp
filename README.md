@@ -89,4 +89,5 @@ For deep architectural details, setup advice, and API references, check out our 
 ## 📈 Status & Roadmap
 * **Current Version**: `v1.1.0` (ResoniteLink Protocol 0.13.1).
 * **Compliance**: Agent Lab Phases 1–6 complete. Real-time slot CRUD, OSC synchronization, and cached asset syncing are fully live-verified.
+* **TODO — nearby-object search**: overte-mcp has a spatial `find_nearby` query built on Overte's `Entities.findEntities`; ResoniteLink has no equivalent primitive, so this hasn't been ported. Building it would mean walking the scene graph (recursive `get_children`/`get_slot` from a root, filtering by distance client-side) instead of a single server-side spatial query — a different, slower design, not a straight port. See `CHANGELOG.md` (2026-09-02 entries) for the rest of what *did* port cleanly from overte-mcp (animate, fixture spawner, model/texture depot + backup).
 * **License**: MIT Licensed. Made with care for the Resonite community.

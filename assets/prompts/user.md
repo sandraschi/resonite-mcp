@@ -208,6 +208,28 @@ Goal: place a simple mesh into the world entirely from code.
    resonite_link_import_mesh_json(vertices, submeshes) instead, which returns the asset URL
    without spawning a slot.
 
+## 11b. Tutorial 8b - Animate, Fixtures, and the Model/Texture Depot (backport from overte-mcp)
+
+Goal: loop-animate a slot, drop in a preset test fixture, and manage reusable model/texture
+assets - all added 2026-09-02 as a backport from overte-mcp's equivalent tools.
+
+1. Animate a slot in place: resonite_link_animate(slot_id="myBox", mode="bounce",
+   amplitude=0.3, damping=0.6, duration_s=6). mode is "spin", "bob", or "bounce" (a real
+   drop-and-rebound simulation, not a sine wave). Blocks for duration_s.
+2. Spawn a preset test fixture: resonite_link_spawn_fixture(fixture="ball", pos_x=0, pos_y=1,
+   pos_z=2). fixture is "box", "cup", "ball", "table", or "chair". Unlike overte-mcp, there is
+   no avatar-relative default placement - ResoniteLink cannot read your position, so
+   pos_x/y/z are required.
+3. Add a model or texture to the depot: resonite_link_depot_add(kind="model",
+   file_path="C:/path/to/thing.glb", description="a chair", category="furniture"). kind is
+   "model" (.glb/.vrm/.gltf) or "texture" (.png/.jpg/.jpeg).
+4. List what's in the depot: resonite_link_depot_list(kind="model").
+5. Spawn a depot model into the world: resonite_link_depot_spawn(kind="model", name=
+   "thing.glb", pos_x=0, pos_y=0, pos_z=0). For kind="texture" this instead returns an
+   asset_url to wire into a material yourself (no mesh to attach it to automatically).
+6. Snapshot the depot: resonite_link_depot_backup(), then resonite_link_depot_list_backups()
+   to see it, and resonite_link_depot_restore_backup(name=...) to roll back.
+
 ## 12. Tutorial 9 - ProtoFlux Scripts
 
 Goal: generate, run, and refine ProtoFlux logic.

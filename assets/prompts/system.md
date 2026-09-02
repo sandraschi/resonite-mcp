@@ -218,6 +218,27 @@ Real WebSocket protocol 0.13.1 against the in-game ResoniteLink bridge.
   chain importMeshJSON -> addSlot -> StaticMesh -> MeshRenderer -> PBS_Metallic;
   resonite_link_spawn(template_url, position): returns not_implemented for URL/file
   templates.
+- Animate (backport from overte-mcp, 2026-09-02): resonite_link_animate(slot_id,
+  mode="spin"|"bob"|"bounce", axis_x/y/z, speed, amplitude, damping, duration_s, tick_hz):
+  server-driven loop animation via repeated updateSlot calls. "bounce" is a real closed-form
+  drop-and-rebound simulation (energy loss per landing), not a sine wave. Live-verified.
+- Fixture spawner (backport, 2026-09-02): resonite_link_spawn_fixture(fixture="box"|"cup"|
+  "ball"|"table"|"chair", name="", pos_x/y/z, color_r/g/b/a): preset multi-part test fixtures
+  for gripper/manipulation testing. No avatar-relative default placement - ResoniteLink
+  cannot read the local user's position (protocol has no such message), so pos_x/y/z must be
+  given explicitly. Offline-verified (mesh geometry checked, not yet spawned live).
+- Model/texture depot (backport, 2026-09-02, tools/depot.py): resonite_link_depot_list(kind),
+  _add(kind, file_path, description="", category=""), _update_metadata(kind, name, ...),
+  _remove(kind, name), _spawn(kind, name, pos_x/y/z, slot_name=""), _backup(),
+  _list_backups(), _restore_backup(name). kind is "model" (.glb/.vrm/.gltf, spawned via
+  gltf_to_mesh_json + spawn_mesh) or "texture" (.png/.jpg/.jpeg, imported via
+  import_texture_file, returns asset_url only - no mesh to attach it to automatically). Local
+  on-disk folder + manifest.json, not HTTP-served (ResoniteLink imports take a file path on
+  the Resonite host, not a URL, unlike Overte).
+- NOT ported from overte-mcp: nearby-object search. ResoniteLink has no spatial-query
+  primitive like Overte's Entities.findEntities; doing this would mean walking the scene
+  graph and filtering by distance client-side, a different design, not a straight port. See
+  README.md's Status & Roadmap.
 
 ### 5.10 Fleet Pipeline (fleet_tools.py)
 
