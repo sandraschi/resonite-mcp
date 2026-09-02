@@ -66,3 +66,7 @@ test_output.txt
 
 # MCPB staging copy (derived from src/ - never commit)
 mcpb/src/
+
+# Generated backup archives (data/textures and models/ are tracked; the zip snapshots of
+# them are regenerable runtime artifacts, not source - mirrors overte-mcp's convention)
+data/backups/

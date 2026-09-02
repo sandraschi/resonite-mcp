@@ -5,6 +5,35 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-09-02 — Model/texture depot + backup (backport from overte-mcp)
+
+### Added
+- `src/resonite_mcp/tools/depot.py` (new module, 8 tools): `resonite_link_depot_list`,
+  `_add`, `_update_metadata`, `_remove`, `_spawn`, `_backup`, `_list_backups`,
+  `_restore_backup`. Ports overte-mcp's binary-file depot, but reshaped for a real API
+  difference found while porting: overte-mcp's depot serves files over HTTP because Overte's
+  spawn call takes a URL, while ResoniteLink's import calls (`import_texture_file`,
+  `gltf_to_mesh_json` + `spawn_mesh`) take a **local file path on the machine Resonite reads
+  from** - so this depot is a plain on-disk folder (`models/`, `data/textures/`) + manifest,
+  no HTTP static-mount, and `depot_add` copies a local file in rather than accepting an HTTP
+  upload (matching how every model actually got into this repo so far - already a local file
+  path).
+- Models (`.glb`/`.vrm`/`.gltf`) spawn via `gltf_to_mesh_json()` (the exact path already
+  live-verified for Nekomimi-chan's full VRM mesh, 2026-07-19) - VRM needs no separate
+  conversion step, that function reads the GLB binary container directly. Textures
+  (`.png`/`.jpg`/`.jpeg`) import via `import_texture_file()` and hand back the asset_url for
+  manual material wiring (no mesh to attach to automatically).
+- Backup/restore zip-snapshots `models/` + `data/textures/` into `data/backups/*.zip`, same
+  shape as overte-mcp's. `data/backups/` added to `.gitignore` (regenerable, not source).
+- **Verification**: fully offline this time (no Resonite session was reachable) but real,
+  not skipped - a standalone script exercised the full add -> list -> update_metadata ->
+  backup -> remove -> restore round-trip against a scratch temp dir (all assertions passed),
+  and `gltf_to_mesh_json()` was fed a hand-built synthetic single-triangle GLB to confirm the
+  depot_spawn glue code's calling convention matches its real signature (3 vertices, 1
+  triangle, correct shape for `spawn_mesh(**result)`). The one thing NOT verified is an
+  actual spawn into a live session - flag that as the next live-test item once Resonite is
+  running again.
+
 ## [Unreleased] — 2026-09-02 — Animate + fixture spawner (backport from overte-mcp)
 
 ### Added

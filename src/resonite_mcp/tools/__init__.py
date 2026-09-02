@@ -7,6 +7,7 @@ Each tool module registers its functions as MCP tools when imported.
 # Import all tool modules to register individual tools
 from . import (
     avatar,
+    depot,
     fleet_tools,
     inventory,
     osc,
@@ -22,6 +23,7 @@ from . import (
 
 __all__ = [
     "avatar",
+    "depot",
     "fleet_tools",
     "inventory",
     "osc",
