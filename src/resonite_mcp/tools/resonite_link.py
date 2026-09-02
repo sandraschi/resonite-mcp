@@ -682,3 +682,210 @@ async def resonite_link_animate(
         return {"status": "error", "message": f"Update failed mid-animation: {e}", "ticks": ticks}
 
     return {"status": "success", "slot_id": slot_id, "mode": mode, "ticks": ticks}
+
+
+# ── Fixture spawner ─────────────────────────────────────────────────────────────
+# Backported 2026-09-02 from overte-mcp's post_fixture_spawn (preset box/cup/ball/table/chair
+# for gripper/manipulation testing). overte-mcp defaults the placement point to "in front of
+# the local user" via its bridge's get_avatar action - ResoniteLink has NO equivalent (its
+# protocol only exposes the world data model, not session/user data - confirmed against the
+# upstream docs 2026-09-02), so position here has no avatar-relative default and must be
+# given explicitly (falls back to the world origin, same as resonite_link_add_slot).
+#
+# Geometry: "box" parts reuse the exact add_box() algorithm from
+# scripts/live_house_and_roscar_test.py verbatim (8 verts/12 tris per box, live-verified
+# there against a real session - the "Phase 1 gate" script). "ball" parts are a new
+# icosahedron mesh (12 verts/20 tris) built for this tool - NOT yet live-tested. Its winding
+# is derived programmatically to match add_box's proven convention (each triangle's
+# right-hand-rule normal checked to point toward the shape's center, flipped if it doesn't)
+# rather than assumed, but the geometry itself is unproven until run once against a real
+# session.
+
+
+def _box_mesh_parts(sx: float, sy: float, sz: float) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Axis-aligned box centered at local origin, full size (sx,sy,sz). Verbatim port of
+    add_box() from scripts/live_house_and_roscar_test.py (that script's docstring: "Live proof
+    script for the Phase 1 gate") - same 8 vertices, same 12-triangle winding."""
+    hx, hy, hz = sx / 2, sy / 2, sz / 2
+    corners = [
+        (-hx, -hy, -hz),
+        (hx, -hy, -hz),
+        (hx, hy, -hz),
+        (-hx, hy, -hz),
+        (-hx, -hy, hz),
+        (hx, -hy, hz),
+        (hx, hy, hz),
+        (-hx, hy, hz),
+    ]
+    vertices = [{"position": {"x": x, "y": y, "z": z}} for x, y, z in corners]
+    faces = [
+        (0, 1, 2),
+        (0, 2, 3),
+        (4, 6, 5),
+        (4, 7, 6),
+        (0, 5, 1),
+        (0, 4, 5),
+        (1, 6, 2),
+        (1, 5, 6),
+        (2, 7, 3),
+        (2, 6, 7),
+        (3, 4, 0),
+        (3, 7, 4),
+    ]
+    triangles = [{"vertex0Index": a, "vertex1Index": b, "vertex2Index": c} for a, b, c in faces]
+    return vertices, [{"$type": "triangles", "triangles": triangles}]
+
+
+def _ball_mesh_parts(diameter: float) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Icosahedron (12 verts/20 tris) scaled to `diameter`, winding auto-corrected to match
+    _box_mesh_parts' proven convention (right-hand-rule normal points toward the center, not
+    away from it - empirically true for every face of the live-tested box)."""
+    import math
+
+    radius = diameter / 2.0
+    phi = (1 + math.sqrt(5)) / 2
+    raw = [
+        (-1, phi, 0),
+        (1, phi, 0),
+        (-1, -phi, 0),
+        (1, -phi, 0),
+        (0, -1, phi),
+        (0, 1, phi),
+        (0, -1, -phi),
+        (0, 1, -phi),
+        (phi, 0, -1),
+        (phi, 0, 1),
+        (-phi, 0, -1),
+        (-phi, 0, 1),
+    ]
+    norm = math.sqrt(1 + phi * phi)
+    corners = [(x / norm * radius, y / norm * radius, z / norm * radius) for x, y, z in raw]
+    faces = [
+        (0, 11, 5),
+        (0, 5, 1),
+        (0, 1, 7),
+        (0, 7, 10),
+        (0, 10, 11),
+        (1, 5, 9),
+        (5, 11, 4),
+        (11, 10, 2),
+        (10, 7, 6),
+        (7, 1, 8),
+        (3, 9, 4),
+        (3, 4, 2),
+        (3, 2, 6),
+        (3, 6, 8),
+        (3, 8, 9),
+        (4, 9, 5),
+        (2, 4, 11),
+        (6, 2, 10),
+        (8, 6, 7),
+        (9, 8, 1),
+    ]
+
+    def _cross(u: tuple, v: tuple) -> tuple:
+        return (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+
+    def _dot(u: tuple, v: tuple) -> float:
+        return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]
+
+    fixed_faces = []
+    for a, b, c in faces:
+        p0, p1, p2 = corners[a], corners[b], corners[c]
+        e1 = (p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2])
+        e2 = (p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2])
+        n = _cross(e1, e2)
+        centroid = ((p0[0] + p1[0] + p2[0]) / 3, (p0[1] + p1[1] + p2[1]) / 3, (p0[2] + p1[2] + p2[2]) / 3)
+        fixed_faces.append((a, b, c) if _dot(n, centroid) < 0 else (a, c, b))
+
+    vertices = [{"position": {"x": x, "y": y, "z": z}} for x, y, z in corners]
+    triangles = [{"vertex0Index": a, "vertex1Index": b, "vertex2Index": c} for a, b, c in fixed_faces]
+    return vertices, [{"$type": "triangles", "triangles": triangles}]
+
+
+# Same real-world (meter) dimensions as overte-mcp's FIXTURE_PRESETS, so a fixture looks the
+# same size whether spawned in Overte or Resonite. "kind" picks the mesh generator above.
+FIXTURE_PRESETS: dict[str, list[dict[str, Any]]] = {
+    "box": [
+        {"kind": "box", "offset": (0, 0.05, 0), "dims": (0.1, 0.1, 0.1)},
+    ],
+    "cup": [
+        {"kind": "box", "offset": (0, 0.05, 0), "dims": (0.08, 0.10, 0.08)},
+    ],
+    "ball": [
+        {"kind": "ball", "offset": (0, 0.035, 0), "dims": (0.07, 0.07, 0.07)},
+    ],
+    "table": [
+        {"kind": "box", "offset": (0, 0.715, 0), "dims": (1.2, 0.05, 0.6)},
+        {"kind": "box", "offset": (0, 0.35, 0), "dims": (0.08, 0.70, 0.08)},
+    ],
+    "chair": [
+        {"kind": "box", "offset": (0, 0.45, 0), "dims": (0.4, 0.05, 0.4)},
+        {"kind": "box", "offset": (0, 0.70, -0.18), "dims": (0.4, 0.5, 0.05)},
+        {"kind": "box", "offset": (0, 0.225, 0), "dims": (0.35, 0.45, 0.35)},
+    ],
+}
+
+
+@server.tool()
+async def resonite_link_spawn_fixture(
+    fixture: str,
+    name: str = "",
+    pos_x: float = 0.0,
+    pos_y: float = 0.0,
+    pos_z: float = 0.0,
+    color_r: float = 1.0,
+    color_g: float = 1.0,
+    color_b: float = 1.0,
+    color_a: float = 1.0,
+) -> dict[str, Any]:
+    """Spawn a preset test fixture (box/cup/ball/table/chair) for gripper/manipulation
+    testing. Multi-part fixtures (table, chair) spawn as several independent slots near each
+    other, not parented - static set-dressing that never needs to move as a unit.
+
+    Unlike overte-mcp's equivalent, there is no "in front of you" default placement -
+    ResoniteLink cannot read the local user's position (no such message exists in the
+    protocol), so pos_x/y/z must be given explicitly; they default to the world origin.
+
+    color_r/g/b/a: 0-1 floats, applied uniformly to every part. Default white.
+
+    ## Return Format
+    {"status": str, "fixture": str, "slot_ids": list[str], "position": {"x","y","z"}}
+
+    ## Examples
+    resonite_link_spawn_fixture(fixture="ball", pos_x=0, pos_y=1, pos_z=2)
+    resonite_link_spawn_fixture(fixture="table", pos_x=3, pos_y=0, pos_z=0, color_r=0.4, color_g=0.25, color_b=0.1)
+    """
+    parts = FIXTURE_PRESETS.get(fixture)
+    if not parts:
+        return {"status": "error", "message": f"Unknown fixture {fixture!r}. Known: {sorted(FIXTURE_PRESETS)}"}
+
+    client = await get_client()
+    if not client.running:
+        return {"status": "error", "message": "ResoniteLink not connected."}
+
+    base_name = name or fixture
+    color = {"r": color_r, "g": color_g, "b": color_b, "a": color_a}
+    slot_ids: list[str] = []
+    try:
+        for i, part in enumerate(parts):
+            ox, oy, oz = part["offset"]
+            dx, dy, dz = part["dims"]
+            vertices, submeshes = _box_mesh_parts(dx, dy, dz) if part["kind"] == "box" else _ball_mesh_parts(dx)
+            result = await client.spawn_mesh(
+                vertices,
+                submeshes,
+                position={"x": pos_x + ox, "y": pos_y + oy, "z": pos_z + oz},
+                name=f"{base_name}_{i}" if len(parts) > 1 else base_name,
+                color=color,
+            )
+            slot_ids.append(result["slot_id"])
+    except Exception as e:
+        return {"status": "error", "message": str(e), "slot_ids": slot_ids}
+
+    return {
+        "status": "success",
+        "fixture": fixture,
+        "slot_ids": slot_ids,
+        "position": {"x": pos_x, "y": pos_y, "z": pos_z},
+    }

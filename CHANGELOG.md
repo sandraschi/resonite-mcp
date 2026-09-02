@@ -5,9 +5,25 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased] — 2026-09-02 — Animate tool (backport from overte-mcp)
+## [Unreleased] — 2026-09-02 — Animate + fixture spawner (backport from overte-mcp)
 
 ### Added
+- `resonite_link_spawn_fixture(fixture, ...)` — preset test fixtures (box/cup/ball/table/
+  chair) for gripper/manipulation testing, ported from overte-mcp's `post_fixture_spawn`.
+  Box parts reuse `add_box()` from `scripts/live_house_and_roscar_test.py` verbatim (that
+  script's own docstring: "Live proof script for the Phase 1 gate" - already live-verified
+  there). Ball parts are a new icosahedron mesh generator whose winding is derived
+  programmatically to match the proven box convention rather than assumed.
+  **Verification status: offline-only.** No Resonite session was reachable during this
+  change, so this was checked with a standalone script confirming every preset produces
+  non-empty, non-degenerate geometry with winding consistent with the proven box (12/12 box
+  triangles, 20/20 ball triangles inward-winding, matching `add_box`'s empirically-correct
+  convention) - it has NOT been spawned into a real running session yet. Treat as unverified
+  until that happens, especially the ball geometry.
+  Unlike overte-mcp's version, there is no avatar-relative default placement: ResoniteLink's
+  protocol only exposes the world data model, not session/user data (confirmed against the
+  upstream `Yellow-Dog-Man/ResoniteLink` docs), so there is no way to read the local user's
+  position to place a fixture "in front of you" - `pos_x/y/z` must be given explicitly.
 - `resonite_link_animate(slot_id, mode, ...)` — loop-animate any slot: `spin` (continuous
   rotation), `bob` (sinusoidal oscillation), or `bounce` (real drop-and-rebound physics with
   energy loss per landing, not a sine wave). Server-driven repeated `updateSlot` calls, same
