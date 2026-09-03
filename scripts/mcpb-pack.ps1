@@ -72,14 +72,23 @@ if (Test-Path $srcPrompts) {
     Write-Host "  WARNING: repo assets/prompts missing - using existing mcpb prompts" -ForegroundColor DarkYellow
 }
 
-# --- 1b. Ensure .mcpbignore exists at the pack root (mcpb/), else mcpb pack excludes nothing ---
+# --- 1b. Sync .mcpbignore to the pack root (mcpb/), else mcpb pack excludes nothing ---
+# ALWAYS overwrite from repo-root (never copy-if-missing) - a copy-if-missing check syncs
+# once then goes stale forever after mcpb/.mcpbignore first exists. Found 2026-09-03 while
+# fixing the identical bug freshly-introduced into overte-mcp/godot-mcp/robotics-mcp/
+# avatar-mcp's scripts: this script (the one those were modeled on) had the same gap - a
+# stale mcpb/.mcpbignore sitting here since Aug 27 was silently reused on every run since,
+# though a diff against the current repo-root version showed it happened to still match
+# byte-for-byte (no actual bundle impact this time, but the mechanism was broken regardless).
 $rootIgnore = Join-Path $RepoRoot ".mcpbignore"
 $packIgnore = Join-Path $RepoRoot "mcpb\.mcpbignore"
-if (-not (Test-Path $packIgnore)) {
-    if (Test-Path $rootIgnore) { Copy-Item $rootIgnore $packIgnore -Force } else { throw "No .mcpbignore at repo root or mcpb/ pack root" }
-    Write-Host "  Ensured mcpb/.mcpbignore from repo root" -ForegroundColor Green
+if (Test-Path $rootIgnore) {
+    Copy-Item $rootIgnore $packIgnore -Force
+    Write-Host "  Synced mcpb/.mcpbignore from repo root" -ForegroundColor Green
+} elseif (Test-Path $packIgnore) {
+    Write-Host "  [WARN] no repo-root .mcpbignore - using existing (possibly stale) mcpb/.mcpbignore" -ForegroundColor Yellow
 } else {
-    Write-Host "  mcpb/.mcpbignore present" -ForegroundColor Green
+    throw "No .mcpbignore at repo root or mcpb/ pack root"
 }
 
 # --- 2. Entry point import resolves from mcpb/src only ---
