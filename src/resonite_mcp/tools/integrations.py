@@ -41,8 +41,8 @@ async def resonite_import_worldlabs_url(
     """Import a WorldLabs splat from a URL into Resonite.
 
     Two import paths:
-    1. ResoniteLink WebSocket — if connected, sends importFile command
-    2. Direct OSC — sends URL via OSC for Resonite-side ProtoFlux to pick up
+    1. ResoniteLink WebSocket - if connected, sends importFile command
+    2. Direct OSC - sends URL via OSC for Resonite-side ProtoFlux to pick up
 
     Returns the import result with local file paths.
     """

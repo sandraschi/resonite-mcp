@@ -1,4 +1,4 @@
-"""ProtoFlux Helpers Plugin — real ProtoFlux scripting tools via OSC and ResoniteLink.
+"""ProtoFlux Helpers Plugin - real ProtoFlux scripting tools via OSC and ResoniteLink.
 
 [RATIONALE] ProtoFlux is Resonite's visual scripting system. These tools send
 real OSC commands to trigger ProtoFlux node execution in-world, and use
@@ -144,7 +144,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
 
             return {
                 "success": True,
-                "message": f"Template '{template_type}' ready — {len(tpl['nodes'])} nodes",
+                "message": f"Template '{template_type}' ready - {len(tpl['nodes'])} nodes",
                 "data": {
                     "template_type": template_type,
                     "nodes": tpl["nodes"],
@@ -290,7 +290,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                     sections.append(
                         {
                             "title": "ResoniteLink",
-                            "content": "Connected — can query script nodes in real-time",
+                            "content": "Connected - can query script nodes in real-time",
                         }
                     )
                 else:
@@ -304,7 +304,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                 sections.append(
                     {
                         "title": "Overview",
-                        "content": f"ProtoFlux script '{script_name}' — documented via OSC helper.",
+                        "content": f"ProtoFlux script '{script_name}' - documented via OSC helper.",
                     }
                 )
 

@@ -1,4 +1,4 @@
-"""Resonite MCP Prompt Templates — FastMCP 3.2+ prompts.
+"""Resonite MCP Prompt Templates - FastMCP 3.2+ prompts.
 
 Registered via import in server.py. Each prompt triggers a predefined
 conversation template for common Resonite workflows.

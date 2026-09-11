@@ -1,4 +1,4 @@
-"""Resonite MCP Agentic Workflows — FastMCP 3.2+ ctx.sample() patterns.
+"""Resonite MCP Agentic Workflows - FastMCP 3.2+ ctx.sample() patterns.
 
 Provides agentic planning and execution workflows that use LLM sampling
 (ctx.sample()) to reason autonomously about Resonite tasks.

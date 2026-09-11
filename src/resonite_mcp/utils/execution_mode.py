@@ -8,7 +8,7 @@ from typing import Any
 async def describe_execution_mode(*, installed: bool, running: bool) -> dict[str, Any]:
     if running:
         mode = "hands_in"
-        summary = "Resonite is running — use ResoniteLink and OSC for live imports."
+        summary = "Resonite is running - use ResoniteLink and OSC for live imports."
         steps = [
             "Confirm ResoniteLink enabled (port 4242).",
             "Use resonite_fleet import_staged_assets or import_blender_asset.",
@@ -16,7 +16,7 @@ async def describe_execution_mode(*, installed: bool, running: bool) -> dict[str
         ]
     elif installed:
         mode = "hands_off_launch"
-        summary = "Resonite installed but not running — launch before live imports."
+        summary = "Resonite installed but not running - launch before live imports."
         steps = [
             "Launch Resonite via steam:// or webapp Presence Gate.",
             "Stage assets with inkscape_sim_art stage_resonite_ui first.",
@@ -24,7 +24,7 @@ async def describe_execution_mode(*, installed: bool, running: bool) -> dict[str
         ]
     else:
         mode = "hands_off_install"
-        summary = "Resonite not detected — filesystem staging and HTTP fleet calls still work."
+        summary = "Resonite not detected - filesystem staging and HTTP fleet calls still work."
         steps = [
             "Install Resonite from Steam (App 2519830).",
             "Prepare UI vectors via inkscape-mcp sim art pipeline.",

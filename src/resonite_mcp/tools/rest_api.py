@@ -1,5 +1,5 @@
 """
-Resonite REST API Tools — portmanteau for api.resonite.com endpoints.
+Resonite REST API Tools - portmanteau for api.resonite.com endpoints.
 
 Implements: authentication, sessions, user lookup, records/inventory browser,
 and signalR message sending (for in-session GLB URL delivery).
@@ -209,7 +209,7 @@ async def resonite_rest_get_records(
 
     uid = user_id or _token_store.get("user_id", "")
     if not uid:
-        return {"status": "error", "detail": "user_id unknown — pass explicitly or login first."}
+        return {"status": "error", "detail": "user_id unknown - pass explicitly or login first."}
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:

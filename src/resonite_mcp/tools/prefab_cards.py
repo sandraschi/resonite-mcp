@@ -1,4 +1,4 @@
-"""Prefab App Tools — Rich in-chat cards for Resonite MCP.
+"""Prefab App Tools - Rich in-chat cards for Resonite MCP.
 
 Provides FastMCP app=True tools that render Prefab UI cards for dashboard
 status and inventory browsing in supporting MCP clients (Claude Desktop,

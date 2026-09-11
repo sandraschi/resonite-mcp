@@ -524,7 +524,7 @@ class ResoniteLinkClient:
     # and the render-chain shapes (StaticMesh/MeshRenderer/PBS_Metallic/Materials
     # list) are live-verified against a running session. import_texture_file's
     # wire shape is confirmed against the upstream C# source
-    # (Models/Assets/Texture2D/ImportTexture2DFile.cs — a plain one-field
+    # (Models/Assets/Texture2D/ImportTexture2DFile.cs - a plain one-field
     # message, no binary payload) but has NOT been live-tested; treat it as
     # "shape correct, unproven" until run once against a real session.
 
@@ -539,7 +539,7 @@ class ResoniteLinkClient:
 
         Live-verified 2026-07-18 (hand-built unit cube, 8 vertices / 12
         triangles). Recommended only for smaller meshes per upstream docs
-        (ImportMeshJSON.cs) — for large meshes, ImportMeshRawData is more
+        (ImportMeshJSON.cs) - for large meshes, ImportMeshRawData is more
         efficient but requires a binary WebSocket payload the client does not
         yet send; see import_mesh_raw().
 
@@ -550,11 +550,11 @@ class ResoniteLinkClient:
             (or "points": [...] for the points variant).
         bones / blendshapes: optional, for skinned/avatar-style meshes. The
             schema supports both (per ImportMeshJSON.cs) but this path has
-            NOT been live-tested — treat as unproven until run once.
+            NOT been live-tested - treat as unproven until run once.
 
         Returns the imported asset's URL (e.g. "local://.../xyz.meshx"),
         NOT an entity/component ID. Wire it into a StaticMesh component's
-        URL member (typed "Uri") to render it — see spawn_mesh() for the
+        URL member (typed "Uri") to render it - see spawn_mesh() for the
         full chain, or do it manually:
             static_mesh_id = await client.add_component(slot_id,
                 "[FrooxEngine]FrooxEngine.StaticMesh",
@@ -601,7 +601,7 @@ class ResoniteLinkClient:
 
     async def import_texture_file(self, file_path: str) -> str:
         """Import a texture asset from a file path on the RESONITE HOST machine
-        (not the machine running this client — matters if they differ).
+        (not the machine running this client - matters if they differ).
 
         Wire shape confirmed against upstream ImportTexture2DFile.cs (single
         "filePath" field, plain Message, no binary payload) but NOT yet
@@ -627,7 +627,7 @@ class ResoniteLinkClient:
 
         Does in one call what the Phase 0 spike did as three separate
         scripts (phase0_mesh_test.py + phase0_mesh_render.py +
-        phase0_material.py, 2026-07-18) — every step below is individually
+        phase0_material.py, 2026-07-18) - every step below is individually
         live-verified; this is a straight composition, not new behaviour:
           1. importMeshJSON -> assetURL
           2. addSlot at `position`, named `name`
@@ -743,11 +743,11 @@ class ResoniteLinkClient:
 
     async def import_audio_clip_file(self, file_path: str) -> str:
         """Import an audio asset from a file path on the RESONITE HOST machine
-        (not the machine running this client — matters if they differ).
+        (not the machine running this client - matters if they differ).
 
         Wire shape assumed by analogy with import_texture_file()/
         ImportTexture2DFile.cs (both are plain single-field file-import
-        messages per the docstring's message-type list) — NOT yet
+        messages per the docstring's message-type list) - NOT yet
         confirmed against ImportAudioClipFile.cs upstream source, and not
         live-tested until this session. Update this docstring once proven.
         """
@@ -778,16 +778,16 @@ class ResoniteLinkClient:
           5. AudioOutput(Source: reference = the AudioClipPlayer,
              Spatialize, Volume) so it's actually audible, positionally
 
-        Component member names confirmed live 2026-07-18 (not guessed —
+        Component member names confirmed live 2026-07-18 (not guessed -
         learned from the earlier UV_Coordinate lesson: reflection first,
         not brute-force guessing): AudioClipPlayer.Clip is a reference to
         IAssetProvider<AudioClip>; AudioClipPlayer.playback is a nested
         SyncPlayback/IPlayable object with sub-fields {"play", "loop",
-        "position", "speed"} — read back live via getComponent() before
+        "position", "speed"} - read back live via getComponent() before
         being used here, not assumed. Playback is triggered automatically
         by this method (play=True). Wiring itself is proven (spawn +
         trigger both return success with no errors); **actual audibility
-        still needs a human to confirm** — no automated way to verify
+        still needs a human to confirm** - no automated way to verify
         sound reaches a listener's ears from here.
 
         Returns {"slot_id", "asset_url", "clip_id", "player_id", "output_id"}.
@@ -807,7 +807,7 @@ class ResoniteLinkClient:
             {"Source": rl_ref(player_id), "Volume": volume, "Spatialize": spatialize},
         )
         # Trigger playback. "playback" is a nested SyncPlayback/IPlayable
-        # object, not a plain bool — live-confirmed shape 2026-07-18:
+        # object, not a plain bool - live-confirmed shape 2026-07-18:
         # {"play": bool, "loop": bool, "position": float, "speed": float}.
         await self.update_component(
             player_id,

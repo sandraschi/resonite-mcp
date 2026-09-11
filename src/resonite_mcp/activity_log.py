@@ -2,7 +2,7 @@
 
 Ported 2026-07-19 from web_sota/backend/server.py, which defined this
 class but is never actually launched (the real backend is http_server.py
-— see docs/WEBAPP_UPDATE_PLAN.md for the full story). Logging.tsx's
+- see docs/WEBAPP_UPDATE_PLAN.md for the full story). Logging.tsx's
 /api/logs* calls were pointing at code that never ran in production;
 this module is that same code, now wired into the server that's real.
 """
@@ -109,7 +109,7 @@ class ActivityLog:
         self._entries.clear()
 
 
-# Module-level singleton — matches the pattern the orphaned server.py used
+# Module-level singleton - matches the pattern the orphaned server.py used
 # (a single shared instance imported wherever logging is needed), just
 # actually importable from the server that's real now.
 activity_log = ActivityLog()

@@ -12,10 +12,11 @@ import shutil
 import subprocess
 import sys
 import webbrowser
-from typing import Any
+from typing import Annotated, Any
 
 from fastmcp import Context, FastMCP
 from fastmcp.server import create_proxy
+from pydantic import Field
 from starlette.responses import JSONResponse
 
 from .llm import detect_local_llms, get_best_substrate, synthesize_answer
@@ -137,21 +138,74 @@ def get_resonite_user_skill() -> str:
 
 
 @server.tool()
-async def search_guides(query: str, limit: int = 5) -> dict[str, Any]:
-    """Perform a semantic search over the Resonite technical guides and documentation."""
+async def search_guides(
+    query: Annotated[
+        str,
+        Field(
+            description="Natural-language search query over the Resonite guides (e.g. 'how do avatar parameters work via OSC')."
+        ),
+    ],
+    limit: Annotated[int, Field(ge=1, le=20, description="Max guide passages to return (1-20).")] = 5,
+) -> dict[str, Any]:
+    """Semantic vector search over the bundled Resonite technical guides (repo *.md + docs/**/*.md, embedded with sentence-transformers all-MiniLM-L6-v2 in LanceDB).
+
+    Use this when you need raw source passages to quote or to ground a follow-up call. Use
+    ask_resonite instead when you want one synthesized natural-language answer rather than passages.
+
+    Args:
+        query: Natural-language search query (e.g. "how do avatar parameters work via OSC").
+        limit: Max passages to return (1-20). Defaults to 5.
+
+    Returns:
+        {"status": "success"|"error", "results": [{"title": str, "filename": str, "text": str}],
+        "count": int}. Each result is one guide section chunk; "text" holds the passage.
+
+    Errors / recovery:
+        - {"status": "error", ...} means the LanceDB index is missing or uninitialized.
+          Recovery: call health_check() to confirm rag_engine_active, then retry once.
+          Empty results list is NOT an error - it means no guide covers the topic; try ask_resonite
+          or rephrase with Resonite terms (avatar, ProtoFlux, OSC, inventory).
+    """
     try:
         from .rag import rag_engine
 
         results = await rag_engine.search(query, limit)
-        return {"status": "success", "results": results}
+        return {"status": "success", "results": results, "count": len(results)}
     except Exception as e:
         logger.error(f"Search failed: {e}")
-        return {"status": "error", "message": str(e)}
+        return {"status": "error", "message": str(e), "results": [], "count": 0}
 
 
 @server.tool()
-async def ask_resonite(question: str) -> str:
-    """Ask a question about Resonite and get a synthesized answer based on technical documentation."""
+async def ask_resonite(
+    question: Annotated[
+        str,
+        Field(
+            description="The Resonite question in plain language (e.g. 'How do I spawn an inventory item via OSC?')."
+        ),
+    ],
+) -> str:
+    """Ask a question about Resonite and get one synthesized answer grounded in the bundled technical guides.
+
+    Retrieval pipeline: LanceDB vector search (top 3 guide chunks) then synthesis via the best
+    available local LLM substrate (Ollama/LM Studio/OpenAI-compatible). Falls back to returning
+    raw quoted passages when no LLM substrate is reachable. Prefer search_guides when you need
+    quotable passages; prefer this tool for a direct answer to a user question.
+
+    Args:
+        question: The user's Resonite question in plain language
+            (e.g. "How do I spawn an inventory item via OSC?").
+
+    Returns:
+        A markdown string: either "Synthesized via <provider> (<model>):\\n\\n<answer>" or,
+        with no LLM available, "Based on Resonite documentation (Note: No local LLM found ...):\\n\\n"
+        followed by quoted guide passages. The literal string "No relevant documentation found ..."
+        means the corpus has nothing on the topic.
+
+    Errors / recovery:
+        - "Error querying documentation: ..." means the RAG index failed. Recovery: run
+          health_check(), verify rag_engine_active is true, then retry once with a simpler question.
+    """
     try:
         from .rag import rag_engine
 
@@ -251,7 +305,25 @@ def is_resonite_running() -> bool:
 
 @server.tool()
 async def health_check() -> dict[str, Any]:
-    """Check the health status of the Resonite MCP server and its components."""
+    """Check the health status of the Resonite MCP server and its components.
+
+    Lightweight readiness probe: reports plugin/OSC/RAG/LLM state plus whether the Resonite
+    desktop client is installed and running. Call this first when search_guides or OSC tools
+    fail, or before starting any OSC/session workflow.
+
+    Returns:
+        {"status": "success", "message": str, "version": str, "agent_lab_phase": int,
+        "plugins_loaded": list[str], "osc_connected": bool, "resonite_link_connected": bool,
+        "rag_engine_active": bool, "llm_substrate": str ("none" when no local LLM),
+        "resonite_installed": bool, "resonite_running": bool}.
+        resonite_installed/resonite_running are false on non-Windows hosts by design.
+
+    Errors / recovery:
+        - This tool itself never raises; a missing key means that subsystem failed to import.
+          Recovery: resonite_running=false -> launch Resonite via POST /api/resonite/launch
+          (steam://rungameid/2519830); llm_substrate="none" -> ask_resonite still works but
+          returns raw passages instead of synthesized answers.
+    """
     installed = is_resonite_installed()
     running = is_resonite_running()
 

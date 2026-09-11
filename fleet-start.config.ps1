@@ -5,7 +5,7 @@
     BackendPort  = 10979
     FrontendPort = 10978
     HealthPath   = '/health'
-    WebRoot      = 'D:\Dev\repos\resonite-mcp\web_sota'
+    WebRoot      = 'web_sota'
     Backend = @{
         Kind          = 'uvicorn'
         UvicornTarget = 'resonite_mcp.http_server:app'

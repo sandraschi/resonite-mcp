@@ -112,7 +112,10 @@ fn materialize_backend(app: &AppHandle) -> Result<PathBuf, String> {
     }
     let bundled = resolve_bundled_backend(app)?;
     log_line(app, &format!("using bundled backend: {}", bundled.display()));
-    Ok(bundled)
+    // Strip Windows extended-length prefix
+    let s = bundled.to_string_lossy().to_string();
+    let clean = s.strip_prefix("\\\\?\\").map(PathBuf::from).unwrap_or(bundled.clone());
+    Ok(clean)
 }
 
 pub fn spawn_backend(app: AppHandle, state: &BackendProcess) -> Result<String, String> {

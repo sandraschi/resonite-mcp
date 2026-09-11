@@ -3,13 +3,13 @@ glTF/GLB -> ResoniteLink mesh-JSON converter.
 
 Bridges blender-mcp's glTF exports (home-shell refinery, furniture kit-bash,
 and eventually VRM-derived avatar meshes) into the wire format resonite-mcp's
-ResoniteLinkClient.import_mesh_json() sends over the wire — see
+ResoniteLinkClient.import_mesh_json() sends over the wire - see
 resonite_mcp.resonite_link for the schema this targets.
 
 COORDINATE FIX (confirmed live 2026-07-19): glTF (right-handed, Y-up,
 -Z-forward) and Resonite/FrooxEngine's coordinate convention don't match.
 A naive 1:1 copy produces a mesh that is completely invisible from any
-external viewing angle — not corrupted, just uniformly inside-out (verified
+external viewing angle - not corrupted, just uniformly inside-out (verified
 mathematically: 99.9% of a 2000-triangle sample had winding fully
 consistent with their own stored normals, meaning the *source* data was
 fine; the mismatch is the target engine's convention, not the parser).
@@ -21,25 +21,25 @@ visible with this fix applied, invisible without it. Set
 `resonite_coordinate_fix=False` only if you're feeding output somewhere
 that already expects raw glTF-convention data (e.g. re-exporting).
 
-Reads GLB binary containers (JSON chunk + BIN chunk) using only the stdlib —
+Reads GLB binary containers (JSON chunk + BIN chunk) using only the stdlib -
 no pygltflib/trimesh dependency, so nothing new to install on Goliath.
 
 HONESTY NOTE: vertex "position" and "normal" (with the coordinate fix
 above) are now live-verified end-to-end. "uvs" shape is confirmed to be a
 LIST of {"x","y"} dicts (multi-UV-channel support), but each element's
 `$type` polymorphic discriminator is still unknown after four live
-attempts (`UV_Coordinate`/`float2`/`uv`/`UVCoordinate` all rejected) —
+attempts (`UV_Coordinate`/`float2`/`uv`/`UVCoordinate` all rejected) -
 UVs will fail to import until that's resolved; strip them if you hit that.
 Bones/blendshapes (needed for the VRM avatar path) are intentionally NOT
-implemented here yet — GLB skinning data (JOINTS_0/WEIGHTS_0) decodes
+implemented here yet - GLB skinning data (JOINTS_0/WEIGHTS_0) decodes
 differently and deserves its own pass once this static-mesh path is proven.
 
-Known simplifications (v1, not silent — logged as warnings):
+Known simplifications (v1, not silent - logged as warnings):
   - Only the first primitive of each mesh is converted; multi-material
     meshes with several primitives will lose all but the first.
   - Only TRIANGLES-mode primitives (glTF mode 4, the default) are handled.
   - Multiple meshes in one glTF are merged into one combined vertex/
-    submesh list (vertex indices offset accordingly) — fine for a single
+    submesh list (vertex indices offset accordingly) - fine for a single
     collider/shell blob, may not be what you want for a scene with many
     independent objects; revisit if that case shows up.
 """
@@ -89,13 +89,13 @@ class GltfConversionError(Exception):
 def _read_glb(path: Path) -> tuple[dict[str, Any], bytes | None]:
     """Parse a .glb container into (json_dict, binary_chunk_or_None).
 
-    Also accepts plain .gltf (JSON-only, no BIN chunk framing) — detected by
+    Also accepts plain .gltf (JSON-only, no BIN chunk framing) - detected by
     the absence of the GLB magic number, in which case the file is parsed as
     plain JSON and any buffers must be embedded as base64 data URIs.
     """
     raw = path.read_bytes()
     if len(raw) < 12 or struct.unpack_from("<I", raw, 0)[0] != GLB_MAGIC:
-        # Not a binary GLB — treat as plain-text .gltf JSON.
+        # Not a binary GLB - treat as plain-text .gltf JSON.
         return json.loads(raw.decode("utf-8")), None
 
     _magic, _version, total_length = struct.unpack_from("<III", raw, 0)
@@ -178,7 +178,7 @@ def _decode_accessor(
 
     buffer_view_index = accessor.get("bufferView")
     if buffer_view_index is None:
-        # Accessor has no data (sparse-only or fully zero) — not needed for
+        # Accessor has no data (sparse-only or fully zero) - not needed for
         # this project's fixtures; fail loudly rather than fake zeros.
         raise GltfConversionError(f"accessor {accessor_index}: sparse/zero-filled accessors not supported")
 
@@ -243,7 +243,7 @@ def _quat_to_matrix(qx: float, qy: float, qz: float, qw: float) -> list[list[flo
 
 def _trs_to_matrix(translation: list[float], rotation: list[float], scale: list[float]) -> list[list[float]]:
     """Compose glTF TRS (translation, quaternion xyzw, scale) into a 4x4
-    row-major matrix (last row [0,0,0,1], translation in the last COLUMN —
+    row-major matrix (last row [0,0,0,1], translation in the last COLUMN -
     the convention this project's rl_value("float4x4", ...) output uses,
     matching FrooxEngine's row-major m_rowcol field naming)."""
     r = _quat_to_matrix(*rotation)
@@ -274,7 +274,7 @@ def _reflect_z_matrix(w: dict[str, float]) -> dict[str, float]:
     coordinate fix applied to vertex positions/normals elsewhere in this
     module. Conjugation (Z @ M @ Z, with Z = diag(1,1,-1,1)) is the
     mathematically correct way to mirror a full rotation+translation
-    matrix — flipping individual fields by hand (an earlier, sloppier
+    matrix - flipping individual fields by hand (an earlier, sloppier
     version of this function) risks getting the rotation part wrong."""
     z = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, -1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
     m = _wire_to_matrix(w)
@@ -295,7 +295,7 @@ def _node_world_matrix(
     child_to_parent: dict[int, int],
     cache: dict[int, list[list[float]]],
 ) -> list[list[float]]:
-    """World-space (bind pose) matrix for a node — its own local TRS
+    """World-space (bind pose) matrix for a node - its own local TRS
     composed with every ancestor's, walking up the FULL node graph (not
     just joints in this skin), since a bind pose is relative to the
     mesh's own local space, which may sit under non-joint ancestor nodes."""
@@ -327,10 +327,10 @@ def _extract_skeleton(gltf: dict[str, Any], skin_index: int) -> list[dict[str, A
     """Build a `bones` list matching the REAL ResoniteLink schema, confirmed
     2026-07-19 by reading the actual open-source C# models
     (ResoniteLink/Models/Assets/Mesh/JSON/Bone.cs): each bone is just
-    {"name": str, "bindPose": <float4x4>} — NOT the parentIndex/position/
+    {"name": str, "bindPose": <float4x4>} - NOT the parentIndex/position/
     rotation/scale shape an earlier version of this function guessed
     (which the server silently accepted, ignoring the unrecognized fields
-    — a real, since-fixed bug: bind poses were never actually being set).
+    - a real, since-fixed bug: bind poses were never actually being set).
 
     bindPose is each joint's world-space transform at rest pose, computed
     by composing TRS matrices up the full node ancestor chain (not just
@@ -367,7 +367,7 @@ def _decode_morph_targets(
 ) -> list[dict[str, Any]]:
     """Decode glTF morph targets (blend shapes) on a primitive into a list
     of {"name": str, "frames": [{"position": 1.0, "positionDeltas": [...]}]}
-    — one entry per target (confirmed shape, see below).
+    - one entry per target (confirmed shape, see below).
 
     CONFIRMED 2026-07-19 by reading the real C# model (BlendshapeFrame.cs):
     blendshapes need a "frames" wrapper around positionDeltas, and each
@@ -397,7 +397,7 @@ def _decode_morph_targets(
                 # CONFIRMED 2026-07-19 by reading the real C# model
                 # (BlendshapeFrame.cs): the frame's field is "position"
                 # (0..1 progress within the blendshape animation, 1.0 for
-                # a single-frame shape) — NOT "weight", which an earlier
+                # a single-frame shape) - NOT "weight", which an earlier
                 # version of this function guessed and which the server
                 # silently accepted while ignoring (so it was never
                 # actually being set).
@@ -423,18 +423,18 @@ def gltf_to_mesh_json(
     into ResoniteLinkClient.import_mesh_json(**result) or .spawn_mesh(**result).
     If `include_skinning` is True and the source has skin/morph data, the
     result also has "bones" and/or "blendshapes" keys (see
-    `import_mesh_json`'s signature) — pass those through too.
+    `import_mesh_json`'s signature) - pass those through too.
 
     resonite_coordinate_fix (default True): negate Z on every position/
     normal and reverse triangle winding to compensate for the glTF-vs-
     Resonite coordinate mismatch (see module docstring). Live-verified
-    necessary — leave this on unless you have a specific reason not to.
+    necessary - leave this on unless you have a specific reason not to.
 
     include_skinning (default False, EXPERIMENTAL 2026-07-19, UNPROVEN):
     decode JOINTS_0/WEIGHTS_0 into per-vertex "boneWeights" and glTF
     skins into a "bones" list; decode morph targets into "blendshapes".
     The Resonite-side wire shape for both has not been confirmed against
-    a live session (see TODO/STATUS docs) — treat any output using this
+    a live session (see TODO/STATUS docs) - treat any output using this
     flag as "parses the source correctly, wire shape not yet verified."
 
     Merges every TRIANGLES-mode primitive across every mesh in the file into
@@ -463,7 +463,7 @@ def gltf_to_mesh_json(
                 mesh_to_skin[node["mesh"]] = node["skin"]
 
         # glTF's non-standard-but-common convention for morph target names
-        # lives at mesh["extras"]["targetNames"] — stash it per-primitive
+        # lives at mesh["extras"]["targetNames"] - stash it per-primitive
         # under a private key so _decode_morph_targets can find it without
         # threading another parameter through every call site.
         for mesh in meshes:
@@ -491,7 +491,7 @@ def gltf_to_mesh_json(
             mode = primitive.get("mode", 4)  # 4 = TRIANGLES is the glTF default
             if mode != 4:
                 logger.warning(
-                    "%s: mesh %d primitive %d has mode=%d (not TRIANGLES) — skipped",
+                    "%s: mesh %d primitive %d has mode=%d (not TRIANGLES) - skipped",
                     path.name,
                     mesh_idx,
                     prim_idx,
@@ -503,7 +503,7 @@ def gltf_to_mesh_json(
             attributes = primitive.get("attributes", {})
             if "POSITION" not in attributes:
                 logger.warning(
-                    "%s: mesh %d primitive %d has no POSITION attribute — skipped",
+                    "%s: mesh %d primitive %d has no POSITION attribute - skipped",
                     path.name,
                     mesh_idx,
                     prim_idx,
@@ -546,7 +546,7 @@ def gltf_to_mesh_json(
                 if joints is not None:
                     # CONFIRMED via reflection and a successful live test
                     # 2026-07-19: BoneWeight.cs is exactly
-                    # {"boneIndex": int, "weight": float} — matches what
+                    # {"boneIndex": int, "weight": float} - matches what
                     # was already here.
                     vertex["boneWeights"] = [
                         {"boneIndex": joints[i][k], "weight": weights[i][k]}

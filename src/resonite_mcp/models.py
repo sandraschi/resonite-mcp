@@ -4,12 +4,36 @@ from pydantic import BaseModel, Field
 
 
 class OSCMessageInput(BaseModel):
-    """Input model for OSC message sending."""
+    """Input model for a single OSC message send."""
 
-    host: str = Field(..., description="Target hostname or IP address")
-    port: int = Field(gt=0, le=65535, description="Target UDP port (1-65535)")
-    address: str = Field(..., pattern=r"^/.*", description="OSC address pattern starting with /")
-    values: list[Any] = Field(default_factory=list, description="List of values to send")
+    host: str = Field(
+        ...,
+        description="Target hostname or IP address of the Resonite OSC endpoint (usually '127.0.0.1' for local Resonite).",
+    )
+    port: int = Field(gt=0, le=65535, description="Target UDP port (1-65535). Resonite listens on 9000 by default.")
+    address: str = Field(
+        ...,
+        pattern=r"^/.*",
+        description="OSC address path, must start with '/'. Resonite avatar params live under '/avatar/parameter/<Name>', sessions under '/resonite/session/*', worlds under '/resonite/world/*'.",
+    )
+    values: list[Any] = Field(
+        default_factory=list,
+        description="Argument list for the OSC message: floats/ints for parameters, strings for names. Empty list sends a trigger/bang.",
+    )
+
+
+class OSCBatchMessage(BaseModel):
+    """One message inside an osc_batch_send batch. Defines the itemSchema ToolBench requires."""
+
+    address: str = Field(
+        ...,
+        pattern=r"^/.*",
+        description="OSC address path starting with '/'. Example: '/avatar/parameter/Happy'.",
+    )
+    values: list[Any] = Field(
+        default_factory=list,
+        description="Argument values for this message (e.g. [0.8] for a float parameter).",
+    )
 
 
 class OSCServerInput(BaseModel):

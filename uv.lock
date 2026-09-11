@@ -2517,6 +2517,7 @@ dev = [
     { name = "pyinstaller" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
+    { name = "pywin32" },
     { name = "ruff" },
 ]
 
@@ -2559,6 +2560,7 @@ dev = [
     { name = "pyinstaller", specifier = ">=6.21.0" },
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-asyncio", specifier = ">=0.24.0" },
+    { name = "pywin32", specifier = ">=311" },
     { name = "ruff", specifier = ">=0.16.0,<0.17" },
 ]
 

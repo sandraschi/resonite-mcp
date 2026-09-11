@@ -237,7 +237,7 @@ async def resonite_start_app_http() -> dict[str, Any]:
 
 
 async def resonite_system_status_http() -> dict[str, Any]:
-    """Full system status — returns JSON that the webapp PresenceGate expects."""
+    """Full system status - returns JSON that the webapp PresenceGate expects."""
     from .server import is_resonite_installed, is_resonite_running
 
     return {

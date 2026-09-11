@@ -46,7 +46,7 @@ async def plugin_list() -> dict[str, Any]:
                 "discovered_plugins": [],
                 "total_loaded": 0,
                 "total_discovered": 0,
-                "note": "PluginManager not available — plugin system not initialized.",
+                "note": "PluginManager not available - plugin system not initialized.",
             },
         }
     except Exception as e:
@@ -71,7 +71,7 @@ async def plugin_load(plugin_name: str) -> dict[str, Any]:
         if not pm:
             return {
                 "status": "error",
-                "message": "PluginManager not available — cannot load plugins.",
+                "message": "PluginManager not available - cannot load plugins.",
                 "plugin_name": plugin_name,
             }
         result = await pm.load_plugin(plugin_name)
@@ -116,7 +116,7 @@ async def plugin_unload(plugin_name: str) -> dict[str, Any]:
         if not pm:
             return {
                 "status": "error",
-                "message": "PluginManager not available — cannot unload plugins.",
+                "message": "PluginManager not available - cannot unload plugins.",
                 "plugin_name": plugin_name,
             }
         if plugin_name not in pm.loaded_plugins:
@@ -158,7 +158,7 @@ async def plugin_reload(plugin_name: str) -> dict[str, Any]:
     if not pm:
         return {
             "status": "error",
-            "message": "PluginManager not available — cannot reload plugins.",
+            "message": "PluginManager not available - cannot reload plugins.",
             "plugin_name": plugin_name,
         }
     unload_result = await plugin_unload(plugin_name)
@@ -202,7 +202,7 @@ async def plugin_discover() -> dict[str, Any]:
             }
         return {
             "status": "error",
-            "message": "PluginManager not available — plugin discovery not possible.",
+            "message": "PluginManager not available - plugin discovery not possible.",
         }
     except Exception as e:
         logger.error(f"Failed to discover plugins: {e}")

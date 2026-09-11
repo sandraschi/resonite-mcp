@@ -1,4 +1,4 @@
-"""VBOT Robotics Tools — OSC-driven virtual robot control in Resonite.
+"""VBOT Robotics Tools - OSC-driven virtual robot control in Resonite.
 
 Wraps the vBot OSC receiver spec (docs/VBOT_OSC_RECEIVER.md) as MCP tools.
 Sends UDP OSC messages to Resonite on port 9000 for vBot spawn/move/head/stop.
@@ -166,7 +166,7 @@ async def resonite_vbot_head(
 
 @server.tool()
 async def resonite_vbot_stop(robot_id: str) -> dict[str, Any]:
-    """Stop a vBot — zero all locomotion commands.
+    """Stop a vBot - zero all locomotion commands.
 
     Args:
         robot_id: The robot ID to stop

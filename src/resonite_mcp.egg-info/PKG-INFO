@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: resonite-mcp
 Version: 1.2.0
-Summary: Resonite social VR platform MCP server for natural language control of avatars, worlds, and ProtoFlux scripting
+Summary: Natural-language control of Resonite VR: avatars, worlds, inventory, OSC, world graph
 Author-email: Sandra Schipal <sandraschipal@gmail.com>
 License: MIT
 Project-URL: Homepage, https://github.com/sandraschi/resonite-mcp
@@ -21,6 +21,7 @@ Classifier: Topic :: Communications :: Chat
 Classifier: Topic :: Internet :: WWW/HTTP :: Dynamic Content
 Requires-Python: >=3.12
 Description-Content-Type: text/markdown
+License-File: LICENSE
 Requires-Dist: fastmcp<4,>=3.4.4
 Requires-Dist: fastapi>=0.100.0
 Requires-Dist: httpx>=0.25.0
@@ -51,6 +52,7 @@ Requires-Dist: mkdocs-material>=9.0.0; extra == "docs"
 Requires-Dist: mkdocstrings[python]>=0.20.0; extra == "docs"
 Provides-Extra: monitoring
 Requires-Dist: prometheus-client>=0.20.0; extra == "monitoring"
+Dynamic: license-file
 
 # 🎭 Resonite MCP & Dashboard
 

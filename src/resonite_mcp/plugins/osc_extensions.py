@@ -1,14 +1,22 @@
-"""OSC Extensions Plugin — real OSC monitoring, batch send, recording, and analysis.
+"""OSC Extensions Plugin - real OSC monitoring, batch send, recording, and analysis.
 
 [RATIONALE] Consolidates advanced OSC tooling that builds on the core `osc.py`
 send/receive primitives. Keeps the 8 core tools clean and puts power-user features here.
 """
 
-from typing import Any
+from typing import Annotated, Any
 
 from fastmcp import FastMCP
+from pydantic import Field
 
+from ..models import OSCBatchMessage
 from .base_plugin import BasePlugin
+
+# OSC protocol assumptions shared by every tool in this plugin:
+# - Transport is UDP via python-osc. Resonite listens on 127.0.0.1:9000 by default.
+# - Every address MUST start with "/". Avatar float params: "/avatar/parameter/<Name>".
+# - Values are JSON scalars (float/int/str/bool); [] means trigger/bang. Types are
+#   passed through to python-osc unchanged, so keep floats as floats (0.8, not "0.8").
 
 
 class OSCExtensionsPlugin(BasePlugin):
@@ -37,20 +45,52 @@ class OSCExtensionsPlugin(BasePlugin):
 
         @server.tool()
         async def osc_monitor_start(
-            port: int = 9001,
-            address_filter: str | None = None,
-            duration_seconds: float | None = None,
+            port: Annotated[
+                int,
+                Field(
+                    ge=1,
+                    le=65535,
+                    description="Local UDP port of an already-running OSC receiver started via start_osc_server (default 9001).",
+                ),
+            ] = 9001,
+            address_filter: Annotated[
+                str | None,
+                Field(
+                    description="Optional substring filter on the OSC address (e.g. '/avatar/parameter/'). Only matching addresses are counted. Must start with '/' when given; '*' wildcards are NOT supported, plain substring match only."
+                ),
+            ] = None,
+            duration_seconds: Annotated[
+                float | None,
+                Field(
+                    ge=0,
+                    description="Reserved informational window in seconds; the count snapshot is returned immediately and is not delayed by this value.",
+                ),
+            ] = None,
         ) -> dict[str, Any]:
-            """Start advanced OSC monitoring with filtering and analysis.
+            """Attach a filtered counter to a running OSC receiver and report how many messages match.
 
-            Monitors OSC traffic on the given port using the real OSC server
-            infrastructure. If a filter is provided, only matching addresses are tracked.
+            WHEN TO USE: live "how much traffic right now" snapshot on an existing receiver.
+            Use osc_analyze_traffic instead for sampled rate/top-address statistics over a time
+            window; use osc_record_session when you need to capture a session for later playback;
+            use get_received_messages for the actual message bodies.
 
-            ## Return Format
-            {"success": bool, "message": str, "data": {"port": int, "filter": str|null, "monitored_messages": int}}
+            Args:
+                port: Local UDP port of the running OSC receiver.
+                address_filter: Optional address substring; None counts everything.
+                duration_seconds: Informational only; does not block.
 
-            ## Examples
-            osc_monitor_start(port=9001, address_filter="/avatar/parameter/*")
+            Returns:
+                {"success": bool, "message": str, "data": {"port": int, "filter": str|null,
+                "monitored_messages": int, "server_running": bool}}.
+
+            Errors / recovery:
+                - success=false "No OSC server running on port ..." -> call start_osc_server(port)
+                  first, then retry. Verify with get_osc_server_stats(port).
+                - count 0 with a filter set usually means the filter string does not occur in any
+                  address; retry with address_filter=None to confirm traffic is flowing.
+
+            Example:
+                osc_monitor_start(port=9001, address_filter="/avatar/parameter/")
             """
             try:
                 from ..tools.osc import osc_recordings, osc_servers
@@ -78,23 +118,57 @@ class OSCExtensionsPlugin(BasePlugin):
 
         @server.tool()
         async def osc_batch_send(
-            port: int,
-            messages: list[dict[str, Any]],
-            delay_ms: int = 0,
+            port: Annotated[
+                int,
+                Field(
+                    ge=1,
+                    le=65535,
+                    description="Target UDP port of the Resonite OSC endpoint (Resonite default 9000). Sent to 127.0.0.1.",
+                ),
+            ],
+            messages: Annotated[
+                list[OSCBatchMessage],
+                Field(
+                    description="Ordered messages to send. Each item needs 'address' ('/...' path) and 'values' (arg list, e.g. [0.8]). Max ~100 per call; split longer animations into chunks."
+                ),
+            ],
+            delay_ms: Annotated[
+                int,
+                Field(
+                    ge=0,
+                    le=60000,
+                    description="Pause between messages in milliseconds. Use 50-200 for avatar animation sequencing, 0 for fire-and-forget.",
+                ),
+            ] = 0,
         ) -> dict[str, Any]:
-            """Send multiple OSC messages in batch with optional inter-message delay.
+            """Send an ordered batch of OSC messages to Resonite with an optional inter-message delay.
 
-            Each message dict must have `address` (str) and `values` (list).
-            Useful for sequenced avatar parameter animations or multi-command sequences.
+            WHEN TO USE: sequenced avatar parameter animations or multi-command scenes
+            (e.g. Happy 0.8 then Surprise 0.5). For a single message use send_osc instead.
 
-            ## Return Format
-            {"success": bool, "message": str, "data": {"sent": int, "failed": int}}
+            Args:
+                port: Target Resonite OSC port.
+                messages: List of {address, values} items in send order.
+                delay_ms: Delay between sends; 0 = back-to-back.
 
-            ## Examples
-            osc_batch_send(port=9000, messages=[
-                {"address": "/avatar/parameter/Happy", "values": [0.8]},
-                {"address": "/avatar/parameter/Surprise", "values": [0.5]},
-            ], delay_ms=100)
+            Returns:
+                {"success": bool, "message": str, "data": {"sent": int, "failed": int,
+                "total": int}}. success=true means the batch ran; check sent vs failed for
+                per-message outcome. Individual failures (bad address shape, UDP unreachable)
+                increment "failed" without aborting the rest.
+
+            Errors / recovery:
+                - failed > 0 with "Failed to send OSC message" -> Resonite/UDP endpoint down.
+                  Recovery: confirm Resonite is running (health_check), verify the port, retry
+                  with a single send_osc call first.
+                - Validation error on messages (missing address / not starting with '/') ->
+                  fix the item shape; every address must start with '/'.
+
+            Example:
+                osc_batch_send(port=9000, messages=[
+                    {"address": "/avatar/parameter/Happy", "values": [0.8]},
+                    {"address": "/avatar/parameter/Surprise", "values": [0.5]},
+                ], delay_ms=100)
             """
             import asyncio
 
@@ -105,11 +179,13 @@ class OSCExtensionsPlugin(BasePlugin):
             failed = 0
             for i, msg in enumerate(messages):
                 try:
+                    addr = msg.address if isinstance(msg, OSCBatchMessage) else msg.get("address", "/")
+                    vals = msg.values if isinstance(msg, OSCBatchMessage) else msg.get("values", [])
                     inp = OSCMessageInput(
                         host="127.0.0.1",
                         port=port,
-                        address=msg.get("address", "/"),
-                        values=msg.get("values", []),
+                        address=addr,
+                        values=list(vals),
                     )
                     result = await send_osc(inp)
                     if result.get("status") == "success":
@@ -129,21 +205,56 @@ class OSCExtensionsPlugin(BasePlugin):
 
         @server.tool()
         async def osc_record_session(
-            port: int,
-            session_name: str,
-            duration_seconds: float = 60.0,
+            port: Annotated[
+                int,
+                Field(
+                    ge=1,
+                    le=65535,
+                    description="Local UDP port of the running OSC receiver that captures the traffic (started via start_osc_server).",
+                ),
+            ],
+            session_name: Annotated[
+                str,
+                Field(
+                    min_length=1,
+                    max_length=100,
+                    description="Human label for this capture (e.g. 'avatar_demo'). Used in the message and returned in data.session_name.",
+                ),
+            ],
+            duration_seconds: Annotated[
+                float,
+                Field(
+                    gt=0,
+                    le=3600,
+                    description="How long to capture in seconds (max 3600). This call BLOCKS for the full duration; keep under 30s for interactive use.",
+                ),
+            ] = 60.0,
         ) -> dict[str, Any]:
-            """Record an OSC session for later playback.
+            """Capture OSC traffic on a receiver port for a fixed duration and return a recording id.
 
-            Captures all OSC traffic on a port for the specified duration.
-            Uses the real osc_recordings buffer. Returns the captured messages.
+            WHEN TO USE: recording a live avatar/world performance for later inspection or
+            playback. Blocks for duration_seconds, then reports how many NEW messages arrived
+            during the window (delta on the osc_recordings buffer). For instant stats without
+            blocking use osc_analyze_traffic; for a non-blocking count use osc_monitor_start.
 
-            ## Return Format
-            {"success": bool, "message": str, "data":
-                {"recording_id": str, "messages_captured": int, "duration": float}}
+            Args:
+                port: Receiver port doing the capture.
+                session_name: Label for the recording.
+                duration_seconds: Capture window; the call sleeps this long.
 
-            ## Examples
-            osc_record_session(port=9001, session_name="avatar_demo", duration_seconds=30.0)
+            Returns:
+                {"success": bool, "message": str, "data": {"recording_id": str ("rec_<hex>"),
+                "session_name": str, "port": int, "duration_seconds": float,
+                "messages_captured": int}}. messages_captured is the delta during the window;
+                fetch bodies via get_received_messages(port).
+
+            Errors / recovery:
+                - 0 messages captured usually means nothing was sent during the window or no
+                  receiver is bound. Recovery: confirm traffic with osc_monitor_start(port),
+                  extend duration_seconds, and re-record while the performance is running.
+
+            Example:
+                osc_record_session(port=9001, session_name="avatar_demo", duration_seconds=30.0)
             """
             import asyncio
             import uuid
@@ -170,20 +281,46 @@ class OSCExtensionsPlugin(BasePlugin):
 
         @server.tool()
         async def osc_analyze_traffic(
-            port: int,
-            analysis_duration: float = 10.0,
+            port: Annotated[
+                int,
+                Field(
+                    ge=1, le=65535, description="Local UDP port of the running OSC receiver whose buffer is analyzed."
+                ),
+            ],
+            analysis_duration: Annotated[
+                float,
+                Field(
+                    gt=0,
+                    le=600,
+                    description="Sampling window in seconds (max 600). This call BLOCKS for the full window while traffic accumulates.",
+                ),
+            ] = 10.0,
         ) -> dict[str, Any]:
-            """Analyze OSC traffic patterns and provide insights.
+            """Sample OSC traffic over a time window and report rate, unique addresses, and top talkers.
 
-            Samples the real osc_recordings buffer over the analysis duration.
-            Returns address frequency, message rate, and unique address count.
+            WHEN TO USE: diagnosing what is noisy/active ("which avatar params are spamming?").
+            Unlike osc_monitor_start (instant filtered count) this blocks for analysis_duration
+            and computes statistics; unlike osc_record_session (capture for playback) it returns
+            aggregates, not message bodies. Pair with get_received_messages for bodies.
 
-            ## Return Format
-            {"success": bool, "message": str, "data": {"total_messages": int, "unique_addresses": int,
-                "messages_per_second": float, "top_addresses": list}}
+            Args:
+                port: Receiver port to analyze.
+                analysis_duration: Sampling window in seconds.
 
-            ## Examples
-            osc_analyze_traffic(port=9001, analysis_duration=5.0)
+            Returns:
+                {"success": bool, "message": str, "data": {"port": int,
+                "analysis_duration": float, "total_messages": int, "unique_addresses": int,
+                "messages_per_second": float, "top_addresses": list[str] (top 5 by frequency),
+                "raw_messages_available": int}}. total_messages counts the whole buffer;
+                raw_messages_available is the delta that arrived during the window.
+
+            Errors / recovery:
+                - total_messages 0 -> no traffic seen. Recovery: verify a sender targets this
+                  port (test_osc_echo), check start_osc_server bound the right interface,
+                  then re-run with a longer window while generating traffic.
+
+            Example:
+                osc_analyze_traffic(port=9001, analysis_duration=5.0)
             """
             import asyncio
             from collections import Counter

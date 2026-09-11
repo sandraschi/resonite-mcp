@@ -321,8 +321,8 @@ async def api_v1_tool(body: MCPToolRequest) -> dict[str, Any]:
         return {"success": False, "error": str(exc), "data": None}
 
 
-# Activity log endpoints — ported 2026-07-19 from web_sota/backend/server.py
-# (which defined this same logic but was never actually launched — see
+# Activity log endpoints - ported 2026-07-19 from web_sota/backend/server.py
+# (which defined this same logic but was never actually launched - see
 # docs/WEBAPP_UPDATE_PLAN.md). Logging.tsx's /api/logs* calls now hit real code.
 @app.get("/api/logs")
 async def get_logs(
@@ -994,9 +994,9 @@ async def get_plugin_info(plugin_name: str | None = None):
 
 
 # ---------------------------------------------------------------------------
-# ResoniteLink API  (WebSocket bridge — protocol 0.13.1, confirmed live
+# ResoniteLink API  (WebSocket bridge - protocol 0.13.1, confirmed live
 # 2026-07-18/19 against a real session; "v0.8.x" was the pre-rewrite
-# fictional API version, no longer accurate — see docs/RESONITELINK_GUIDE.md)
+# fictional API version, no longer accurate - see docs/RESONITELINK_GUIDE.md)
 #
 # All endpoints share a single persistent ResoniteLinkClient instance.
 # The client connects lazily on first use and reconnects on demand.
@@ -1015,7 +1015,7 @@ class RLConnectRequest(BaseModel):
 
 class RLWriteRequest(BaseModel):
     ref_id: str  # component ID
-    member: str | None = None  # member name (Resonite inspector name) — required
+    member: str | None = None  # member name (Resonite inspector name) - required
     value: Any
     value_type: str | None = None  # optional protocol type ("float3", "colorX", ...)
 
@@ -1063,7 +1063,7 @@ def _get_rl_client():
 @app.post("/rl/connect")
 async def rl_connect(req: RLConnectRequest):
     """Connect to ResoniteLink WebSocket in Resonite. Prefer calling
-    /rl/discover first and passing its result — port 4242 is only a
+    /rl/discover first and passing its result - port 4242 is only a
     fallback default, not a guarantee (sessions announce their real
     port via UDP broadcast, discovered dynamically)."""
     from .resonite_link import ResoniteLinkClient
@@ -1185,8 +1185,8 @@ async def rl_add_component(req: RLAddComponentRequest):
 
 
 class RLUpdateSlotRequest(BaseModel):
-    """Partial slot update — include only the fields you want to change.
-    Real, working (client.update_slot()) — unlike /rl/world/write-field,
+    """Partial slot update - include only the fields you want to change.
+    Real, working (client.update_slot()) - unlike /rl/world/write-field,
     which the protocol has no equivalent for."""
 
     name: str | None = None
@@ -1268,7 +1268,7 @@ async def list_cloud_sessions(
     include_empty_headless: bool = Query(True, alias="includeEmptyHeadless"),
 ):
     """
-    Proxy to api.resonite.com/sessions — returns public world sessions.
+    Proxy to api.resonite.com/sessions - returns public world sessions.
     No authentication required.
     """
     params: dict[str, Any] = {"minActiveUsers": min_active_users}
@@ -1355,7 +1355,7 @@ async def world_node(ref_id: str):
 
 VRM_DIR = Path.home() / ".avatarmcp" / "models"
 
-# Canonical asset root — shared across all MCP servers that deal with 3D content.
+# Canonical asset root - shared across all MCP servers that deal with 3D content.
 # Subdirectories map to categories: props/, furniture/, architecture/, avatars/
 # avatars/ symlinks/mirrors ~/.avatarmcp/models/ for convenience.
 ASSET_ROOT = Path.home() / "Documents" / "ResoniteAssets"
@@ -1531,7 +1531,7 @@ async def import_vrm(req: VRMImportRequest):
     if vrm_path.suffix.lower() != ".vrm":
         raise HTTPException(status_code=400, detail="File must be a .vrm file")
 
-    # ResoniteLink (0.13.1) has no generic file import — VRM injection over the
+    # ResoniteLink (0.13.1) has no generic file import - VRM injection over the
     # link is not possible. Fail honestly (Implementation Honesty standard).
     raise HTTPException(
         status_code=501,
@@ -1869,5 +1869,5 @@ async def test_vbot_receiver(
         "host": host,
         "osc_port": osc_port,
         "steps": results,
-        "message": "OSC test sequence sent — verify motion in Resonite if receiver graph is wired.",
+        "message": "OSC test sequence sent - verify motion in Resonite if receiver graph is wired.",
     }

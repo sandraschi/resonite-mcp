@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-# Canonical OSC contract — keep in sync with teleoperator-mcp/docs/resonite/VBOOMY_OSC.md
+# Canonical OSC contract - keep in sync with teleoperator-mcp/docs/resonite/VBOOMY_OSC.md
 DEFAULT_OSC_PORT = 9000
 
 VBOOMY_SPAWN_ADDRESS = "/resonite/vbot/spawn"
@@ -29,7 +29,7 @@ VBOT_ROBOT_TYPES: dict[str, dict[str, Any]] = {
         "drive": "holonomic_2d",
         "default_robot_id": "vbot_mechazilla_01",
         "default_scale": 2.5,
-        "notes": "Fun scale — same OSC contract; swap mesh in Resonite. IRL Mechazilla optional.",
+        "notes": "Fun scale - same OSC contract; swap mesh in Resonite. IRL Mechazilla optional.",
     },
     "bumi": {
         "label": "vBumi (biped twin, planned rig)",
@@ -43,7 +43,7 @@ VBOT_ROBOT_TYPES: dict[str, dict[str, Any]] = {
         "drive": "holonomic_2d",
         "default_robot_id": "vbot_custom_01",
         "default_scale": 1.0,
-        "notes": "Any mesh — wire the same receiver graph.",
+        "notes": "Any mesh - wire the same receiver graph.",
     },
     "godzilla": {
         "label": "Kaiju / tokusatsu scale",

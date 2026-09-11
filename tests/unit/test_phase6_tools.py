@@ -132,7 +132,7 @@ class TestApiV1ToolPhase6:
         response = api_client.get("/api/v1/health")
         assert response.status_code == 200
         body = response.json()
-        assert body["version"] == "1.0.0"
+        assert body["version"] == "1.2.0"
         assert body["agent_lab_phase"] == 6
 
     def test_resonite_voice_via_api(self, api_client: TestClient):

@@ -2,7 +2,7 @@
 Mesh decimation for mesh-JSON dicts (the shape gltf_meshjson/stl_meshjson
 produce and ResoniteLinkClient.import_mesh_json() consumes).
 
-HONESTY NOTE: this is **vertex clustering** (grid quantization) decimation —
+HONESTY NOTE: this is **vertex clustering** (grid quantization) decimation -
 snap every vertex to the nearest cell of a 3D grid sized by target_ratio,
 merge vertices that land in the same cell, drop triangles that degenerate
 to zero area once their corners collapse together. This is a real, simple
@@ -27,13 +27,13 @@ def decimate_mesh_json(mesh_json: dict[str, Any], target_ratio: float) -> dict[s
     target_ratio: approximate fraction of the ORIGINAL BOUNDING-BOX EXTENT
         to use as the grid cell size (e.g. 0.02 = cells 2% of the mesh's
         largest dimension). Smaller = coarser grid = more decimation.
-        This is a size-based knob, not a target triangle count — the
+        This is a size-based knob, not a target triangle count - the
         actual reduction depends on how the geometry is distributed.
 
     Only the first submesh is decimated (matches this project's converters,
     which currently always emit exactly one). Only position is used for
     clustering; normals from whichever vertex is kept survive as-is (not
-    re-averaged) — acceptable for a proof-of-pipeline pass, not a
+    re-averaged) - acceptable for a proof-of-pipeline pass, not a
     production simplifier.
     """
     if not 0 < target_ratio < 1:
