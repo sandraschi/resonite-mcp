@@ -421,8 +421,10 @@ async def get_status(request):
 
 @server.custom_route("/api/stats", methods=["GET"])
 async def get_stats(request):
-    """SOTA Stats endpoint."""
-    return JSONResponse({"worlds": 42, "avatars": 156, "sessions": 12, "scripts": 89})
+    """SOTA Stats endpoint (real counts, shared with the HTTP backend)."""
+    from .http_functions import resonite_stats_http
+
+    return JSONResponse(await resonite_stats_http())
 
 
 @server.custom_route("/api/llm-discovery", methods=["GET"])

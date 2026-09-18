@@ -2,6 +2,7 @@
 """HTTP-only functions for Resonite MCP - avoids FastMCP tool wrapping."""
 
 import logging
+import time
 import webbrowser
 from typing import Any
 
@@ -240,6 +241,27 @@ async def resonite_system_status_http() -> dict[str, Any]:
     """Full system status - returns JSON that the webapp PresenceGate expects."""
     from .server import is_resonite_installed, is_resonite_running
 
+    # Include ResoniteLink snapshot so the dashboard can show link status + port
+    # without a second round-trip. Import is deferred: http_server imports this
+    # module inside endpoints, so a top-level import would cycle.
+    rl_connected = False
+    rl_uri: str | None = None
+    rl_host: str | None = None
+    rl_port: int | None = None
+    rl_session: dict[str, Any] | None = None
+    try:
+        from .http_server import _rl_state
+
+        client = _rl_state.get("client")
+        if client is not None:
+            rl_connected = bool(getattr(client, "connected", False))
+            rl_uri = getattr(client, "uri", None)
+            rl_host = getattr(client, "host", None)
+            rl_port = getattr(client, "port", None)
+            rl_session = getattr(client, "session_info", None) or None
+    except Exception:
+        pass
+
     return {
         "status": "success",
         "authenticated": True,
@@ -248,7 +270,76 @@ async def resonite_system_status_http() -> dict[str, Any]:
         "resonite_installed": is_resonite_installed(),
         "resonite_running": is_resonite_running(),
         "launch_url": "steam://rungameid/2519830",
+        "resonite_link_connected": rl_connected,
+        "resonite_link_uri": rl_uri,
+        "resonite_link_host": rl_host,
+        "resonite_link_port": rl_port,
+        "resonite_link": {
+            "connected": rl_connected,
+            "uri": rl_uri,
+            "host": rl_host,
+            "port": rl_port,
+            "session_info": rl_session,
+        },
     }
+
+
+_STATS_CACHE: dict[str, Any] = {"at": 0.0, "data": None}
+_STATS_TTL_SECONDS = 120.0
+
+
+async def resonite_stats_http() -> dict[str, Any]:
+    """Dashboard KPIs, computed from real sources -- never placeholders.
+
+    - sessions: live public sessions on the Resonite cloud (no auth needed).
+    - worlds: distinct world record IDs across those sessions.
+    - avatars: staged .vrm model files in ~/.avatarmcp/models/.
+    - scripts: ProtoFlux presets shipped in utils/protoflux_avatar_presets.py.
+
+    Any value is None when its source is unreachable (the dashboard renders
+    an em-dash for None). Results are cached for 120s so every dashboard
+    refresh does not re-pull the multi-megabyte cloud session list.
+    """
+    now = time.monotonic()
+    cached = _STATS_CACHE["data"]
+    if cached is not None and (now - _STATS_CACHE["at"]) < _STATS_TTL_SECONDS:
+        return cached
+
+    stats: dict[str, Any] = {"worlds": None, "avatars": None, "sessions": None, "scripts": None}
+
+    try:
+        result = await rest_api.resonite_rest_get_sessions()
+        if isinstance(result, dict) and result.get("status") == "ok":
+            sessions = result.get("sessions") or []
+            stats["sessions"] = len(sessions)
+            world_ids = set()
+            for session in sessions:
+                record_id = (session.get("correspondingWorldId") or {}).get("recordId")
+                if record_id:
+                    world_ids.add(record_id)
+            stats["worlds"] = len(world_ids)
+    except Exception as exc:
+        logger.warning(f"stats: cloud sessions failed: {exc}")
+
+    try:
+        from pathlib import Path
+
+        vrm_dir = Path.home() / ".avatarmcp" / "models"
+        stats["avatars"] = sum(1 for _ in vrm_dir.rglob("*.vrm")) if vrm_dir.is_dir() else 0
+    except Exception as exc:
+        logger.warning(f"stats: avatar scan failed: {exc}")
+
+    try:
+        from .utils.protoflux_avatar_presets import list_protoflux_presets
+
+        presets = list_protoflux_presets()
+        stats["scripts"] = int(presets.get("count", len(presets.get("presets") or [])))
+    except Exception as exc:
+        logger.warning(f"stats: protoflux presets failed: {exc}")
+
+    _STATS_CACHE["at"] = now
+    _STATS_CACHE["data"] = stats
+    return stats
 
 
 async def resonite_session_status_http() -> dict[str, Any]:
@@ -307,24 +398,64 @@ async def resonite_protoflux_execute_http(script_name: str, parameters: dict[str
 
 
 async def resonite_avatar_info_http() -> dict[str, Any]:
-    """Get active avatar info (HTTP version)."""
-    # In a real scenario, this would poll Resonite for the current avatar.
-    # For now, we return the structure the frontend expects, ideally synced
-    # with the last known equipped avatar or from ResoniteLink.
+    """Describe the avatar control surface (HTTP version).
+
+    HONESTY CONTRACT: name/id are only filled when find_worn_avatars()
+    positively resolves an avatar root (marker components). Otherwise they
+    stay None with live False. `channels` lists the send-only parameter
+    addresses the page may drive (UDP fire-and-forget, no delivery
+    confirmation). Never put measured-looking numbers here; the frontend
+    renders them as live readings.
+    """
+    users: list[dict[str, Any]] = []
+    avatar: dict[str, Any] | None = None
+    detail = (
+        "Avatar readback is not implemented. Channels below are send-only: "
+        "values are transmitted over OSC with no confirmation of receipt or effect."
+    )
+    try:
+        from .http_server import _rl_state
+        from .resonite_link import find_worn_avatars
+
+        client = _rl_state.get("client")
+        if client is not None and bool(getattr(client, "connected", False)):
+            users = await find_worn_avatars(client)
+            resolved = [u for u in users if u.get("avatar")]
+            if len(resolved) == 1:
+                avatar = resolved[0]["avatar"]
+                detail = (
+                    f"Worn avatar resolved via ResoniteLink for {resolved[0].get('username') or 'the linked user'}."
+                )
+            elif len(resolved) > 1:
+                detail = f"{len(resolved)} worn avatars resolved; showing none -- ambiguous which user is local."
+            elif users:
+                detail = (
+                    "Linked user visible but no avatar root found in the world "
+                    "(default/fallback avatars may not instantiate as world objects)."
+                )
+    except Exception as exc:
+        logger.warning(f"avatar readback failed: {exc}")
+
+    live = avatar is not None
+    first_user = users[0] if users else {}
     return {
         "status": "success",
-        "name": "Sandra Schipal",
-        "id": "res_u-4f2d-908b-62d25f8b482b",
-        "isEquipped": True,
+        "live": live,
+        "name": avatar.get("name") if avatar else None,
+        "id": avatar.get("refId") if avatar else None,
+        "username": first_user.get("username"),
+        "userSlotId": first_user.get("userSlotId"),
+        "userCount": len(users),
+        "isEquipped": True if live else None,
         "thumbnail": None,
-        "parameters": {
-            "VoiceIntensity": 0.82,
-            "EyeTrack": True,
-            "LipSync": 0.45,
-            "GestureSmoothing": 0.3,
-            "NeuralSync": True,
-            "EmoteGain": 1.0,
-        },
+        "detail": detail,
+        "channels": [
+            {"name": "VoiceIntensity", "kind": "number"},
+            {"name": "EyeTrack", "kind": "boolean"},
+            {"name": "LipSync", "kind": "number"},
+            {"name": "GestureSmoothing", "kind": "number"},
+            {"name": "EmoteGain", "kind": "number"},
+        ],
     }
 
 

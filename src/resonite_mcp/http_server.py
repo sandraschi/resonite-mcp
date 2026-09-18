@@ -736,6 +736,37 @@ async def get_system_status_api():
     return await resonite_system_status_http()
 
 
+@app.get("/api/stats")
+async def get_stats_api():
+    """Dashboard KPIs, computed from real sources (see resonite_stats_http)."""
+    from .http_functions import resonite_stats_http
+
+    return await resonite_stats_http()
+
+
+@app.get("/api/llm-discovery")
+async def discover_llms_api():
+    """Detect local LLM providers (Ollama / LM Studio / LiteLLM)."""
+    try:
+        from .llm import detect_local_llms
+
+        llms = await detect_local_llms()
+        return {
+            "llms": [
+                {
+                    "name": llm_info.name,
+                    "provider": llm_info.provider,
+                    "url": llm_info.url,
+                    "model_id": llm_info.model_id,
+                }
+                for llm_info in llms
+            ]
+        }
+    except Exception as exc:
+        logger.warning(f"LLM discovery failed: {exc}")
+        return {"llms": []}
+
+
 # Integration API endpoints
 @app.post("/api/resonite/integrations/worldlabs")
 async def import_worldlabs(request: WorldLabsImportRequest):
@@ -1068,6 +1099,12 @@ async def rl_connect(req: RLConnectRequest):
     port via UDP broadcast, discovered dynamically)."""
     from .resonite_link import ResoniteLinkClient
 
+    previous = _rl_state.get("client")
+    if previous is not None:
+        try:
+            await previous.disconnect()
+        except Exception:
+            pass
     client = ResoniteLinkClient(host=req.host, port=req.port)
     _rl_state["client"] = client
     ok = await client.connect()
@@ -1089,13 +1126,58 @@ async def rl_disconnect():
 
 
 @app.get("/rl/status")
-async def rl_status():
-    """Get ResoniteLink connection status and session info."""
+async def rl_status(autoconnect: bool = False, discovery_timeout: float = 12.0):
+    """Get ResoniteLink connection status and session info.
+
+    With autoconnect=true (used by the dashboard on load), a disconnected
+    client first retries its last-known endpoint (fast TCP refusal on a stale
+    port) and then falls back to UDP discovery (protocol 0.12.0+, broadcast
+    every ~10s) + connect to the first announced session. This makes the
+    random per-session link port a non-issue: the dashboard finds Resonite
+    by itself instead of anyone typing a port. Callers that manage the
+    connection manually (ResoniteLink page, which polls every 5s) must NOT
+    pass autoconnect -- a 12s discovery on every poll would self-DDoS.
+    """
     client = _get_rl_client()
+    autoconnected = False
+    if autoconnect and not client.connected:
+        if await client.connect():
+            autoconnected = True
+        else:
+            try:
+                from .resonite_link import ResoniteLinkClient, discover_sessions
+
+                sessions = await discover_sessions(timeout=discovery_timeout)
+                if sessions:
+                    first = sessions[0]
+                    host = first.get("host") or "localhost"
+                    if host == "0.0.0.0":  # noqa: S104 -- string compare, not a bind
+                        host = "localhost"
+                    port = int(first["linkPort"])
+                    # Try the announced endpoint, then localhost with the same
+                    # port: a loopback-bound link server is announced with the
+                    # sender's LAN/virtual-adapter address but only answers on
+                    # localhost (observed: 172.23.160.1:51447 announced,
+                    # rejected; localhost:51447 live).
+                    candidates = [host]
+                    if host not in ("localhost", "127.0.0.1", "::1"):
+                        candidates.append("localhost")
+                    for candidate_host in candidates:
+                        candidate = ResoniteLinkClient(host=candidate_host, port=port)
+                        if await candidate.connect():
+                            _rl_state["client"] = candidate
+                            client = candidate
+                            autoconnected = True
+                            break
+            except Exception as exc:
+                logger.warning("rl autoconnect failed: %s", exc)
     return {
         "connected": client.connected,
         "uri": client.uri,
+        "host": getattr(client, "host", None),
+        "port": getattr(client, "port", None),
         "session_info": client.session_info,
+        "autoconnected": autoconnected,
     }
 
 
@@ -1322,25 +1404,42 @@ async def world_root():
 
 @app.get("/rl/world/children/{slot_id}")
 async def world_children(slot_id: str):
-    """List direct children of any slot (use 'Root' for top level)."""
+    """List direct children of any slot (use 'Root' for top level).
+
+    Children are flattened to {refId, name, active, position, rotation,
+    scale} -- the shape the World tree expects. Raw protocol envelopes
+    (name: {"value": ...}) are unwrapped here, not in the frontend.
+    """
+    from .resonite_link import summarize_slot
+
     client = _get_rl_client()
     if not client.connected:
         raise HTTPException(status_code=503, detail="Not connected to ResoniteLink")
     try:
         children = await client.get_children(slot_id)
-        return {"slot_id": slot_id, "children": children}
+        return {
+            "slot_id": slot_id,
+            "children": [summarize_slot(c) for c in children],
+        }
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @app.get("/rl/world/node/{ref_id}")
 async def world_node(ref_id: str):
-    """Get full slot/component data by ref ID."""
+    """Get one slot for the World inspector.
+
+    Flattened to {refId, name, active, position, rotation, scale,
+    components: [{refId, componentType}]} -- the SlotNode shape the
+    inspector edits against.
+    """
+    from .resonite_link import summarize_node
+
     client = _get_rl_client()
     if not client.connected:
         raise HTTPException(status_code=503, detail="Not connected to ResoniteLink")
     try:
-        return await client.get_node(ref_id)
+        return summarize_node(await client.get_node(ref_id))
     except Exception as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -1599,25 +1698,12 @@ async def world_map_data():
         return {"status": "ok", "nodes": [], "connected": False}
 
     try:
-        # Attempt to get children of the Root slot
-        # This gives us a coarse map of everything in the world
+        # Root children flattened to map nodes (envelopes unwrapped, the
+        # Users container replaced by its per-user avatar slots).
+        from .resonite_link import build_map_nodes
+
         children = await client.get_children("Root")
-        nodes = []
-
-        for child in children:
-            # Basic heuristic: names containing 'User' or certain patterns are likely avatars
-            name = child.get("name", "Unknown")
-            is_avatar = "User" in name or name.startswith("[")  # Common user tag patterns
-
-            nodes.append(
-                {
-                    "id": child.get("id"),
-                    "name": name,
-                    "position": child.get("position", {"x": 0, "y": 0, "z": 0}),
-                    "type": "avatar" if is_avatar else "object",
-                }
-            )
-
+        nodes = build_map_nodes(children)
         return {"status": "ok", "nodes": nodes, "connected": True}
     except Exception as exc:
         logger.error(f"Map data fetch failed: {exc}")

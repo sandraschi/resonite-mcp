@@ -53,6 +53,7 @@ exist. import_file() raises with guidance.
 import asyncio
 import json
 import logging
+import re
 import socket
 import time
 import uuid
@@ -133,6 +134,268 @@ def rl_auto(value: Any) -> dict[str, Any]:
 def _encode_members(members: dict[str, Any]) -> dict[str, Any]:
     """Encode a {memberName: value} dict, auto-wrapping raw primitives."""
     return {name: rl_auto(val) for name, val in members.items()}
+
+
+# ---------------------------------------------------------------------------
+# Response unwrapping (protocol 0.13.1 shape knowledge, live-verified
+# 2026-09-18 against a real session: slot fields arrive as
+# {"value": ..., "id": "Reso_x"} envelopes, component members as
+# {"$type": ..., "value": ..., "id": ...}. Treating them as plain values
+# crashes callers -- e.g. map-data's name.startswith() on a dict.)
+# ---------------------------------------------------------------------------
+
+
+def rl_unwrap(field: Any, default: Any = None) -> Any:
+    """Unwrap a ResoniteLink field envelope to its raw value.
+
+    Returns `default` for missing or null envelopes. Already-plain values
+    (and reference members, which carry targetId instead of value) pass
+    through, so callers survive either shape.
+    """
+    if isinstance(field, dict) and "value" in field:
+        value = field["value"]
+        return default if value is None else value
+    return field if field is not None else default
+
+
+def _float_triple(mapping: Any, fallback: tuple[float, float, float]) -> dict[str, float]:
+    """Defensive {x, y, z} extraction: non-numeric junk becomes the fallback."""
+    if not isinstance(mapping, dict):
+        return {"x": fallback[0], "y": fallback[1], "z": fallback[2]}
+    out = []
+    for key, fb in zip(("x", "y", "z"), fallback, strict=False):
+        try:
+            out.append(float(mapping.get(key, fb)))
+        except (TypeError, ValueError):
+            out.append(fb)
+    return {"x": out[0], "y": out[1], "z": out[2]}
+
+
+def summarize_slot(slot: Any) -> dict[str, Any]:
+    """Flatten one slot envelope to {refId, name, active, position, rotation, scale}.
+
+    Non-dict input yields an "Unknown" placeholder rather than raising, so
+    one malformed child can never break a whole tree/map response again.
+    """
+    if not isinstance(slot, dict):
+        return {
+            "refId": None,
+            "name": "Unknown",
+            "active": False,
+            "position": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "rotation": {"x": 0.0, "y": 0.0, "z": 0.0, "w": 1.0},
+            "scale": {"x": 1.0, "y": 1.0, "z": 1.0},
+        }
+    name = rl_unwrap(slot.get("name"), "Unknown")
+    rot_raw = rl_unwrap(slot.get("rotation"), {})
+    rotation = _float_triple(rot_raw if isinstance(rot_raw, dict) else {}, (0.0, 0.0, 0.0))
+    try:
+        rotation["w"] = float(rot_raw.get("w", 1.0)) if isinstance(rot_raw, dict) else 1.0
+    except (TypeError, ValueError):
+        rotation["w"] = 1.0
+    return {
+        "refId": slot.get("id"),
+        "name": name if isinstance(name, str) else str(name),
+        "active": bool(rl_unwrap(slot.get("isActive"), True)),
+        "position": _float_triple(rl_unwrap(slot.get("position"), {}), (0.0, 0.0, 0.0)),
+        "rotation": rotation,
+        "scale": _float_triple(rl_unwrap(slot.get("scale"), {}), (1.0, 1.0, 1.0)),
+    }
+
+
+def summarize_component(component: Any) -> dict[str, Any]:
+    """Flatten one component envelope to {refId, componentType}."""
+    if not isinstance(component, dict):
+        return {"refId": None, "componentType": "Unknown"}
+    ctype = component.get("componentType", "Unknown")
+    return {"refId": component.get("id"), "componentType": ctype if isinstance(ctype, str) else str(ctype)}
+
+
+def summarize_node(response: Any) -> dict[str, Any]:
+    """Flatten a getSlot/getComponent response for the World inspector.
+
+    Returns summarize_slot() plus a "components" list of summarize_component().
+    A component lookup (no slot fields) degrades to name "Unknown" with an
+    empty component list instead of crashing.
+    """
+    data = response.get("data") if isinstance(response, dict) and isinstance(response.get("data"), dict) else response
+    summary = summarize_slot(data)
+    raw_components = data.get("components") if isinstance(data, dict) else None
+    summary["components"] = [summarize_component(c) for c in (raw_components or []) if isinstance(c, dict)]
+    return summary
+
+
+def build_map_nodes(root_children: Any) -> list[dict[str, Any]]:
+    """Flatten Root children into map nodes {id, name, position, type}.
+
+    The "Users" container is replaced by its children (marked avatar):
+    otherwise every user collapses into one dot at the container origin.
+    Anything else keeps the "User"-in-name / "["-prefix avatar heuristic.
+    """
+    nodes: list[dict[str, Any]] = []
+    if not isinstance(root_children, list):
+        return nodes
+    for child in root_children:
+        summary = summarize_slot(child)
+        if summary["name"] == "Users" and isinstance(child, dict):
+            for user_slot in child.get("children") or []:
+                user = summarize_slot(user_slot)
+                nodes.append(
+                    {
+                        "id": user["refId"],
+                        "name": user["name"],
+                        "position": user["position"],
+                        "type": "avatar",
+                    }
+                )
+            continue
+        name = summary["name"]
+        node_type = "avatar" if ("User" in name or name.startswith("[")) else "object"
+        nodes.append({"id": summary["refId"], "name": name, "position": summary["position"], "type": node_type})
+    return nodes
+
+
+# ---------------------------------------------------------------------------
+# Worn-avatar readback (live-researched 2026-09-18, protocol 0.13.1)
+#
+# Findings from a full 695-slot census of a live home session:
+# - The user slot carries the tracking rig (View/Head/hands/feet/controllers,
+#   badges, ViewVisual/VR_Headset first-person visuals) plus ~33 components
+#   (UserRoot, AvatarManager, AvatarObjectSlot, stream drivers...).
+# - EVERY reference member of those components points back inside the user
+#   subtree (rig/stream slots). None points at an avatar object.
+# - No avatar root exists anywhere under world Root in that session: avatars
+#   are not reliably reachable by traversal. (Plausibly default/fallback
+#   avatars never instantiate as world objects, or they live outside Root.)
+# Hence: best-effort marker search, honest unknown otherwise. Never guess.
+# ---------------------------------------------------------------------------
+
+AVATAR_MARKER_COMPONENTS = (
+    # AvatarRoot verified real 2026-09-18 via reflection (Users/Common Avatar
+    # System category, 5 members incl. _originalParent -- avatars reparent on
+    # equip). AvatarCreator is NOT a component (reflection rejects it).
+    "AvatarRoot",
+    "BipedRig",
+    "AvatarPoseNode",
+    "AvatarAudioOutput",
+    "VRIK",
+)
+
+_USER_SLOT_PREFIX = "User "
+
+
+def parse_username(slot_name: Any) -> str | None:
+    """Extract 'sanschip' from 'User <noparse=8>sanschip (ID2E00)'."""
+    if not isinstance(slot_name, str):
+        return None
+    text = slot_name.strip()
+    if text.startswith(_USER_SLOT_PREFIX):
+        text = text[len(_USER_SLOT_PREFIX) :].strip()
+    text = re.sub(r"<noparse=\d+>", "", text).strip()
+    text = re.sub(r"\s*\([^()]*\)\s*$", "", text).strip()
+    text = re.sub(r"<[^>]*>", "", text).strip()
+    return text or None
+
+
+def _slot_has_avatar_markers(slot_data: dict[str, Any]) -> bool:
+    components = slot_data.get("components") or []
+    for comp in components:
+        if not isinstance(comp, dict):
+            continue
+        ctype = comp.get("componentType") or ""
+        if any(marker in ctype for marker in AVATAR_MARKER_COMPONENTS):
+            return True
+    return False
+
+
+async def find_worn_avatars(client: Any, max_slots: int = 60) -> list[dict[str, Any]]:
+    """Best-effort worn-avatar resolution for every user in the session.
+
+    Strategy: Users container -> per-user slot (username from the
+    AvatarManager NameTagText, else parsed slot name) -> marker search over
+    Root children and their children (depth <= 2, Users rig explicitly
+    skipped: proven barren 2026-09-18, identical rigs by construction).
+
+    Returns [{username, userSlotId, avatar: {refId, name} | None}]. Empty
+    list = Users container missing/unreadable. avatar None = no marker hit:
+    report as unknown, never synthesize.
+    """
+    checked = 0
+
+    async def fetch_slot(slot_id: str) -> dict[str, Any] | None:
+        nonlocal checked
+        if checked >= max_slots:
+            return None
+        checked += 1
+        try:
+            resp = await client.get_slot(slot_id, include_component_data=True, depth=0)
+        except Exception:
+            return None
+        data = resp.get("data") if isinstance(resp.get("data"), dict) else resp
+        return data if isinstance(data, dict) else None
+
+    try:
+        root_children = await client.get_children("Root")
+    except Exception:
+        return []
+    if not isinstance(root_children, list):
+        return []
+
+    users_container = None
+    for child in root_children:
+        if isinstance(child, dict) and rl_unwrap(child.get("name")) == "Users":
+            users_container = child
+            break
+    if users_container is None:
+        return []
+
+    user_slots = [c for c in (users_container.get("children") or []) if isinstance(c, dict)]
+
+    # Marker sweep once (shared across users): Root children + one level down,
+    # Users subtree excluded (rig, proven barren).
+    avatar_hits: list[dict[str, Any]] = []
+    sweep: list[Any] = [c for c in root_children if c is not users_container]
+    for child in list(sweep):
+        if isinstance(child, dict):
+            sweep.extend([g for g in (child.get("children") or []) if isinstance(g, dict)])
+    for candidate in sweep:
+        if not isinstance(candidate, dict) or candidate.get("id") is None:
+            continue
+        data = await fetch_slot(candidate["id"])
+        if data is not None and _slot_has_avatar_markers(data):
+            name = rl_unwrap(data.get("name"), "Unknown")
+            avatar_hits.append({"refId": data.get("id"), "name": name if isinstance(name, str) else str(name)})
+        if checked >= max_slots:
+            break
+
+    results = []
+    for user_slot in user_slots:
+        summary = summarize_slot(user_slot)
+        username = None
+        try:
+            data = await fetch_slot(summary["refId"]) if summary["refId"] else None
+            if data is not None:
+                for comp in data.get("components") or []:
+                    if isinstance(comp, dict) and comp.get("componentType", "").endswith("AvatarManager"):
+                        members = comp.get("members") or {}
+                        tag = members.get("NameTagText")
+                        if isinstance(tag, dict):
+                            raw_tag = rl_unwrap(tag.get("value"))
+                            if isinstance(raw_tag, str):
+                                username = re.sub(r"<[^>]*>", "", raw_tag).strip() or None
+                        break
+        except Exception:
+            username = None
+        if not username:
+            username = parse_username(summary["name"])
+        results.append(
+            {
+                "username": username,
+                "userSlotId": summary["refId"],
+                "avatar": avatar_hits[0] if avatar_hits else None,
+            }
+        )
+    return results
 
 
 # ---------------------------------------------------------------------------
@@ -544,7 +807,10 @@ class ResoniteLinkClient:
         yet send; see import_mesh_raw().
 
         vertices: list of {"position": {"x","y","z"}}, each optionally also
-            carrying "normal"/"tangent"/"color"/"uvs"/"boneWeights".
+            carrying "normal"/"tangent"/"color"/"boneWeights", plus UVs as a
+            MeshX-style per-channel key: "uv0" = {"$type": "2D",
+            "uv": {"x","y"}} (live-verified 2026-09-18; the old "uvs" LIST
+            shape is rejected by the importer).
         submeshes: list of {"$type": "triangles"|"points"|"trianglesFlat",
             "triangles": [{"vertex0Index","vertex1Index","vertex2Index"}, ...]}
             (or "points": [...] for the points variant).
