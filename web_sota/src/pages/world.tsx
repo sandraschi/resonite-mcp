@@ -247,7 +247,7 @@ function SlotRow({ slot, depth, selected, onSelect }: SlotRowProps) {
         )}
         title={slot.refId}
       >
-        <span className="flex-none text-slate-600 w-3">
+        <span className="flex-none text-slate-400 w-3">
           {loading ? (
             <Loader2 className="w-3 h-3 animate-spin" />
           ) : expanded ? (
@@ -264,7 +264,7 @@ function SlotRow({ slot, depth, selected, onSelect }: SlotRowProps) {
           {slot.name ?? slot.refId}
         </span>
         {slot.active === false && (
-          <span className="ml-auto mr-2 text-[9px] text-slate-600 font-bold uppercase tracking-widest">
+          <span className="ml-auto mr-2 text-[9px] text-slate-400 font-bold uppercase tracking-widest">
             OFF
           </span>
         )}
@@ -286,7 +286,7 @@ function SlotRow({ slot, depth, selected, onSelect }: SlotRowProps) {
       {expanded && children && children.length === 0 && (
         <p
           className={cn(
-            "text-[10px] text-slate-700 py-1",
+            "text-[10px] text-slate-400 py-1",
             depthClass(depth + 1),
           )}
         >
@@ -347,7 +347,7 @@ function Inspector({ refId }: { refId: string }) {
         </div>
       )}
       <div className="space-y-1">
-        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
           Slot
         </p>
         <input
@@ -357,18 +357,18 @@ function Inspector({ refId }: { refId: string }) {
           title="Slot Name"
           className="w-full bg-transparent text-violet-300 border-none px-0 py-0 outline-none focus:ring-0"
         />
-        <p className="text-slate-600 text-[10px] break-all">{data.refId}</p>
+        <p className="text-slate-400 text-[10px] break-all">{data.refId}</p>
       </div>
 
       {data.position && (
         <div className="space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
             Position
           </p>
           <div className="grid grid-cols-3 gap-2">
             {(["x", "y", "z"] as const).map((axis) => (
               <div key={axis} className="flex flex-col gap-0.5">
-                <span className="text-[8px] text-slate-700">
+                <span className="text-[8px] text-slate-400">
                   {axis.toUpperCase()}
                 </span>
                 <input
@@ -390,13 +390,13 @@ function Inspector({ refId }: { refId: string }) {
 
       {data.scale && (
         <div className="space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
             Scale
           </p>
           <div className="grid grid-cols-3 gap-2">
             {(["x", "y", "z"] as const).map((axis) => (
               <div key={axis} className="flex flex-col gap-0.5">
-                <span className="text-[8px] text-slate-700">
+                <span className="text-[8px] text-slate-400">
                   {axis.toUpperCase()}
                 </span>
                 <input
@@ -418,7 +418,7 @@ function Inspector({ refId }: { refId: string }) {
 
       {data.components && data.components.length > 0 && (
         <div className="space-y-1">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-600">
+          <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
             Components ({data.components.length})
           </p>
           <div className="space-y-1 max-h-40 overflow-y-auto scrollbar-thin scrollbar-thumb-white/10">
@@ -434,7 +434,7 @@ function Inspector({ refId }: { refId: string }) {
                 <span className="text-slate-300 truncate text-[10px]">
                   {c.componentType.split(".").pop()}
                 </span>
-                <span className="ml-auto text-[8px] text-slate-700 opacity-0 group-hover/comp:opacity-100 transition-opacity">
+                <span className="ml-auto text-[8px] text-slate-400 opacity-0 group-hover/comp:opacity-100 transition-opacity">
                   {c.refId.split("-")[0]}
                 </span>
               </div>
@@ -566,14 +566,14 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
           <Upload
             className={cn(
               "w-6 h-6 transition-colors",
-              dragActive ? "text-violet-400" : "text-slate-700",
+              dragActive ? "text-violet-400" : "text-slate-400",
             )}
           />
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               Drag & Drop 3D File
             </p>
-            <p className="text-[9px] text-slate-600 mt-1">
+            <p className="text-[9px] text-slate-400 mt-1">
               .VRM, .FBX, .GLB, .OBJ, .SPLAT
             </p>
           </div>
@@ -609,9 +609,9 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
       </div>
 
       <div className="space-y-1.5">
-        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">
+        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
           Library Spawn
-          <span className="ml-1 text-slate-700 normal-case font-normal">
+          <span className="ml-1 text-slate-400 normal-case font-normal">
             (ResoniteAssets/{category}/)
           </span>
         </p>
@@ -632,11 +632,11 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
             ))}
           </select>
         ) : (
-          <div className="flex items-center gap-2 text-xs text-slate-600 py-1">
+          <div className="flex items-center gap-2 text-xs text-slate-400 py-1">
             <FolderOpen className="w-4 h-4" />
             <span>
               No files found in{" "}
-              <code className="text-slate-700">
+              <code className="text-slate-400">
                 {assetData?.scan_dir ?? "…"}
               </code>
             </span>
@@ -645,13 +645,13 @@ function AssetPanel({ targetSlot }: { targetSlot: string | null }) {
       </div>
 
       <div className="space-y-1">
-        <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest flex items-center gap-1">
+        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
           <Crosshair className="w-3 h-3" /> Target Position
         </p>
         <div className="grid grid-cols-3 gap-2">
           {(["x", "y", "z"] as const).map((axis) => (
             <div key={axis} className="space-y-0.5">
-              <label className="text-[9px] text-slate-600 uppercase">
+              <label className="text-[9px] text-slate-400 uppercase">
                 {axis}
               </label>
               <input
@@ -827,7 +827,7 @@ export function World() {
                   Scene Hierarchy
                 </span>
               </div>
-              <span className="text-[9px] font-mono text-slate-600">Root</span>
+              <span className="text-[9px] font-mono text-slate-400">Root</span>
             </div>
 
             <div className="p-2 max-h-[60vh] overflow-y-auto space-y-0.5">
@@ -864,7 +864,7 @@ export function World() {
                   Inspector
                 </span>
                 {selectedRefId && (
-                  <span className="ml-auto text-[9px] font-mono text-slate-600 truncate max-w-[120px]">
+                  <span className="ml-auto text-[9px] font-mono text-slate-400 truncate max-w-[120px]">
                     {selectedRefId}
                   </span>
                 )}
@@ -872,7 +872,7 @@ export function World() {
               {selectedRefId ? (
                 <Inspector refId={selectedRefId} />
               ) : (
-                <p className="text-xs text-slate-700 p-4">
+                <p className="text-xs text-slate-400 p-4">
                   Select a slot from the hierarchy to inspect.
                 </p>
               )}

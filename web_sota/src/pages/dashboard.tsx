@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Cpu,
   HardDrive,
+  Link2,
   MessageSquare,
   Network,
   Radio,
@@ -21,13 +22,45 @@ interface Status {
   server_running: boolean;
   resonite_installed: boolean;
   resonite_running: boolean;
+  resonite_link?: {
+    connected: boolean;
+    uri: string | null;
+    host: string | null;
+    port: number | null;
+  };
+  resonite_link_connected?: boolean;
+  resonite_link_port?: number | null;
+  resonite_link_uri?: string | null;
+}
+
+interface RlStatus {
+  connected: boolean;
+  uri: string | null;
+  host?: string | null;
+  port?: number | null;
+  session_info?: Record<string, unknown> | null;
+  autoconnected?: boolean;
+}
+
+function rlPortOf(
+  rl: RlStatus | null | undefined,
+  status: Status | null,
+): number | null {
+  if (rl?.port) return rl.port;
+  if (status?.resonite_link?.port) return status.resonite_link.port;
+  if (status?.resonite_link_port) return status.resonite_link_port;
+  const uri =
+    rl?.uri ?? status?.resonite_link?.uri ?? status?.resonite_link_uri ?? null;
+  if (!uri) return null;
+  const m = uri.match(/:(\d+)\/?$/);
+  return m ? Number.parseInt(m[1], 10) : null;
 }
 
 interface Stats {
-  worlds: number;
-  avatars: number;
-  sessions: number;
-  scripts: number;
+  worlds: number | null;
+  avatars: number | null;
+  sessions: number | null;
+  scripts: number | null;
 }
 
 interface Llm {
@@ -38,9 +71,22 @@ interface Llm {
 
 export function Dashboard() {
   const [status, setStatus] = useState<Status | null>(null);
+  const [rl, setRl] = useState<RlStatus | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [llms, setLlms] = useState<Llm[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const fetchRl = async () => {
+    // Runs outside the loading gate on purpose: with autoconnect the backend
+    // may spend ~12s on UDP discovery (broadcast interval), and first render
+    // must not wait for that. The badge flips to connected when it resolves.
+    try {
+      const rlRes = await fetch(apiUrl("/rl/status?autoconnect=true"));
+      if (rlRes?.ok) setRl(await rlRes.json());
+    } catch (error) {
+      console.error("ResoniteLink status failed", error);
+    }
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -62,11 +108,19 @@ export function Dashboard() {
     } finally {
       setLoading(false);
     }
+    void fetchRl();
   };
 
   useEffect(() => {
     fetchData();
   }, []);
+
+  const rlConnected =
+    rl?.connected ??
+    status?.resonite_link?.connected ??
+    status?.resonite_link_connected ??
+    false;
+  const rlPort = rlPortOf(rl, status);
 
   if (loading)
     return (
@@ -115,6 +169,24 @@ export function Dashboard() {
                   <Wifi className="h-3 w-3 text-blue-400" />
                   OSC 9000
                 </span>
+                <a
+                  href="/resonite-link"
+                  title={
+                    rl?.uri ??
+                    status?.resonite_link?.uri ??
+                    status?.resonite_link_uri ??
+                    "ResoniteLink WebSocket"
+                  }
+                  className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1 hover:border-emerald-500/40 transition-colors"
+                  data-testid="dashboard-link-badge"
+                >
+                  <Link2
+                    className={`h-3 w-3 ${rlConnected ? "text-emerald-400" : "text-rose-400"}`}
+                  />
+                  {rlConnected
+                    ? `Link connected${rlPort ? ` :${rlPort}` : ""}`
+                    : "Link disconnected"}
+                </a>
               </div>
             </div>
           </div>
@@ -175,65 +247,89 @@ export function Dashboard() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-indigo-500/50 transition-all duration-500 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
-              Worlds
-            </CardTitle>
-            <Shield className="h-4 w-4 text-emerald-500 transition-transform group-hover:scale-125 duration-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground tracking-tight">
-              {stats?.worlds || 0}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Indexed in RAG</p>
-          </CardContent>
-        </Card>
+        <a
+          href="/sessions"
+          title="View public sessions and worlds"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        >
+          <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-indigo-500/50 transition-all duration-500 group cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                Worlds
+              </CardTitle>
+              <Shield className="h-4 w-4 text-emerald-500 transition-transform group-hover:scale-125 duration-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                {stats?.worlds ?? "—"}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Distinct public worlds</p>
+            </CardContent>
+          </Card>
+        </a>
 
-        <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-blue-500/50 transition-all duration-500 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
-              Avatars
-            </CardTitle>
-            <Cpu className="h-4 w-4 text-blue-500 transition-transform group-hover:rotate-12 duration-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground tracking-tight">
-              {stats?.avatars || 0}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Available</p>
-          </CardContent>
-        </Card>
+        <a
+          href="/avatar"
+          title="Open avatar controls"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        >
+          <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-blue-500/50 transition-all duration-500 group cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                Avatars
+              </CardTitle>
+              <Cpu className="h-4 w-4 text-blue-500 transition-transform group-hover:rotate-12 duration-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                {stats?.avatars ?? "—"}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Staged VRM models</p>
+            </CardContent>
+          </Card>
+        </a>
 
-        <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-purple-500/50 transition-all duration-500 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
-              Scripts
-            </CardTitle>
-            <Activity className="h-4 w-4 text-purple-500 transition-transform group-hover:scale-110 duration-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground tracking-tight">
-              {stats?.scripts || 0}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">ProtoFlux available</p>
-          </CardContent>
-        </Card>
+        <a
+          href="/protoflux"
+          title="Open ProtoFlux presets and reflection"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        >
+          <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-purple-500/50 transition-all duration-500 group cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                Scripts
+              </CardTitle>
+              <Activity className="h-4 w-4 text-purple-500 transition-transform group-hover:scale-110 duration-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                {stats?.scripts ?? "—"}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">ProtoFlux presets</p>
+            </CardContent>
+          </Card>
+        </a>
 
-        <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-orange-500/50 transition-all duration-500 group">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
-              Sessions
-            </CardTitle>
-            <Network className="h-4 w-4 text-orange-500 transition-transform group-hover:-translate-y-1 duration-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-black text-foreground tracking-tight">
-              {stats?.sessions || 0}
-            </div>
-            <p className="text-xs text-slate-400 mt-1">Active</p>
-          </CardContent>
-        </Card>
+        <a
+          href="/sessions"
+          title="View public sessions"
+          className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        >
+          <Card className="border-border bg-card/40 backdrop-blur-md glass hover:border-orange-500/50 transition-all duration-500 group cursor-pointer h-full">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-slate-300">
+                Sessions
+              </CardTitle>
+              <Network className="h-4 w-4 text-orange-500 transition-transform group-hover:-translate-y-1 duration-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-black text-foreground tracking-tight">
+                {stats?.sessions ?? "—"}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Public sessions live</p>
+            </CardContent>
+          </Card>
+        </a>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
@@ -331,6 +427,43 @@ export function Dashboard() {
                   >
                     {status?.resonite_running ? "Running" : "Not running"}
                   </p>
+                </div>
+              </div>
+              <div className="flex items-center group">
+                <div
+                  className={`p-2 rounded-md bg-muted border border-border transition-colors ${rlConnected ? "group-hover:border-emerald-500/50" : "group-hover:border-rose-500/50"}`}
+                >
+                  <Link2
+                    className={`h-4 w-4 ${rlConnected ? "text-emerald-500" : "text-rose-500"}`}
+                  />
+                </div>
+                <div className="ml-4 space-y-1">
+                  <p className="text-sm font-bold leading-none text-foreground tracking-tight">
+                    ResoniteLink{" "}
+                    <a
+                      href="/resonite-link"
+                      className="text-indigo-400 hover:text-indigo-300 font-semibold text-xs ml-1"
+                    >
+                      Open →
+                    </a>
+                  </p>
+                  <p
+                    className={`text-xs font-medium ${rlConnected ? "text-emerald-400" : "text-rose-400"}`}
+                    data-testid="dashboard-link-status"
+                  >
+                    {rlConnected
+                      ? `Connected${rlPort ? ` :${rlPort}` : ""}`
+                      : "Disconnected — enable ResoniteLink (Dash → Session → Settings)"}
+                  </p>
+                  {(rl?.uri ??
+                    status?.resonite_link?.uri ??
+                    status?.resonite_link_uri) && (
+                    <p className="text-[11px] font-mono text-slate-500">
+                      {rl?.uri ??
+                        status?.resonite_link?.uri ??
+                        status?.resonite_link_uri}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="pt-4 border-t border-border">
