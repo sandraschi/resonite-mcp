@@ -25,14 +25,14 @@ Reads GLB binary containers (JSON chunk + BIN chunk) using only the stdlib -
 no pygltflib/trimesh dependency, so nothing new to install on Goliath.
 
 HONESTY NOTE: vertex "position" and "normal" (with the coordinate fix
-above) are now live-verified end-to-end. "uvs" shape is confirmed to be a
-LIST of {"x","y"} dicts (multi-UV-channel support), but each element's
-`$type` polymorphic discriminator is still unknown after four live
-attempts (`UV_Coordinate`/`float2`/`uv`/`UVCoordinate` all rejected) -
-UVs will fail to import until that's resolved; strip them if you hit that.
-Bones/blendshapes (needed for the VRM avatar path) are intentionally NOT
-implemented here yet - GLB skinning data (JOINTS_0/WEIGHTS_0) decodes
-differently and deserves its own pass once this static-mesh path is proven.
+above) are now live-verified end-to-end. UVs are MeshX-style per-channel
+keys: vertex["uv0"] = {"$type": "2D", "uv": {"x", "y"}} (live-verified
+2026-09-18: a 21-material textured VRM avatar rendered correctly with this
+shape; the earlier "uvs" LIST shape is rejected by importMeshJSON with
+"UV channel 0 is already configured with 0 dimensions"). Only channel 0
+(TEXCOORD_0) is emitted.
+Bones/blendshapes behind include_skinning=True decode the source correctly
+but their wire shape is still UNPROVEN against a live session.
 
 Known simplifications (v1, not silent - logged as warnings):
   - Only the first primitive of each mesh is converted; multi-material
@@ -536,13 +536,12 @@ def gltf_to_mesh_json(
                     vertex["normal"] = {"x": n[0], "y": n[1], "z": nz}
                 if uvs is not None:
                     uv = uvs[i]
-                    # CONFIRMED 2026-07-19 by reading the real C# model
-                    # (UV_Coordinate.cs): the discriminator is "2D" (not
-                    # any of "UV_Coordinate"/"float2"/"uv"/"UVCoordinate",
-                    # all tried and rejected live 2026-07-18), and the
-                    # value lives under a "uv" field (a float2), not bare
-                    # top-level x/y. Still a LIST (multi-UV-channel support).
-                    vertex["uvs"] = [{"$type": "2D", "uv": {"x": uv[0], "y": uv[1]}}]
+                    # LIVE-VERIFIED 2026-09-18: MeshX-style per-channel key.
+                    # The old "uvs" LIST shape is rejected by importMeshJSON
+                    # ("UV channel 0 is already configured with 0 dimensions");
+                    # uv0 with the "2D" discriminator + "uv" field imports and
+                    # renders textured correctly (21-material VRM avatar).
+                    vertex["uv0"] = {"$type": "2D", "uv": {"x": uv[0], "y": uv[1]}}
                 if joints is not None:
                     # CONFIRMED via reflection and a successful live test
                     # 2026-07-19: BoneWeight.cs is exactly
@@ -640,7 +639,7 @@ def _main() -> int:
     n_verts = len(result["vertices"])
     n_tris = sum(len(sm["triangles"]) for sm in result["submeshes"])
     has_normals = n_verts > 0 and "normal" in result["vertices"][0]
-    has_uvs = n_verts > 0 and "uvs" in result["vertices"][0]
+    has_uvs = n_verts > 0 and "uv0" in result["vertices"][0]
     print(
         f"{src.name}: {n_verts} vertices, {n_tris} triangles "
         f"(normals={'yes' if has_normals else 'no'}, uvs={'yes' if has_uvs else 'no'})"

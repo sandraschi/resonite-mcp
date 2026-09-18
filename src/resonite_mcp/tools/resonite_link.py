@@ -390,7 +390,9 @@ async def resonite_link_import_mesh_json(
     or use resonite_link_spawn_mesh to do the whole chain in one call.
 
     vertices: [{"position": {"x","y","z"}}, ...] (each may also carry
-        "normal"/"tangent"/"color"/"uvs"/"boneWeights").
+        "normal"/"tangent"/"color"/"boneWeights", plus UVs as "uv0" =
+        {"$type": "2D", "uv": {"x","y"}} -- live-verified 2026-09-18; the old
+        "uvs" list shape is rejected).
     submeshes: [{"$type": "triangles", "triangles": [{"vertex0Index",
         "vertex1Index","vertex2Index"}, ...]}] (or "points"/"trianglesFlat").
     bones/blendshapes: optional, for skinned meshes - schema supports it but
