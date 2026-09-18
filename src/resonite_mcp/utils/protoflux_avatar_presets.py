@@ -47,6 +47,122 @@ PROTOFLUX_AVATAR_PRESETS: dict[str, dict[str, Any]] = {
             "AvatarExpressionDriver",
         ],
     },
+    "vrm_visemes_full": {
+        "label": "VRM vowel visemes (A/I/U/E/O)",
+        "description": "VRM 0.x standard lip-sync vowel preset maps (WISE blend shapes).",
+        "parameters": {
+            "Viseme/A": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Viseme/I": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Viseme/U": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Viseme/E": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Viseme/O": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm_mood": {
+        "label": "VRM mood expressions",
+        "description": "VRM 0.x standard emotion preset maps (Joy/Angry/Sorrow/Fun/Surprised).",
+        "parameters": {
+            "Expression/Joy": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/Angry": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/Sorrow": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/Fun": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/Surprised": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm_look": {
+        "label": "VRM gaze directions",
+        "description": "VRM 0.x standard look preset maps (LookUp/LookDown/LookLeft/LookRight).",
+        "parameters": {
+            "Look/Up": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Look/Down": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Look/Left": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Look/Right": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm_blink_sides": {
+        "label": "VRM asymmetric blink (L/R)",
+        "description": "VRM 0.x Blink_L/Blink_R side presets for winks and asymmetric blinks.",
+        "parameters": {
+            "Expression/BlinkLeft": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/BlinkRight": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "Pulse",
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm_neutral_reset": {
+        "label": "VRM neutral rest face",
+        "description": "VRM 0.x Neutral preset: zero-weight rest pose to clear stuck expressions.",
+        "parameters": {
+            "Expression/Neutral": {"type": "float", "range": [0.0, 1.0], "default": 1.0},
+        },
+        "protoflux_nodes": [
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm1_vowels": {
+        "label": "VRM 1.0 vowel expressions (aa/ih/ou/ee/oh)",
+        "description": "VRM 1.0 VRMC_vrm expression preset names for lip-sync vowels.",
+        "parameters": {
+            "Expression/aa": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/ih": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/ou": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/ee": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/oh": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm1_emotion": {
+        "label": "VRM 1.0 emotions",
+        "description": "VRM 1.0 VRMC_vrm expression preset names (happy/angry/sad/relaxed/surprised).",
+        "parameters": {
+            "Expression/happy": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/angry": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/sad": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/relaxed": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/surprised": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
+    "vrm1_gaze": {
+        "label": "VRM 1.0 gaze and blink",
+        "description": "VRM 1.0 VRMC_vrm look/blink expression preset names.",
+        "parameters": {
+            "Look/lookUp": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Look/lookDown": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Look/lookLeft": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Look/lookRight": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/blink": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/blinkLeft": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+            "Expression/blinkRight": {"type": "float", "range": [0.0, 1.0], "default": 0.0},
+        },
+        "protoflux_nodes": [
+            "Pulse",
+            "ValueField<float>",
+            "AvatarExpressionDriver",
+        ],
+    },
 }
 
 
