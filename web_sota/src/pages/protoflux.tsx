@@ -1,4 +1,3 @@
-import { apiUrl } from "@/lib/api-base";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	AlertTriangle,
@@ -12,6 +11,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { apiUrl } from "@/lib/api-base";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,7 +72,11 @@ function Step({
 	n,
 	title,
 	children,
-}: { n: number; title: string; children: React.ReactNode }) {
+}: {
+	n: number;
+	title: string;
+	children: React.ReactNode;
+}) {
 	return (
 		<div className="flex gap-4">
 			<div className="flex-shrink-0 w-7 h-7 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-300 mt-0.5">
@@ -392,10 +396,14 @@ To fire from MCP HTTP API:
 
 						<div className="flex gap-3 items-end flex-wrap">
 							<div className="space-y-1">
-								<label className="text-[10px] text-slate-500 uppercase tracking-wider">
+								<label
+									htmlFor="pf-host"
+									className="text-[10px] text-slate-500 uppercase tracking-wider"
+								>
 									Host
 								</label>
 								<input
+									id="pf-host"
 									value={form.host}
 									onChange={(e) =>
 										setForm((f) => ({ ...f, host: e.target.value }))
@@ -404,10 +412,14 @@ To fire from MCP HTTP API:
 								/>
 							</div>
 							<div className="space-y-1">
-								<label className="text-[10px] text-slate-500 uppercase tracking-wider">
+								<label
+									htmlFor="pf-port"
+									className="text-[10px] text-slate-500 uppercase tracking-wider"
+								>
 									Port
 								</label>
 								<input
+									id="pf-port"
 									type="number"
 									value={form.port}
 									onChange={(e) =>
@@ -546,10 +558,14 @@ function FieldPanel() {
 			</div>
 
 			<div className="space-y-1">
-				<label className="text-[10px] text-slate-500 uppercase tracking-wider">
+				<label
+					htmlFor="pf-refid"
+					className="text-[10px] text-slate-500 uppercase tracking-wider"
+				>
 					Ref ID
 				</label>
 				<input
+					id="pf-refid"
 					placeholder="ID:xxxx-xxxx-xxxx"
 					value={refId}
 					onChange={(e) => setRefId(e.target.value)}
@@ -578,10 +594,14 @@ function FieldPanel() {
 
 			<div className="border-t border-white/[0.05] pt-4 space-y-3">
 				<div className="space-y-1">
-					<label className="text-[10px] text-slate-500 uppercase tracking-wider">
+					<label
+						htmlFor="pf-value"
+						className="text-[10px] text-slate-500 uppercase tracking-wider"
+					>
 						Value (JSON or string)
 					</label>
 					<input
+						id="pf-value"
 						placeholder='e.g. true  or  {"x":0,"y":1,"z":5}  or  42.0'
 						value={writeValue}
 						onChange={(e) => setWriteValue(e.target.value)}
@@ -647,10 +667,14 @@ function ReflectPanel() {
 			</p>
 			<div className="flex gap-3 items-end flex-wrap">
 				<div className="flex-1 space-y-1 min-w-48">
-					<label className="text-[10px] text-slate-500 uppercase tracking-wider">
+					<label
+						htmlFor="pf-comptype"
+						className="text-[10px] text-slate-500 uppercase tracking-wider"
+					>
 						Component Type (optional)
 					</label>
 					<input
+						id="pf-comptype"
 						placeholder="e.g. FrooxEngine.AudioStreamController"
 						value={componentType}
 						onChange={(e) => setComponentType(e.target.value)}

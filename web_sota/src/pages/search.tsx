@@ -1,7 +1,3 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { apiUrl } from "@/lib/api-base";
 import {
 	ExternalLink,
 	FileText,
@@ -9,6 +5,10 @@ import {
 	Search as SearchIcon,
 } from "lucide-react";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { apiUrl } from "@/lib/api-base";
 
 interface SearchResult {
 	text: string;
@@ -85,9 +85,9 @@ export function SearchPage() {
 
 			<div className="space-y-4">
 				{results.length > 0
-					? results.map((result, i) => (
+					? results.map((result) => (
 							<Card
-								key={i}
+								key={result.filename}
 								className="border-border bg-card/20 hover:bg-card/40 transition-all duration-300 group"
 							>
 								<CardHeader className="pb-2">

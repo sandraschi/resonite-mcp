@@ -1,12 +1,4 @@
 import {
-	type StagingRecord,
-	callTool,
-	clearStagingGallery,
-	getBackendHealth,
-	loadStagingGallery,
-	saveStagingSnapshot,
-} from "@/api/mcp";
-import {
 	type Bot,
 	FlaskConical,
 	GitPullRequest,
@@ -18,6 +10,14 @@ import {
 	User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import {
+	callTool,
+	clearStagingGallery,
+	getBackendHealth,
+	loadStagingGallery,
+	type StagingRecord,
+	saveStagingSnapshot,
+} from "@/api/mcp";
 
 type TabId =
 	| "runtime"

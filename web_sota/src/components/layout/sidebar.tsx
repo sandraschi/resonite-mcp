@@ -1,11 +1,9 @@
-import { useState } from "react";
-import { cn } from "@/common/utils";
 import {
 	Activity,
 	Archive,
+	ChevronDown,
 	ChevronLeft,
 	ChevronRight,
-	ChevronDown,
 	Cloud,
 	Cpu,
 	FlaskConical,
@@ -32,7 +30,9 @@ import {
 	Users,
 	Wrench,
 } from "lucide-react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { cn } from "@/common/utils";
 
 interface SidebarProps {
 	collapsed: boolean;
@@ -113,7 +113,9 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 	}
 
 	// Dynamic initial state: expand any section containing the active path
-	const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+	const [expandedSections, setExpandedSections] = useState<
+		Record<string, boolean>
+	>(() => {
 		const initial: Record<string, boolean> = {
 			main: true,
 			world: false,
@@ -181,7 +183,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 									<ChevronDown
 										className={cn(
 											"h-3.5 w-3.5 transition-transform duration-200",
-											expandedSections[sec] ? "rotate-0" : "-rotate-90"
+											expandedSections[sec] ? "rotate-0" : "-rotate-90",
 										)}
 									/>
 								</button>

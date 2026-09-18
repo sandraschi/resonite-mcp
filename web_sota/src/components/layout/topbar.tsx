@@ -1,7 +1,7 @@
-import { APPS_CATALOG } from "@/common/apps-catalog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ExternalLink, HelpCircle, LayoutGrid, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { APPS_CATALOG } from "@/common/apps-catalog";
 
 // EXPERIMENTAL light mode (invert hack). Not fleet standard — see index.css.
 // Toggling `.dark` off the root flips the invert filter; persisted so the
@@ -45,7 +45,11 @@ export function Topbar() {
 					type="button"
 					onClick={toggle}
 					className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300 glass"
-					title={light ? "Switch to dark (experimental light mode)" : "Switch to light (experimental, ugly)"}
+					title={
+						light
+							? "Switch to dark (experimental light mode)"
+							: "Switch to light (experimental, ugly)"
+					}
 					aria-label="Toggle light mode (experimental)"
 				>
 					{light ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -63,7 +67,10 @@ export function Topbar() {
 				{/* Global Apps Navigation */}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger asChild>
-						<button className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-foreground hover:bg-muted transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 glass">
+						<button
+							type="button"
+							className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-foreground hover:bg-muted transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 glass"
+						>
 							<LayoutGrid className="h-3.5 w-3.5" />
 							Fleet
 						</button>

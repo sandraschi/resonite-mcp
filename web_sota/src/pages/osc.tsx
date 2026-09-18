@@ -1,15 +1,3 @@
-import { cn } from "@/common/utils";
-import { Button } from "@/components/ui/button";
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { apiUrl } from "@/lib/api-base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	Clock,
@@ -26,6 +14,18 @@ import {
 	Zap,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { cn } from "@/common/utils";
+import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { apiUrl } from "@/lib/api-base";
 
 interface OSCServerStats {
 	port: number;
@@ -84,7 +84,10 @@ export function OSCPage() {
 
 	const { data: receivedData } = useQuery({
 		queryKey: ["osc-messages", activePort],
-		queryFn: () => fetchReceivedMessages(activePort!),
+		queryFn: async () => {
+			if (activePort === null) throw new Error("No OSC port selected");
+			return fetchReceivedMessages(activePort);
+		},
 		enabled: activePort !== null,
 		refetchInterval: 2000,
 	});
@@ -242,7 +245,7 @@ export function OSCPage() {
 											onChange={(e) =>
 												setSendData({
 													...sendData,
-													port: Number.parseInt(e.target.value),
+													port: Number.parseInt(e.target.value, 10),
 												})
 											}
 											className="bg-muted/30 border-border/50 rounded-xl h-11 focus:ring-2 focus:ring-indigo-500/20"
@@ -325,9 +328,19 @@ export function OSCPage() {
 							<CardContent className="p-4">
 								<div className="space-y-3 max-h-[220px] overflow-y-auto pr-2 custom-scrollbar">
 									{statusData?.servers?.map((server: OSCServerStats) => (
+										// Row wraps a per-server stop button: cannot be a <button> itself.
+										// biome-ignore lint/a11y/useSemanticElements: row containing a focusable stop control
 										<div
 											key={server.port}
+											role="button"
+											tabIndex={0}
+											aria-label={`Select OSC server on port ${server.port}`}
 											onClick={() => setActivePort(server.port)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" || e.key === " ") {
+													setActivePort(server.port);
+												}
+											}}
 											className={cn(
 												"group flex items-center justify-between p-3 rounded-xl border transition-all duration-300 cursor-pointer",
 												activePort === server.port
@@ -411,7 +424,7 @@ export function OSCPage() {
 												onChange={(e) =>
 													setStartData({
 														...startData,
-														port: Number.parseInt(e.target.value),
+														port: Number.parseInt(e.target.value, 10),
 													})
 												}
 												className="bg-muted/30 border-border/50 rounded-xl h-11 focus:ring-2 focus:ring-amber-500/20"
@@ -480,9 +493,9 @@ export function OSCPage() {
 									</p>
 								</div>
 							)}
-							{messages.map((msg: OSCMessage, i: number) => (
+							{messages.map((msg: OSCMessage) => (
 								<div
-									key={i}
+									key={`${msg.timestamp}-${msg.address}`}
 									className="flex gap-4 p-2 rounded-lg hover:bg-white/[0.03] transition-colors group border border-transparent hover:border-white/[0.05] animate-in slide-in-from-left-2 duration-300"
 								>
 									<span className="text-muted-foreground opacity-50 min-w-[70px]">
@@ -492,18 +505,22 @@ export function OSCPage() {
 										{msg.address}
 									</span>
 									<span className="text-foreground/80 font-medium">
-										{msg.args.map((arg: any, idx: number) => (
-											<span
-												key={idx}
-												className="mr-2 px-1.5 py-0.5 rounded bg-muted/30 text-emerald-400/80 border border-white/[0.05]"
-											>
-												{typeof arg === "boolean"
-													? arg
-														? "TRUE"
-														: "FALSE"
-													: arg}
-											</span>
-										))}
+										{msg.args.map(
+											(arg: string | number | boolean, idx: number) => (
+												<span
+													// Append-only live feed: argument position is a stable identity.
+													// biome-ignore lint/suspicious/noArrayIndexKey: feed order never changes
+													key={`${msg.timestamp}-${msg.address}-arg-${idx}`}
+													className="mr-2 px-1.5 py-0.5 rounded bg-muted/30 text-emerald-400/80 border border-white/[0.05]"
+												>
+													{typeof arg === "boolean"
+														? arg
+															? "TRUE"
+															: "FALSE"
+														: arg}
+												</span>
+											),
+										)}
 									</span>
 								</div>
 							))}

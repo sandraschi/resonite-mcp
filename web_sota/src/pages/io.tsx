@@ -1,4 +1,3 @@
-import { apiUrl } from "@/lib/api-base";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	Box,
@@ -18,6 +17,7 @@ import {
 	Upload,
 } from "lucide-react";
 import { useState } from "react";
+import { apiUrl } from "@/lib/api-base";
 
 interface InventoryItem {
 	name: string;
@@ -214,7 +214,10 @@ export function IoPage() {
 							.split("/")
 							.filter(Boolean)
 							.map((part, i, arr) => (
-								<div key={i} className="flex items-center gap-2">
+								<div
+									key={arr.slice(0, i + 1).join("/")}
+									className="flex items-center gap-2"
+								>
 									<span>/</span>
 									<button
 										onClick={() =>
@@ -232,9 +235,9 @@ export function IoPage() {
 
 					{isLoading ? (
 						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-							{[...Array(8)].map((_, i) => (
+							{Array.from({ length: 8 }, (_, i) => `io-skel-${i}`).map((id) => (
 								<div
-									key={i}
+									key={id}
 									className="glass-card aspect-square animate-pulse"
 								/>
 							))}
@@ -247,9 +250,16 @@ export function IoPage() {
 									: "space-y-2"
 							}
 						>
-							{filteredItems.map((item, i) => (
+							{filteredItems.map((item) => (
+								// Card wraps Spawn/Share action buttons: cannot be a <button> itself.
+								// biome-ignore lint/a11y/useSemanticElements: card containing focusable action controls
 								<div
-									key={i}
+									key={item.path}
+									role="button"
+									tabIndex={0}
+									aria-label={
+										item.type === "folder" ? `Open ${item.path}` : item.path
+									}
 									className={`group border border-white/[0.05] hover:border-indigo-500/30 hover:bg-indigo-500/[0.02] transition-all cursor-pointer overflow-hidden ${
 										viewMode === "grid"
 											? "glass-card rounded-2xl flex flex-col"
@@ -258,6 +268,14 @@ export function IoPage() {
 									onClick={() =>
 										item.type === "folder" && setCurrentPath(item.path)
 									}
+									onKeyDown={(e) => {
+										if (
+											(e.key === "Enter" || e.key === " ") &&
+											item.type === "folder"
+										) {
+											setCurrentPath(item.path);
+										}
+									}}
 								>
 									{viewMode === "grid" ? (
 										<>

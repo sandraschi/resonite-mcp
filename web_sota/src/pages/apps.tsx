@@ -1,7 +1,7 @@
+import { LayoutGrid, Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { LayoutGrid, Plus, Search } from "lucide-react";
 
 export function Apps() {
 	return (

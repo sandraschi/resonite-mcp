@@ -1,5 +1,3 @@
-import { cn } from "@/common/utils";
-import { apiUrl } from "@/lib/api-base";
 import { useQuery } from "@tanstack/react-query";
 import {
 	Layers,
@@ -10,6 +8,8 @@ import {
 	ZoomOut,
 } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/common/utils";
+import { apiUrl } from "@/lib/api-base";
 
 interface Node {
 	id: string;
@@ -18,7 +18,7 @@ interface Node {
 	type: "avatar" | "object";
 }
 
-export function Map() {
+export function WorldMap() {
 	const [zoom, setZoom] = useState(1.0);
 	const { data, isLoading, refetch, isFetching } = useQuery({
 		queryKey: ["world-map"],
@@ -138,7 +138,10 @@ export function Map() {
 					<svg
 						viewBox={`0 0 ${mapSize} ${mapSize}`}
 						className="w-full h-full max-w-[600px] max-h-[600px] relative z-0"
+						role="img"
+						aria-label="Top-down map of the linked Resonite world"
 					>
+						<title>World map</title>
 						{/* Reference Axis */}
 						<line
 							x1={mapSize / 2}

@@ -1,5 +1,3 @@
-import { cn } from "@/common/utils";
-import { apiUrl } from "@/lib/api-base";
 import { useQuery } from "@tanstack/react-query";
 import {
 	ChevronLeft,
@@ -14,6 +12,8 @@ import {
 	Users,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { cn } from "@/common/utils";
+import { apiUrl } from "@/lib/api-base";
 
 interface Session {
 	sessionId: string;
@@ -99,9 +99,7 @@ export function Sessions() {
 			if (sort === "name")
 				return plainName(a.name).localeCompare(plainName(b.name));
 			if (sort === "updated")
-				return (
-					Date.parse(b.lastUpdate ?? "") - Date.parse(a.lastUpdate ?? "")
-				);
+				return Date.parse(b.lastUpdate ?? "") - Date.parse(a.lastUpdate ?? "");
 			return (b.activeUsers ?? 0) - (a.activeUsers ?? 0);
 		});
 		return rows;
@@ -109,11 +107,14 @@ export function Sessions() {
 
 	useEffect(() => {
 		setPage(1);
-	}, [search, access, sort]);
+	}, []);
 
 	const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 	const safePage = Math.min(page, pageCount);
-	const pageRows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+	const pageRows = filtered.slice(
+		(safePage - 1) * PAGE_SIZE,
+		safePage * PAGE_SIZE,
+	);
 
 	const pageWindow = useMemo(() => {
 		const start = Math.max(1, Math.min(safePage - 2, pageCount - 4));
@@ -138,8 +139,8 @@ export function Sessions() {
 								<span className="h-1.5 w-1.5 rounded-full bg-indigo-500 animate-pulse" />
 								{data ? (
 									<>
-										{data.length} sessions • {worldCount} worlds • live
-										from the Resonite cloud
+										{data.length} sessions • {worldCount} worlds • live from the
+										Resonite cloud
 									</>
 								) : (
 									"Live public sessions from the Resonite cloud"

@@ -1,15 +1,15 @@
-import { cn } from "@/common/utils";
-import { apiUrl } from "@/lib/api-base";
 import { useQuery } from "@tanstack/react-query";
 import {
 	Globe2,
 	MessageCircle,
 	Search,
 	UserCheck,
-	UserX,
 	Users,
+	UserX,
 } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/common/utils";
+import { apiUrl } from "@/lib/api-base";
 
 interface Contact {
 	id: string;
@@ -141,6 +141,7 @@ export function Contacts() {
 									</div>
 								)}
 								<span
+									role="img"
 									className={cn(
 										"absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900",
 										statusColor(online),

@@ -7,7 +7,7 @@ type LogEntry = {
 	level: string;
 	kind: string;
 	detail: string;
-	meta: Record<string, any>;
+	meta: Record<string, unknown>;
 };
 
 const LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"];
@@ -89,7 +89,7 @@ export default function Logging() {
 		if (tail && !userScrolled && endRef.current) {
 			endRef.current.scrollIntoView({ behavior: "smooth" });
 		}
-	}, [entries, tail, userScrolled]);
+	}, [tail, userScrolled]);
 
 	const handleScroll = () => {
 		if (!containerRef.current) return;
@@ -269,14 +269,21 @@ export default function Logging() {
 			</div>
 
 			{showClear && (
+				// Backdrop wraps dialog buttons: cannot be a <button> itself.
+				// biome-ignore lint/a11y/useSemanticElements: modal backdrop containing focusable dialog controls
 				<div
 					className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-					onClick={() => setShowClear(false)}
+					role="button"
+					tabIndex={0}
+					aria-label="Close clear-logs dialog"
+					onClick={(e) => {
+						if (e.target === e.currentTarget) setShowClear(false);
+					}}
+					onKeyDown={(e) => {
+						if (e.key === "Escape" || e.key === "Enter") setShowClear(false);
+					}}
 				>
-					<div
-						className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-sm"
-						onClick={(e) => e.stopPropagation()}
-					>
+					<div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-sm">
 						<h3 className="text-lg font-bold text-slate-200 mb-2">
 							Clear all logs?
 						</h3>

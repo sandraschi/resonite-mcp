@@ -1,4 +1,3 @@
-import { apiUrl } from "@/lib/api-base";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	AlertTriangle,
@@ -9,6 +8,7 @@ import {
 	User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/api-base";
 import { cn } from "../common/utils";
 
 interface Channel {
@@ -53,7 +53,8 @@ export function AvatarPage() {
 			setValues((prev) => {
 				const next = { ...prev };
 				for (const c of avatarInfo.channels) {
-					if (!(c.name in next)) next[c.name] = c.kind === "boolean" ? false : 0;
+					if (!(c.name in next))
+						next[c.name] = c.kind === "boolean" ? false : 0;
 				}
 				return next;
 			});
@@ -64,7 +65,10 @@ export function AvatarPage() {
 		mutationFn: async ({
 			param,
 			value,
-		}: { param: string; value: string | number | boolean }) => {
+		}: {
+			param: string;
+			value: string | number | boolean;
+		}) => {
 			const r = await fetch(apiUrl("/api/resonite/avatar/set_parameter"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -125,8 +129,8 @@ export function AvatarPage() {
 						</h2>
 						<p className="text-sm text-slate-400 max-w-md">
 							Send-only avatar controls for the linked session: parameter
-							channels, locomotion and pose. Values are transmitted, never
-							read back.
+							channels, locomotion and pose. Values are transmitted, never read
+							back.
 						</p>
 					</div>
 				</div>
@@ -216,8 +220,8 @@ export function AvatarPage() {
 											Parameter channels
 										</h3>
 										<p className="text-xs text-slate-500">
-											One-way sends over OSC. No delivery confirmation,
-											no readback.
+											One-way sends over OSC. No delivery confirmation, no
+											readback.
 										</p>
 									</div>
 								</div>
@@ -225,7 +229,9 @@ export function AvatarPage() {
 
 							<div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
 								{(avatarInfo?.channels ?? []).map((channel) => {
-									const value = values[channel.name] ?? (channel.kind === "boolean" ? false : 0);
+									const value =
+										values[channel.name] ??
+										(channel.kind === "boolean" ? false : 0);
 									return (
 										<div
 											key={channel.name}
@@ -261,7 +267,10 @@ export function AvatarPage() {
 													title={`Send ${channel.name}`}
 													aria-label={`Send ${channel.name}`}
 													onChange={(e) =>
-														sendChannel(channel.name, Number.parseFloat(e.target.value))
+														sendChannel(
+															channel.name,
+															Number.parseFloat(e.target.value),
+														)
 													}
 													className="w-full h-1 bg-white/5 rounded-full appearance-none cursor-pointer accent-purple-500 hover:accent-purple-400"
 												/>

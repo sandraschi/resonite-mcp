@@ -1,28 +1,32 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/common/utils";
 import {
 	BookOpen,
+	Cpu,
 	ExternalLink,
+	Globe2,
+	Headphones,
 	HelpCircle,
 	Info,
-	Radio,
-	Wifi,
-	Zap,
 	Monitor,
-	Headphones,
-	Cpu,
-	Globe2,
+	Move,
+	Radio,
 	User,
 	Wand2,
-	Move,
+	Wifi,
+	Zap,
 } from "lucide-react";
+import { cn } from "@/common/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function RefCard({
 	title,
 	desc,
 	href,
-}: { title: string; desc: string; href: string }) {
+}: {
+	title: string;
+	desc: string;
+	href: string;
+}) {
 	return (
 		<a
 			href={href}
@@ -113,8 +117,8 @@ export function Help() {
 								<li className="pl-2">
 									<span className="font-bold">Set env vars</span>{" "}
 									<span className="text-muted-foreground">
-										— Copy <code>.env.example</code> to <code>.env</code>{" "}
-										and set <code>RESONITE_USER_ID</code> +{" "}
+										— Copy <code>.env.example</code> to <code>.env</code> and
+										set <code>RESONITE_USER_ID</code> +{" "}
 										<code>RESONITE_TOKEN</code> for cloud API access
 									</span>
 								</li>
@@ -129,8 +133,7 @@ export function Help() {
 									<span className="font-bold">Launch Resonite</span>{" "}
 									<span className="text-muted-foreground">
 										— Use the dashboard Launch button or start Resonite via
-										Steam. The MCP tools will activate once Resonite is
-										running.
+										Steam. The MCP tools will activate once Resonite is running.
 									</span>
 								</li>
 							</ol>
@@ -144,11 +147,10 @@ export function Help() {
 								</div>
 								<p className="text-xs text-muted-foreground">
 									For cloud API tools (inventory, friends, messages, cloud
-									variables), log in with the{" "}
-									<code>resonite_rest_login</code> tool or set{" "}
-									<code>RESONITE_USER_ID</code> and{" "}
-									<code>RESONITE_TOKEN</code> environment variables. Token
-									lasts 30 days with <code>remember_me=true</code>.
+									variables), log in with the <code>resonite_rest_login</code>{" "}
+									tool or set <code>RESONITE_USER_ID</code> and{" "}
+									<code>RESONITE_TOKEN</code> environment variables. Token lasts
+									30 days with <code>remember_me=true</code>.
 								</p>
 							</div>
 						</CardContent>
@@ -158,9 +160,7 @@ export function Help() {
 						<Card className="border-border/50 bg-card/30 glass">
 							<CardContent className="p-5 space-y-2">
 								<Monitor className="h-4 w-4 text-indigo-400" />
-								<p className="text-xs font-bold text-foreground">
-									Ports
-								</p>
+								<p className="text-xs font-bold text-foreground">Ports</p>
 								<p className="text-[10px] text-muted-foreground">
 									Backend: 10979 (REST + MCP)
 									<br />
@@ -175,9 +175,7 @@ export function Help() {
 						<Card className="border-border/50 bg-card/30 glass">
 							<CardContent className="p-5 space-y-2">
 								<Cpu className="h-4 w-4 text-purple-400" />
-								<p className="text-xs font-bold text-foreground">
-									Tool Count
-								</p>
+								<p className="text-xs font-bold text-foreground">Tool Count</p>
 								<p className="text-[10px] text-muted-foreground">
 									65 tools across 12 modules
 									<br />
@@ -192,9 +190,7 @@ export function Help() {
 						<Card className="border-border/50 bg-card/30 glass">
 							<CardContent className="p-5 space-y-2">
 								<Radio className="h-4 w-4 text-emerald-400" />
-								<p className="text-xs font-bold text-foreground">
-									Transport
-								</p>
+								<p className="text-xs font-bold text-foreground">Transport</p>
 								<p className="text-[10px] text-muted-foreground">
 									Stdio: Claude Desktop
 									<br />
@@ -223,7 +219,8 @@ export function Help() {
 								</div>
 								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
 									<p>
-										Resonite has two main modes of interaction depending on your setup:
+										Resonite has two main modes of interaction depending on your
+										setup:
 									</p>
 									<div className="space-y-2 font-mono text-[11px] bg-black/30 p-3 rounded-lg border border-white/[0.03]">
 										<div className="flex justify-between border-b border-white/[0.05] pb-1">
@@ -235,11 +232,17 @@ export function Help() {
 											<span className="text-white">Look around</span>
 										</div>
 										<div className="flex justify-between border-b border-white/[0.05] pb-1">
-											<span className="text-slate-400">Left-Click (Desktop)</span>
-											<span className="text-white">Interact / Click / Grab</span>
+											<span className="text-slate-400">
+												Left-Click (Desktop)
+											</span>
+											<span className="text-white">
+												Interact / Click / Grab
+											</span>
 										</div>
 										<div className="flex justify-between border-b border-white/[0.05] pb-1">
-											<span className="text-slate-400">Right-Click (Desktop)</span>
+											<span className="text-slate-400">
+												Right-Click (Desktop)
+											</span>
 											<span className="text-white">Open Context Menu</span>
 										</div>
 										<div className="flex justify-between border-b border-white/[0.05] pb-1">
@@ -266,17 +269,37 @@ export function Help() {
 								</div>
 								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
 									<p>
-										Avatars define your virtual appearance and biometric tracking capabilities:
+										Avatars define your virtual appearance and biometric
+										tracking capabilities:
 									</p>
 									<ul className="list-disc list-inside space-y-2">
 										<li>
-											<span className="font-bold text-white">Default Avatars:</span> Open the <span className="font-bold text-white">Inventory</span> tab, navigate to <span className="font-bold text-white">Resonite Essentials</span>, then open <span className="font-bold text-white">Avatars</span> to spawn default public models.
+											<span className="font-bold text-white">
+												Default Avatars:
+											</span>{" "}
+											Open the{" "}
+											<span className="font-bold text-white">Inventory</span>{" "}
+											tab, navigate to{" "}
+											<span className="font-bold text-white">
+												Resonite Essentials
+											</span>
+											, then open{" "}
+											<span className="font-bold text-white">Avatars</span> to
+											spawn default public models.
 										</li>
 										<li>
-											<span className="font-bold text-white">Equipping:</span> Point at a spawned avatar in the world, hold your controller Grip or Right-Click (desktop) to open the context radial menu, and click the T-posing <span className="font-bold text-white">Equip</span> button.
+											<span className="font-bold text-white">Equipping:</span>{" "}
+											Point at a spawned avatar in the world, hold your
+											controller Grip or Right-Click (desktop) to open the
+											context radial menu, and click the T-posing{" "}
+											<span className="font-bold text-white">Equip</span>{" "}
+											button.
 										</li>
 										<li>
-											<span className="font-bold text-white">Saving:</span> Once wearing an avatar, open the Dash, navigate to your personal folder in the Inventory tab, and click <span className="font-bold text-white">Save Avatar</span>.
+											<span className="font-bold text-white">Saving:</span> Once
+											wearing an avatar, open the Dash, navigate to your
+											personal folder in the Inventory tab, and click{" "}
+											<span className="font-bold text-white">Save Avatar</span>.
 										</li>
 									</ul>
 								</div>
@@ -294,17 +317,31 @@ export function Help() {
 								</div>
 								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
 									<p>
-										Resonite is a highly interactive social platform. Here is how to speak and connect:
+										Resonite is a highly interactive social platform. Here is
+										how to speak and connect:
 									</p>
 									<ul className="list-disc list-inside space-y-2">
 										<li>
-											<span className="font-bold text-white">Microphone Mute:</span> Press <span className="font-bold text-white">F9</span> to quickly toggle your microphone mute state, or configure push-to-talk in Settings.
+											<span className="font-bold text-white">
+												Microphone Mute:
+											</span>{" "}
+											Press <span className="font-bold text-white">F9</span> to
+											quickly toggle your microphone mute state, or configure
+											push-to-talk in Settings.
 										</li>
 										<li>
-											<span className="font-bold text-white">Text Chat:</span> Press the <span className="font-bold text-white">T</span> key on desktop to open text chat bubble overlays.
+											<span className="font-bold text-white">Text Chat:</span>{" "}
+											Press the <span className="font-bold text-white">T</span>{" "}
+											key on desktop to open text chat bubble overlays.
 										</li>
 										<li>
-											<span className="font-bold text-white">Contacts Page:</span> Use the <span className="font-bold text-white">Contacts</span> tab on this dashboard to see your friends list and copy links to jump directly into their active sessions.
+											<span className="font-bold text-white">
+												Contacts Page:
+											</span>{" "}
+											Use the{" "}
+											<span className="font-bold text-white">Contacts</span> tab
+											on this dashboard to see your friends list and copy links
+											to jump directly into their active sessions.
 										</li>
 									</ul>
 								</div>
@@ -322,17 +359,32 @@ export function Help() {
 								</div>
 								<div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
 									<p>
-										Resonite worlds are connected by immersive, real-time 3D portal links:
+										Resonite worlds are connected by immersive, real-time 3D
+										portal links:
 									</p>
 									<ul className="list-disc list-inside space-y-2">
 										<li>
-											<span className="font-bold text-white">Real-Time Previews:</span> Look through portal windows to see a live view of the destination world before crossing.
+											<span className="font-bold text-white">
+												Real-Time Previews:
+											</span>{" "}
+											Look through portal windows to see a live view of the
+											destination world before crossing.
 										</li>
 										<li>
-											<span className="font-bold text-white">Spawning Portals:</span> Open the Dash, find a world or session inside the Worlds tab, and click <span className="font-bold text-white">Spawn Portal</span>.
+											<span className="font-bold text-white">
+												Spawning Portals:
+											</span>{" "}
+											Open the Dash, find a world or session inside the Worlds
+											tab, and click{" "}
+											<span className="font-bold text-white">Spawn Portal</span>
+											.
 										</li>
 										<li>
-											<span className="font-bold text-white">Crossing Portals:</span> Walk directly through the portal opening to trigger loading into the target world.
+											<span className="font-bold text-white">
+												Crossing Portals:
+											</span>{" "}
+											Walk directly through the portal opening to trigger
+											loading into the target world.
 										</li>
 									</ul>
 								</div>
@@ -350,12 +402,21 @@ export function Help() {
 							</div>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
 								<div className="space-y-1">
-									<p className="font-bold text-white">I cannot move my avatar!</p>
-									<p>Ensure you do not have any menus open (press Esc). If you are stuck inside an object, try jumping (Space) or crouching (Ctrl).</p>
+									<p className="font-bold text-white">
+										I cannot move my avatar!
+									</p>
+									<p>
+										Ensure you do not have any menus open (press Esc). If you
+										are stuck inside an object, try jumping (Space) or crouching
+										(Ctrl).
+									</p>
 								</div>
 								<div className="space-y-1">
 									<p className="font-bold text-white">People cannot hear me!</p>
-									<p>Ensure you are unmuted (press F9). Check your default audio input device inside the Settings tab of your Dash menu.</p>
+									<p>
+										Ensure you are unmuted (press F9). Check your default audio
+										input device inside the Settings tab of your Dash menu.
+									</p>
 								</div>
 							</div>
 						</CardContent>
@@ -377,48 +438,77 @@ export function Help() {
 								<div className="space-y-2 p-4 rounded-xl bg-black/20 border border-white/[0.03]">
 									<div className="flex items-center gap-2 mb-2">
 										<div className="w-2 h-2 rounded-full bg-indigo-400" />
-										<h4 className="text-xs font-bold text-foreground">Resonite</h4>
+										<h4 className="text-xs font-bold text-foreground">
+											Resonite
+										</h4>
 									</div>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Focus:</span> Real-time, in-world collaborative creation and visual programming (ProtoFlux).
+										<span className="font-bold text-white">Focus:</span>{" "}
+										Real-time, in-world collaborative creation and visual
+										programming (ProtoFlux).
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Strengths:</span> Immediate asset imports, live scripting, and bi-directional OSC integration.
+										<span className="font-bold text-white">Strengths:</span>{" "}
+										Immediate asset imports, live scripting, and bi-directional
+										OSC integration.
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Fleet Connection:</span> Handled via the Resonite-MCP server using <strong>ResoniteLink WebSocket</strong> and bi-directional OSC.
+										<span className="font-bold text-white">
+											Fleet Connection:
+										</span>{" "}
+										Handled via the Resonite-MCP server using{" "}
+										<strong>ResoniteLink WebSocket</strong> and bi-directional
+										OSC.
 									</p>
 								</div>
 
 								<div className="space-y-2 p-4 rounded-xl bg-black/20 border border-white/[0.03]">
 									<div className="flex items-center gap-2 mb-2">
 										<div className="w-2 h-2 rounded-full bg-emerald-400" />
-										<h4 className="text-xs font-bold text-foreground">VRChat</h4>
+										<h4 className="text-xs font-bold text-foreground">
+											VRChat
+										</h4>
 									</div>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Focus:</span> Massive social communities, club events, and public worlds.
+										<span className="font-bold text-white">Focus:</span> Massive
+										social communities, club events, and public worlds.
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Strengths:</span> High concurrent user count and an extensive marketplace of pre-made avatars.
+										<span className="font-bold text-white">Strengths:</span>{" "}
+										High concurrent user count and an extensive marketplace of
+										pre-made avatars.
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Fleet Connection:</span> Passive control via unidirectional OSC parameters and offline Unity SDK build/upload automation.
+										<span className="font-bold text-white">
+											Fleet Connection:
+										</span>{" "}
+										Passive control via unidirectional OSC parameters and
+										offline Unity SDK build/upload automation.
 									</p>
 								</div>
 
 								<div className="space-y-2 p-4 rounded-xl bg-black/20 border border-white/[0.03]">
 									<div className="flex items-center gap-2 mb-2">
 										<div className="w-2 h-2 rounded-full bg-amber-400" />
-										<h4 className="text-xs font-bold text-foreground">Vircadia</h4>
+										<h4 className="text-xs font-bold text-foreground">
+											Vircadia
+										</h4>
 									</div>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Focus:</span> Open-source, self-hosted, fully decentralized domain grids.
+										<span className="font-bold text-white">Focus:</span>{" "}
+										Open-source, self-hosted, fully decentralized domain grids.
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Strengths:</span> Native JavaScript scripting engine and server-side audio mixing.
+										<span className="font-bold text-white">Strengths:</span>{" "}
+										Native JavaScript scripting engine and server-side audio
+										mixing.
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										<span className="font-bold text-white">Fleet Connection:</span> Automated JS script injection and domain REST management connections.
+										<span className="font-bold text-white">
+											Fleet Connection:
+										</span>{" "}
+										Automated JS script injection and domain REST management
+										connections.
 									</p>
 								</div>
 							</div>
@@ -436,19 +526,57 @@ export function Help() {
 							</div>
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-muted-foreground">
 								<div className="p-4 rounded-xl bg-black/20 border border-white/[0.03] space-y-2">
-									<p className="font-bold text-white">Development Tools &amp; Modding</p>
+									<p className="font-bold text-white">
+										Development Tools &amp; Modding
+									</p>
 									<ul className="list-disc list-inside space-y-1">
-										<li><span className="font-bold text-white">Resonite Mod Loader (RML):</span> Modding framework for custom C# client DLLs.</li>
-										<li><span className="font-bold text-white">Resonite Wiki:</span> Official reference guide for ProtoFlux nodes and components.</li>
-										<li><span className="font-bold text-white">ResoniteLink:</span> WebSocket bridge connecting the game engine to external APIs.</li>
+										<li>
+											<span className="font-bold text-white">
+												Resonite Mod Loader (RML):
+											</span>{" "}
+											Modding framework for custom C# client DLLs.
+										</li>
+										<li>
+											<span className="font-bold text-white">
+												Resonite Wiki:
+											</span>{" "}
+											Official reference guide for ProtoFlux nodes and
+											components.
+										</li>
+										<li>
+											<span className="font-bold text-white">
+												ResoniteLink:
+											</span>{" "}
+											WebSocket bridge connecting the game engine to external
+											APIs.
+										</li>
 									</ul>
 								</div>
 								<div className="p-4 rounded-xl bg-black/20 border border-white/[0.03] space-y-2">
-									<p className="font-bold text-white">In-World Libraries &amp; Assets</p>
+									<p className="font-bold text-white">
+										In-World Libraries &amp; Assets
+									</p>
 									<ul className="list-disc list-inside space-y-1">
-										<li><span className="font-bold text-white">Resonite Essentials:</span> Default folder featuring avatars, building tools, and prefabs.</li>
-										<li><span className="font-bold text-white">Community Depots:</span> Public world storage hosting thousands of scripts and models.</li>
-										<li><span className="font-bold text-white">Blender Exporters:</span> Custom plugins streamlining asset imports.</li>
+										<li>
+											<span className="font-bold text-white">
+												Resonite Essentials:
+											</span>{" "}
+											Default folder featuring avatars, building tools, and
+											prefabs.
+										</li>
+										<li>
+											<span className="font-bold text-white">
+												Community Depots:
+											</span>{" "}
+											Public world storage hosting thousands of scripts and
+											models.
+										</li>
+										<li>
+											<span className="font-bold text-white">
+												Blender Exporters:
+											</span>{" "}
+											Custom plugins streamlining asset imports.
+										</li>
 									</ul>
 								</div>
 							</div>
@@ -465,28 +593,54 @@ export function Help() {
 								</h3>
 							</div>
 							<p className="text-xs text-muted-foreground leading-relaxed">
-								The fleet pipeline automates the lifecycle of virtual assets from external design tools straight to active inhabitance inside Resonite:
+								The fleet pipeline automates the lifecycle of virtual assets
+								from external design tools straight to active inhabitance inside
+								Resonite:
 							</p>
 							<div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2">
 								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
-									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 1</div>
-									<div className="text-xs font-bold text-white">Design &amp; Export</div>
-									<p className="text-[10px] text-muted-foreground mt-1">Export meshes from Blender or textures from GIMP.</p>
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+										Step 1
+									</div>
+									<div className="text-xs font-bold text-white">
+										Design &amp; Export
+									</div>
+									<p className="text-[10px] text-muted-foreground mt-1">
+										Export meshes from Blender or textures from GIMP.
+									</p>
 								</div>
 								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
-									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 2</div>
-									<div className="text-xs font-bold text-white">Staging Cache</div>
-									<p className="text-[10px] text-muted-foreground mt-1">Assets are staged in <code>~/.avatarmcp/models/</code>.</p>
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+										Step 2
+									</div>
+									<div className="text-xs font-bold text-white">
+										Staging Cache
+									</div>
+									<p className="text-[10px] text-muted-foreground mt-1">
+										Assets are staged in <code>~/.avatarmcp/models/</code>.
+									</p>
 								</div>
 								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
-									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 3</div>
-									<div className="text-xs font-bold text-white">Live Spawning</div>
-									<p className="text-[10px] text-muted-foreground mt-1">ResoniteLink WebSocket spawns the asset into a slot.</p>
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+										Step 3
+									</div>
+									<div className="text-xs font-bold text-white">
+										Live Spawning
+									</div>
+									<p className="text-[10px] text-muted-foreground mt-1">
+										ResoniteLink WebSocket spawns the asset into a slot.
+									</p>
 								</div>
 								<div className="p-3 rounded-xl bg-black/35 border border-white/[0.03] text-center space-y-1">
-									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">Step 4</div>
-									<div className="text-xs font-bold text-white">OSC Inhabit</div>
-									<p className="text-[10px] text-muted-foreground mt-1">OSC feeds biometrics (face, voice, eyes) into the slot.</p>
+									<div className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+										Step 4
+									</div>
+									<div className="text-xs font-bold text-white">
+										OSC Inhabit
+									</div>
+									<p className="text-[10px] text-muted-foreground mt-1">
+										OSC feeds biometrics (face, voice, eyes) into the slot.
+									</p>
 								</div>
 							</div>
 						</CardContent>
@@ -575,9 +729,8 @@ export function Help() {
 							</div>
 							<p className="text-xs text-muted-foreground">
 								ResoniteLink is a WebSocket-based JSON protocol (v0.8.3+) for
-								direct slot/component manipulation inside Resonite. Enable it
-								in Resonite: Sessions → Enable ResoniteLink (default port
-								4242).
+								direct slot/component manipulation inside Resonite. Enable it in
+								Resonite: Sessions → Enable ResoniteLink (default port 4242).
 							</p>
 							<div className="overflow-x-auto">
 								<table className="w-full text-[10px]">
@@ -597,47 +750,19 @@ export function Help() {
 									<tbody className="text-muted-foreground">
 										{[
 											["Read field", "ReadField", "Read value by ref ID"],
-											[
-												"Write field",
-												"WriteField",
-												"Write value by ref ID",
-											],
+											["Write field", "WriteField", "Write value by ref ID"],
 											["Get node", "GetNode", "Get slot/component info"],
-											[
-												"Get children",
-												"GetChildren",
-												"List child slots",
-											],
-											[
-												"Add slot",
-												"AddSlot",
-												"Create child slot",
-											],
+											["Get children", "GetChildren", "List child slots"],
+											["Add slot", "AddSlot", "Create child slot"],
 											[
 												"Add component",
 												"AddComponent",
 												"Add component to slot",
 											],
-											[
-												"Destroy slot",
-												"DestroySlot",
-												"Delete slot + children",
-											],
-											[
-												"Reflect",
-												"Reflect",
-												"Discover types/fields (v0.8.3+)",
-											],
-											[
-												"Batch",
-												"Batch",
-												"Atomic batch (v0.8.3+)",
-											],
-											[
-												"Import file",
-												"importFile",
-												"Import local asset",
-											],
+											["Destroy slot", "DestroySlot", "Delete slot + children"],
+											["Reflect", "Reflect", "Discover types/fields (v0.8.3+)"],
+											["Batch", "Batch", "Atomic batch (v0.8.3+)"],
+											["Import file", "importFile", "Import local asset"],
 										].map(([op, type, desc]) => (
 											<tr
 												key={op}
@@ -665,9 +790,9 @@ export function Help() {
 								</h3>
 							</div>
 							<p className="text-xs text-muted-foreground">
-								Resonite's cloud API provides authentication, session
-								browsing, user lookup, inventory records, messages, friends,
-								and cloud variables.
+								Resonite's cloud API provides authentication, session browsing,
+								user lookup, inventory records, messages, friends, and cloud
+								variables.
 							</p>
 							<div className="overflow-x-auto">
 								<table className="w-full text-[10px]">
@@ -676,12 +801,8 @@ export function Help() {
 											<th className="p-2 font-bold text-foreground">
 												Endpoint
 											</th>
-											<th className="p-2 font-bold text-foreground">
-												Method
-											</th>
-											<th className="p-2 font-bold text-foreground">
-												Auth
-											</th>
+											<th className="p-2 font-bold text-foreground">Method</th>
+											<th className="p-2 font-bold text-foreground">Auth</th>
 										</tr>
 									</thead>
 									<tbody className="text-muted-foreground">
@@ -732,12 +853,12 @@ export function Help() {
 										How VR mode works
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										Resonite auto-detects an active SteamVR or OpenXR runtime
-										on startup. When VR is detected, Resonite renders to the
-										HMD at full framerate (72/90/120Hz depending on headset)
-										while the desktop window shows a spectator view. All MCP
-										tools work identically in VR mode — OSC and ResoniteLink
-										are process-level connections, not window-level.
+										Resonite auto-detects an active SteamVR or OpenXR runtime on
+										startup. When VR is detected, Resonite renders to the HMD at
+										full framerate (72/90/120Hz depending on headset) while the
+										desktop window shows a spectator view. All MCP tools work
+										identically in VR mode — OSC and ResoniteLink are
+										process-level connections, not window-level.
 									</p>
 								</div>
 
@@ -746,8 +867,8 @@ export function Help() {
 										Pico HMD setup
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										Pico headsets (Pico 4, Pico 4 Ultra, Neo 3) connect to
-										PC VR via two methods:
+										Pico headsets (Pico 4, Pico 4 Ultra, Neo 3) connect to PC VR
+										via two methods:
 									</p>
 									<div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
 										<div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
@@ -755,10 +876,10 @@ export function Help() {
 												Virtual Desktop (recommended)
 											</p>
 											<p className="text-[10px] text-muted-foreground leading-relaxed">
-												Purchase Virtual Desktop on the Pico Store, install
-												the free PC streamer app. Wireless, best quality,
-												lowest latency. Supports SteamVR passthrough.
-												Resonite auto-launches in VR mode.
+												Purchase Virtual Desktop on the Pico Store, install the
+												free PC streamer app. Wireless, best quality, lowest
+												latency. Supports SteamVR passthrough. Resonite
+												auto-launches in VR mode.
 											</p>
 										</div>
 										<div className="p-3 rounded-lg bg-blue-500/5 border border-blue-500/20">
@@ -767,10 +888,9 @@ export function Help() {
 											</p>
 											<p className="text-[10px] text-muted-foreground leading-relaxed">
 												Free Pico app for USB-C or WiFi connection. Good
-												alternative if Virtual Desktop is unavailable.
-												Install Pico Connect on PC, then enable USB
-												tethering on the headset. Resonite starts in VR
-												if SteamVR is running.
+												alternative if Virtual Desktop is unavailable. Install
+												Pico Connect on PC, then enable USB tethering on the
+												headset. Resonite starts in VR if SteamVR is running.
 											</p>
 										</div>
 									</div>
@@ -781,16 +901,16 @@ export function Help() {
 										Desktop #2 (multi-monitor)
 									</p>
 									<p className="text-[11px] text-muted-foreground leading-relaxed">
-										Resonite opens on the primary monitor by default. To
-										move it to a secondary monitor on launch: use Windows
-										display settings to set your preferred monitor as
-										primary before launch, or use{" "}
+										Resonite opens on the primary monitor by default. To move it
+										to a secondary monitor on launch: use Windows display
+										settings to set your preferred monitor as primary before
+										launch, or use{" "}
 										<code className="text-[10px] bg-muted/50 px-1 rounded">
 											Shift+Win+Arrow
 										</code>{" "}
-										to move the window after it opens. In VR mode, the
-										desktop window is a spectator view and its position is
-										cosmetic — all rendering goes to the HMD.
+										to move the window after it opens. In VR mode, the desktop
+										window is a spectator view and its position is cosmetic —
+										all rendering goes to the HMD.
 									</p>
 								</div>
 
@@ -800,16 +920,14 @@ export function Help() {
 									</p>
 									<ul className="text-[11px] text-muted-foreground space-y-1 list-disc pl-4">
 										<li>
-											Make sure SteamVR is running before launching
-											Resonite
+											Make sure SteamVR is running before launching Resonite
 										</li>
 										<li>
-											Check Virtual Desktop streamer shows "Connected" on
-											the PC
+											Check Virtual Desktop streamer shows "Connected" on the PC
 										</li>
 										<li>
-											If Resonite opens in flatscreen mode, restart
-											SteamVR and re-launch
+											If Resonite opens in flatscreen mode, restart SteamVR and
+											re-launch
 										</li>
 										<li>
 											For Pico Connect USB: enable Developer Mode on the
@@ -817,8 +935,8 @@ export function Help() {
 											settings
 										</li>
 										<li>
-											The MCP server is unaffected by VR mode — all OSC
-											and Link tools work regardless
+											The MCP server is unaffected by VR mode — all OSC and Link
+											tools work regardless
 										</li>
 									</ul>
 								</div>
@@ -866,9 +984,9 @@ export function Help() {
 							q: "How do fleet integrations work?",
 							a: "The resonite_fleet tool pulls assets from other MCP servers (blender-mcp, gimp-mcp, inkscape-mcp, worldlabs-mcp) and imports them into Resonite. Use the Integrations page or call resonite_fleet directly with the desired operation.",
 						},
-					].map(({ q, a }, i) => (
+					].map(({ q, a }) => (
 						<Card
-							key={i}
+							key={q}
 							className="border-border/50 bg-card/30 glass hover:border-indigo-500/20 transition-all"
 						>
 							<CardContent className="p-5 space-y-2">

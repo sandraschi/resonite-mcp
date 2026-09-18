@@ -1,8 +1,8 @@
-import { apiUrl } from "@/lib/api-base";
 import { useMutation } from "@tanstack/react-query";
 import { Eye, EyeOff, Gamepad2, Info } from "lucide-react";
 import nipplejs from "nipplejs";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { apiUrl } from "@/lib/api-base";
 
 export function Control() {
 	const [viewType, setViewType] = useState<"first-person" | "third-person">(

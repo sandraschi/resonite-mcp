@@ -1,6 +1,12 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+	Navigate,
+	Route,
+	BrowserRouter as Router,
+	Routes,
+} from "react-router-dom";
 import { AppLayout } from "@/components/layout/app-layout";
 import { PresenceGate } from "@/components/presence-gate";
-import Logging from "@/pages/Logging";
 import { AgentTools } from "@/pages/agent-tools";
 import { Apps } from "@/pages/apps";
 import { AvatarPage } from "@/pages/avatar";
@@ -8,11 +14,13 @@ import { Chat } from "@/pages/chat";
 import { Contacts } from "@/pages/contacts";
 import { Control } from "@/pages/control";
 import { Dashboard } from "@/pages/dashboard";
+import { Gallery } from "@/pages/gallery";
 import { Help } from "@/pages/help";
 import { Integrations } from "@/pages/integrations";
 import { Inventory } from "@/pages/inventory";
 import { IoPage } from "@/pages/io";
-import { Map } from "@/pages/map";
+import Logging from "@/pages/Logging";
+import { WorldMap } from "@/pages/map";
 import { MarketplacePage } from "@/pages/marketplace";
 import { OSCPage } from "@/pages/osc";
 import { ProtoFluxPage } from "@/pages/protoflux";
@@ -23,16 +31,8 @@ import { SearchPage } from "@/pages/search";
 import { Sessions } from "@/pages/sessions";
 import { Settings } from "@/pages/settings";
 import { Status } from "@/pages/status";
-import { Gallery } from "@/pages/gallery";
 import { Tools } from "@/pages/tools";
 import { World } from "@/pages/world";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-	Navigate,
-	Route,
-	BrowserRouter as Router,
-	Routes,
-} from "react-router-dom";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -76,7 +76,7 @@ function App() {
 										/>
 										<Route path="/world" element={<World />} />
 										<Route path="/control" element={<Control />} />
-										<Route path="/map" element={<Map />} />
+										<Route path="/map" element={<WorldMap />} />
 										<Route path="/search" element={<SearchPage />} />
 										<Route path="/apps" element={<Apps />} />
 										<Route path="/logs" element={<Logging />} />

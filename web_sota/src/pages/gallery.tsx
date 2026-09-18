@@ -1,4 +1,3 @@
-import { apiUrl } from "@/lib/api-base";
 import { useQuery } from "@tanstack/react-query";
 import {
 	Calendar,
@@ -11,6 +10,7 @@ import {
 	X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { apiUrl } from "@/lib/api-base";
 import { cn } from "../common/utils";
 
 interface GalleryItem {
@@ -24,7 +24,9 @@ interface GalleryItem {
 
 export function Gallery() {
 	const [activeCategory, setActiveCategory] = useState<string>("All");
-	const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
+	const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(
+		null,
+	);
 
 	// Fetch gallery items from backend
 	const { data, isLoading } = useQuery<{ items: GalleryItem[] }>({
@@ -82,7 +84,8 @@ export function Gallery() {
 							<Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
 						</h2>
 						<p className="text-sm text-slate-400 max-w-md">
-							In-game captures, world showcases, and dashboard interface telemetry
+							In-game captures, world showcases, and dashboard interface
+							telemetry
 						</p>
 					</div>
 				</div>
@@ -112,9 +115,9 @@ export function Gallery() {
 			{/* Grid Layout */}
 			{isLoading ? (
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-					{[...Array(4)].map((_, i) => (
+					{["sk1", "sk2", "sk3", "sk4"].map((id) => (
 						<div
-							key={i}
+							key={id}
 							className="aspect-video rounded-3xl bg-white/[0.02] border border-white/[0.05] animate-pulse"
 						/>
 					))}
@@ -126,15 +129,17 @@ export function Gallery() {
 						No screenshots found in this category
 					</p>
 					<p className="text-xs text-slate-500 mt-1">
-						Drag screenshots into your <code>web_sota/public/screenshots/</code> folder
-						to see them here!
+						Drag screenshots into your <code>web_sota/public/screenshots/</code>{" "}
+						folder to see them here!
 					</p>
 				</div>
 			) : (
 				<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 					{filteredItems.map((item, index) => (
-						<div
-							key={item.url + index}
+						<button
+							type="button"
+							key={item.url}
+							aria-label="View screenshot"
 							onClick={() => setSelectedImageIndex(index)}
 							className="group relative rounded-2xl overflow-hidden border border-white/10 bg-slate-950/40 glass-card aspect-video cursor-pointer hover:border-indigo-500/40 transition-all duration-500"
 						>
@@ -166,7 +171,7 @@ export function Gallery() {
 							<div className="absolute top-2 right-2 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider glass-morphism border border-white/10 text-slate-300">
 								{item.is_local ? "Local" : "Cloud Preset"}
 							</div>
-						</div>
+						</button>
 					))}
 				</div>
 			)}
@@ -225,10 +230,13 @@ export function Gallery() {
 							<div className="p-3 rounded-xl bg-indigo-500/5 border border-indigo-500/10 text-left flex items-start gap-2.5">
 								<Info className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
 								<p className="text-[10px] text-slate-400 leading-relaxed">
-									<span className="font-bold text-indigo-400">Pro-Tip for Beginners:</span> You
-									can join this world inside Resonite by searching for its title
-									in the <span className="text-white">Worlds</span> tab of your in-game Dash
-									menu. Double-click it to visit or spawn a portal.
+									<span className="font-bold text-indigo-400">
+										Pro-Tip for Beginners:
+									</span>{" "}
+									You can join this world inside Resonite by searching for its
+									title in the <span className="text-white">Worlds</span> tab of
+									your in-game Dash menu. Double-click it to visit or spawn a
+									portal.
 								</p>
 							</div>
 						)}

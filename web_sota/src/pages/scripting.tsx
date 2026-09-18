@@ -1,4 +1,3 @@
-import { apiUrl } from "@/lib/api-base";
 import { useMutation } from "@tanstack/react-query";
 import {
 	AlertTriangle,
@@ -14,6 +13,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { useState } from "react";
+import { apiUrl } from "@/lib/api-base";
 
 interface ScriptResult {
 	status: "success" | "error";
@@ -121,13 +121,16 @@ export function ScriptingPage() {
 								className="w-full h-full bg-transparent p-6 font-mono text-sm text-slate-300 focus:outline-none resize-none spellcheck-false"
 								spellCheck={false}
 							/>
-							<div className="absolute left-0 top-0 bottom-0 w-10 bg-black/20 border-r border-white/5 flex flex-col items-center py-6 gap-2 opacity-20 select-none pointer-events-none">
-								{[...Array(20)].map((_, i) => (
+							<div
+								className="absolute left-0 top-0 bottom-0 w-10 bg-black/20 border-r border-white/5 flex flex-col items-center py-6 gap-2 opacity-20 select-none pointer-events-none"
+								aria-hidden="true"
+							>
+								{Array.from({ length: 20 }, (_, n) => n + 1).map((n) => (
 									<span
-										key={i}
+										key={n}
 										className="text-[10px] font-mono text-slate-500"
 									>
-										{i + 1}
+										{n}
 									</span>
 								))}
 							</div>
@@ -169,9 +172,9 @@ export function ScriptingPage() {
 									No logs recorded in this session
 								</p>
 							) : (
-								logs.map((log, i) => (
+								logs.map((log) => (
 									<div
-										key={i}
+										key={`${log.time}-${log.msg}`}
 										className={`flex items-start gap-3 p-2 rounded-lg ${log.type === "error" ? "bg-rose-500/5 text-rose-400 border border-rose-500/10" : log.type === "success" ? "bg-emerald-500/5 text-emerald-400 border border-emerald-500/10" : "bg-white/5 text-slate-400 border border-white/5"}`}
 									>
 										{log.type === "error" ? (
@@ -256,9 +259,12 @@ export function ScriptingPage() {
 							This allows for in-world interactions to control your local system
 							or cloud services.
 						</p>
-						<button className="text-[10px] text-orange-400 font-bold uppercase tracking-wider hover:underline">
+						<a
+							href="/help"
+							className="text-[10px] text-orange-400 font-bold uppercase tracking-wider hover:underline"
+						>
 							Learn more in Docs
-						</button>
+						</a>
 					</div>
 				</div>
 			</div>
