@@ -154,4 +154,116 @@ await resonite_link_get_component(component_id="Reso_A13")
    each session rather than hardcoding.
 
 ---
+
+## Live research log — 2026-09-18/19 (protocol 0.13.1.0, Resonite 2026.9.18.82)
+
+Full VRM-avatar pipeline proven against a live session (190,111 verts /
+45,451 tris / 21 materials / 197 joints spawned, textured, rigged, posed).
+Findings below are all live-verified; "accepted but inert" means the server
+returned success while dropping the data.
+
+### Mesh UV import is broken server-side (importMeshJSON)
+
+- The documented `uvs` list shape (`[{"$type": "2D", "uv": {x, y}}]`,
+  matches upstream `Vertex.cs`) is REJECTED by the running build:
+  `UV channel 0 is already configured with 0 dimensions`.
+- MeshX-style per-channel `uv0` keys are ACCEPTED — but ignored
+  (unknown property dropped). Proven with a checkerboard quad: renders
+  flat. Consequence: every textured import renders **single-texel per
+  material** (corner texel stretched over the part). Brown hair / skin
+  tone / black dress / missing eyes (transparent corner texel +
+  AlphaCutoff 0.5) are all this one bug wearing different clothes.
+- `uvChannelDimensions` exists in the installed `ResoniteLink.dll`
+  (v0.13.1+067afad, string analysis) and on the *binary* raw-mesh model
+  only — top-level declarations on JSON imports are ignored.
+- Per-vertex `color` is likewise accepted but dropped (white box test).
+- Upstream state: latest release == installed version; no UV import test
+  exists anywhere upstream; related open issues #56 (mesh JSON type
+  ambiguity), #80 (no mesh-upload example), #89 (no mesh readback),
+  #99 (no version-compat docs), #145 (texture imports). Our client
+  converter (`utils/gltf_meshjson.py`) now emits the `uv0` shape with a
+  comment recording all of this — revisit when upstream fixes the importer.
+- Plausible real route: `importMeshRawData` (binary frames declare UV
+  channels properly), but our client cannot send binary frames yet.
+
+### Skinned meshes DO work (with exact recipes)
+
+- Accepted wire shapes (all hashed into the asset URL, i.e. parsed):
+  `bones: [{name, bindPose}]`, per-vertex `boneWeights:
+  [{boneIndex, weight}]`. Different weights ⇒ different asset URL.
+- **Asset wants INVERSE bind matrices; bone slots carry FORWARD binds.**
+  Forward-in-asset renders B-squared horror (limbs flung upward);
+  inverse-in-asset + forward slots renders a clean rest pose. Verified
+  by A/B reimport. (`utils` `_extract_skeleton` emits forward binds —
+  invert them with rigid-inverse before import.)
+- Pad weights to a UNIFORM 4 per vertex (bone 0 / weight 0 fillers).
+  Mixed 1–4 counts correlate with garbage skinning.
+- VRM multi-skin files: all 3 skins shared identical joint lists here —
+  always verify before assuming index alignment. Joint scales measured
+  exactly 1.0.
+- `SkinnedMeshRenderer` recipe: `Mesh` → StaticMesh ref, `Materials` →
+  PBS refs in submesh order, `Bones` → slot refs in joint-index order.
+  Rotating a bone slot deforms live (45° quad bend, full arm wave).
+- **Bone slots must mirror the joint HIERARCHY** (parent each slot under
+  its joint-parent with parent-relative locals). Flat slots render a
+  clean rest pose but posing a parent leaves children behind (head
+  moved, arms didn't — the tell).
+- ** shrinking a `Materials` list via update silently fails** (list
+  stayed at 21 after a 19- and a 15-write). Delete + recreate the
+  renderer/materials instead. Same-length element swaps DO apply.
+- `StaticMesh` URL swaps apply immediately. Note: deleting/recreating a
+  skinned renderer appears to trigger an engine rebake (asset URL
+  changes under you) — re-verify URLs after renderer surgery.
+- `BlendShapeWeights` list exists on the renderer (face posing
+  unexplored). `BipedRig.Bones` is a BodyNode→Slot dictionary (rig
+  mapping, unexplored — posing via raw bone slots works without it).
+
+### Link behavior notes
+
+- Concurrent clients allowed (2nd client connects fine alongside the
+  backend's). Full-subtree `getSlot` depth=-1 kills the connection —
+  crawl bounded (depth ≤ 3–4, or targeted subtrees).
+- Discovery announces the sender's LAN/virtual-adapter IP (seen
+  172.23.160.1); the link only answers on loopback — always connect via
+  `localhost` with the discovered *port*.
+- `get_children` returns depth=1 WITH nested children arrays (two levels
+  per call) but never component data; `get_node` per slot for components.
+
+### Avatar domain (no-equip verdict)
+
+- Fresh worlds contain NO avatar root (full 695-slot census). User slots
+  carry rig + first-person visuals only; all 33 user-slot component
+  references point back inside the user subtree.
+- `AvatarRoot` verified real via reflection (marker for avatar roots;
+  has `_originalParent` — avatars reparent on equip). `AvatarManager`
+  has 20 members, 0 methods. `AvatarObjectSlot.Equipped` reads null
+  with no custom avatar worn.
+- Component category `Users/Common Avatar System` (29 types) is the
+  recon surface for avatar features.
+- No external equip path exists: no protocol message, no manager
+  method, sibling fleets (avatar-mcp is VRChat/Blender-side) have none,
+  OSC `/resonite/avatar/load` is this repo's invention (fired live, no
+  effect observed). `forceResoniteLinkPort` is headless-only; Steam
+  clients pick a random port per session — use discover+autoconnect.
+- Working readback: username (AvatarManager NameTagText, rich-text
+  stripped, else parsed `User <noparse=N>name (ID)` slot name) +
+  best-effort marker search (`AvatarRoot`/`BipedRig`/`AvatarPoseNode`/
+  `AvatarAudioOutput`/`VRIK` over Root children + one level, rig
+  excluded). Returns found-or-honest-unknown, never synthesized.
+
+### Diagnosis techniques that paid off
+
+- DLL string analysis on the installed `ResoniteLink.dll` (find the
+  `UV_Channel_Dimensions` owner, confirm build == protocol version).
+- Upstream source cross-check (`Vertex.cs`/`Bone.cs`/`BoneWeight.cs`/
+  `ImportMeshJSON.cs` on master) to separate doc-truth from running
+  truth. Note the installed build can *differ* from master despite
+  equal version numbers.
+- Content-hash probing: reimport with one field changed; same URL ⇒
+  field ignored, different URL ⇒ parsed. (How boneWeights parsing and
+  the `uv0` drop were proven.)
+- Checkerboard/texture-less control meshes to isolate mapping bugs
+  from data bugs.
+
+---
 **Note**: ResoniteLink is currently in Beta. Protocol changes may occur.
