@@ -9,7 +9,10 @@
 		--foreground: 213 31% 91%;
 
 		--muted: 223 47% 11%;
-		--muted-foreground: 215.4 16.3% 56.9%;
+		/* Lifted 56.9% -> 68%: the old value sat near 5:1 on the near-black
+		   background, and every opacity-50/60 treatment on top of it dropped
+		   secondary text below readable contrast. ~8:1 base now. */
+		--muted-foreground: 215 18% 68%;
 
 		--accent: 216 34% 17%;
 		--accent-foreground: 210 40% 98%;
@@ -104,4 +107,27 @@ html:not(.dark) video,
 html:not(.dark) canvas,
 html:not(.dark) iframe {
   filter: invert(1) hue-rotate(180deg);
+}
+
+/* Readability floor: no text below 12px anywhere. Tailwind's text-[8px] /
+   text-[9px] utilities (35 usages across 9 pages) render unreadably small
+   on desktop; this single rule lifts them to 12px without touching each
+   call site. Remove once pages are migrated to text-xs minimum. */
+[class*="text-[8px]"],
+[class*="text-[9px]"] {
+  font-size: 0.75rem !important;
+}
+
+/* Contrast backstop: text-slate-600/700 sit near 2:1 on the near-black
+   background (micro-labels across 11 pages). Lift them to slate-400.
+   Small text-slate-500 (the other dim-label workhorse) gets the same lift;
+   body-size slate-500 already passes and is left alone. */
+.text-slate-600,
+.text-slate-700 {
+  color: #94a3b8 !important;
+}
+.text-xs.text-slate-500,
+.text-\[10px\].text-slate-500,
+.text-\[11px\].text-slate-500 {
+  color: #94a3b8 !important;
 }

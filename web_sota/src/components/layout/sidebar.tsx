@@ -175,7 +175,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 							{!collapsed && (
 								<button
 									onClick={() => toggleSection(sec)}
-									className="w-full flex items-center justify-between px-3 pb-1.5 pt-1 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-50 hover:opacity-90 hover:text-white transition-all duration-200 text-left"
+									className="w-full flex items-center justify-between px-3 pb-1.5 pt-1 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-80 hover:opacity-100 hover:text-white transition-all duration-200 text-left"
 								>
 									<span>{sections[sec]}</span>
 									<ChevronDown

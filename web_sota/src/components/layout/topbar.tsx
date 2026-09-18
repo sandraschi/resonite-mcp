@@ -34,7 +34,7 @@ export function Topbar() {
 	return (
 		<header className="flex h-14 items-center justify-between border-b border-border bg-background/50 px-6 backdrop-blur-xl">
 			<div className="flex items-center gap-4">
-				<h1 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px]">
+				<h1 className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
 					Intelligence /{" "}
 					<span className="text-foreground font-bold">Control Center</span>
 				</h1>
@@ -75,7 +75,7 @@ export function Topbar() {
 							sideOffset={5}
 							align="end"
 						>
-							<DropdownMenu.Label className="px-2 py-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-50">
+							<DropdownMenu.Label className="px-2 py-1.5 text-xs font-bold text-muted-foreground uppercase tracking-[0.2em] opacity-80">
 								Switch Console
 							</DropdownMenu.Label>
 
