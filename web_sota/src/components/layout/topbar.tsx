@@ -1,7 +1,9 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { ExternalLink, HelpCircle, LayoutGrid, Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { APPS_CATALOG } from "@/common/apps-catalog";
+import { apiUrl } from "@/lib/api-base";
 
 // EXPERIMENTAL light mode (invert hack). Not fleet standard — see index.css.
 // Toggling `.dark` off the root flips the invert filter; persisted so the
@@ -29,8 +31,39 @@ function useExperimentalTheme() {
 	return { light, toggle: () => setLight((v) => !v) };
 }
 
+type BackendHealth = "online" | "degraded" | "down";
+
+function useBackendHealth(): BackendHealth {
+	const [health, setHealth] = useState<BackendHealth>("down");
+	useEffect(() => {
+		let cancelled = false;
+		const poll = async () => {
+			try {
+				const r = await fetch(apiUrl("/api/status"));
+				if (!r.ok) {
+					if (!cancelled) setHealth("down");
+					return;
+				}
+				const d = await r.json();
+				if (cancelled) return;
+				setHealth(d.server_running ? "online" : "degraded");
+			} catch {
+				if (!cancelled) setHealth("down");
+			}
+		};
+		void poll();
+		const timer = window.setInterval(poll, 30000);
+		return () => {
+			cancelled = true;
+			window.clearInterval(timer);
+		};
+	}, []);
+	return health;
+}
+
 export function Topbar() {
 	const { light, toggle } = useExperimentalTheme();
+	const health = useBackendHealth();
 	return (
 		<header className="flex h-14 items-center justify-between border-b border-border bg-background/50 px-6 backdrop-blur-xl">
 			<div className="flex items-center gap-4">
@@ -55,14 +88,49 @@ export function Topbar() {
 					{light ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
 				</button>
 
-				{/* System Status Indicator */}
-				<div className="mr-4 flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-500 border border-emerald-500/20 glass">
+				{/* System Status Indicator (live backend health) */}
+				<Link
+					to="/status"
+					title={
+						health === "online"
+							? "Backend responding"
+							: health === "degraded"
+								? "Backend degraded"
+								: "Backend unreachable"
+					}
+					className={
+						health === "online"
+							? "mr-4 flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-500 border border-emerald-500/20 glass"
+							: health === "degraded"
+								? "mr-4 flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-500 border border-amber-500/20 glass"
+								: "mr-4 flex items-center gap-2 rounded-full bg-rose-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-500 border border-rose-500/20 glass"
+					}
+				>
 					<span className="relative flex h-2 w-2">
-						<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-						<span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+						<span
+							className={
+								health === "online"
+									? "absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"
+									: "absolute inline-flex h-full w-full rounded-full opacity-40 " +
+										(health === "degraded" ? "bg-amber-400" : "bg-rose-400")
+							}
+						/>
+						<span
+							className={
+								health === "online"
+									? "relative inline-flex h-2 w-2 rounded-full bg-emerald-500"
+									: health === "degraded"
+										? "relative inline-flex h-2 w-2 rounded-full bg-amber-500"
+										: "relative inline-flex h-2 w-2 rounded-full bg-rose-500"
+							}
+						/>
 					</span>
-					System Online
-				</div>
+					{health === "online"
+						? "System Online"
+						: health === "degraded"
+							? "Degraded"
+							: "Backend Down"}
+				</Link>
 
 				{/* Global Apps Navigation */}
 				<DropdownMenu.Root>

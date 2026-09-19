@@ -12,6 +12,7 @@ import {
 	Wifi,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiUrl } from "@/lib/api-base";
@@ -147,12 +148,12 @@ export function Dashboard() {
 								AI-powered control for Resonite — chat-based OSC, slot/component
 								manipulation, inventory management, cloud API, and fleet asset
 								pipeline.{" "}
-								<a
-									href="/help"
+								<Link
+									to="/help"
 									className="text-indigo-400 hover:text-indigo-300 font-semibold"
 								>
 									Setup guide →
-								</a>
+								</Link>
 							</p>
 							<div className="flex flex-wrap items-center gap-2 mt-2">
 								<span className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
@@ -165,12 +166,16 @@ export function Dashboard() {
 										? "Resonite connected"
 										: "Resonite off"}
 								</span>
-								<span className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
+								<Link
+									to="/osc"
+									title="Open OSC controls"
+									className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1 hover:border-blue-500/40 transition-colors"
+								>
 									<Wifi className="h-3 w-3 text-blue-400" />
 									OSC 9000
-								</span>
-								<a
-									href="/resonite-link"
+								</Link>
+								<Link
+									to="/resonite-link"
 									title={
 										rl?.uri ??
 										status?.resonite_link?.uri ??
@@ -186,7 +191,7 @@ export function Dashboard() {
 									{rlConnected
 										? `Link connected${rlPort ? ` :${rlPort}` : ""}`
 										: "Link disconnected"}
-								</a>
+								</Link>
 							</div>
 						</div>
 					</div>
@@ -247,8 +252,8 @@ export function Dashboard() {
 
 			{/* KPI Cards */}
 			<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-				<a
-					href="/sessions"
+				<Link
+					to="/sessions"
 					title="View public sessions and worlds"
 					className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
 				>
@@ -268,10 +273,10 @@ export function Dashboard() {
 							</p>
 						</CardContent>
 					</Card>
-				</a>
+				</Link>
 
-				<a
-					href="/avatar"
+				<Link
+					to="/avatar"
 					title="Open avatar controls"
 					className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
 				>
@@ -289,10 +294,10 @@ export function Dashboard() {
 							<p className="text-xs text-slate-400 mt-1">Staged VRM models</p>
 						</CardContent>
 					</Card>
-				</a>
+				</Link>
 
-				<a
-					href="/protoflux"
+				<Link
+					to="/protoflux"
 					title="Open ProtoFlux presets and reflection"
 					className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
 				>
@@ -310,10 +315,10 @@ export function Dashboard() {
 							<p className="text-xs text-slate-400 mt-1">ProtoFlux presets</p>
 						</CardContent>
 					</Card>
-				</a>
+				</Link>
 
-				<a
-					href="/sessions"
+				<Link
+					to="/sessions"
 					title="View public sessions"
 					className="block rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
 				>
@@ -333,14 +338,20 @@ export function Dashboard() {
 							</p>
 						</CardContent>
 					</Card>
-				</a>
+				</Link>
 			</div>
 
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
 				<Card className="col-span-4 border-border bg-card/40 backdrop-blur-md glass">
 					<CardHeader className="flex flex-row items-center justify-between">
 						<CardTitle className="text-xs font-bold uppercase tracking-widest text-foreground">
-							Local LLMs
+							Local LLMs{" "}
+							<Link
+								to="/settings"
+								className="text-indigo-400 hover:text-indigo-300 font-semibold normal-case tracking-normal"
+							>
+								Configure →
+							</Link>
 						</CardTitle>
 						<div className="flex gap-1.5">
 							<span className="h-2 w-2 rounded-full bg-emerald-500/50" />
@@ -444,12 +455,12 @@ export function Dashboard() {
 								<div className="ml-4 space-y-1">
 									<p className="text-sm font-bold leading-none text-foreground tracking-tight">
 										ResoniteLink{" "}
-										<a
-											href="/resonite-link"
+										<Link
+											to="/resonite-link"
 											className="text-indigo-400 hover:text-indigo-300 font-semibold text-xs ml-1"
 										>
 											Open →
-										</a>
+										</Link>
 									</p>
 									<p
 										className={`text-xs font-medium ${rlConnected ? "text-emerald-400" : "text-rose-400"}`}
@@ -473,7 +484,12 @@ export function Dashboard() {
 							<div className="pt-4 border-t border-border">
 								<div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-300 mb-2">
 									<span>Tool Coverage</span>
-									<span className="text-indigo-400">not live-counted yet</span>
+									<Link
+										to="/tools"
+										className="text-indigo-400 hover:text-indigo-300"
+									>
+										browse tools →
+									</Link>
 								</div>
 								<div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
 									<div
