@@ -8,6 +8,7 @@ import {
 import { AppLayout } from "@/components/layout/app-layout";
 import { PresenceGate } from "@/components/presence-gate";
 import { AgentTools } from "@/pages/agent-tools";
+import { ApiDocs } from "@/pages/api_docs";
 import { Apps } from "@/pages/apps";
 import { AvatarPage } from "@/pages/avatar";
 import { Chat } from "@/pages/chat";
@@ -16,6 +17,7 @@ import { Control } from "@/pages/control";
 import { Dashboard } from "@/pages/dashboard";
 import { Gallery } from "@/pages/gallery";
 import { Help } from "@/pages/help";
+import { Inbox } from "@/pages/inbox";
 import { Integrations } from "@/pages/integrations";
 import { Inventory } from "@/pages/inventory";
 import { IoPage } from "@/pages/io";
@@ -80,6 +82,8 @@ function App() {
 										<Route path="/search" element={<SearchPage />} />
 										<Route path="/apps" element={<Apps />} />
 										<Route path="/logs" element={<Logging />} />
+										<Route path="/inbox" element={<Inbox />} />
+										<Route path="/api-docs" element={<ApiDocs />} />
 										<Route path="*" element={<Navigate to="/" replace />} />
 									</Routes>
 								</PresenceGate>

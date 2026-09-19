@@ -5,6 +5,7 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Cloud,
+	Code2,
 	Cpu,
 	FlaskConical,
 	Gamepad2,
@@ -12,6 +13,7 @@ import {
 	Grid,
 	HelpCircle,
 	Image,
+	Inbox,
 	LayoutDashboard,
 	Link2,
 	MessageCircle,
@@ -41,6 +43,7 @@ interface SidebarProps {
 
 const navItems = [
 	{ href: "/", label: "Dashboard", icon: LayoutDashboard, section: "main" },
+	{ href: "/inbox", label: "Inbox", icon: Inbox, section: "main" },
 	{ href: "/search", label: "Semantic Search", icon: Search, section: "main" },
 	{ href: "/status", label: "Status", icon: Activity, section: "main" },
 	{ href: "/gallery", label: "Gallery", icon: Image, section: "main" },
@@ -88,6 +91,7 @@ const navItems = [
 		section: "dev",
 	},
 	{ href: "/tools", label: "Dev Tools", icon: Wrench, section: "dev" },
+	{ href: "/api-docs", label: "API Docs", icon: Code2, section: "dev" },
 	{ href: "/help", label: "Reference", icon: HelpCircle, section: "dev" },
 	{ href: "/settings", label: "Settings", icon: Settings, section: "dev" },
 	{ href: "/logs", label: "Logs", icon: ScrollText, section: "dev" },
@@ -147,14 +151,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 			)}
 			aria-label="Main navigation"
 		>
-			{/* Brand */}
+			{/* Brand + collapse toggle (toggle lives at the top per fleet standard) */}
 			<div className="flex h-16 items-center border-b border-border px-4 gap-2.5">
 				<Rss
 					className="h-6 w-6 text-indigo-400 flex-shrink-0"
 					aria-hidden="true"
 				/>
 				{!collapsed && (
-					<span className="animate-in fade-in duration-300 font-semibold text-foreground text-sm leading-tight">
+					<span className="animate-in fade-in duration-300 font-semibold text-foreground text-sm leading-tight flex-1">
 						Resonite
 						<br />
 						<span className="text-xs text-indigo-400 font-normal tracking-wider">
@@ -162,6 +166,18 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 						</span>
 					</span>
 				)}
+				<button
+					onClick={onToggle}
+					aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+					title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+					className="flex items-center justify-center rounded-lg p-1.5 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-300 flex-shrink-0"
+				>
+					{collapsed ? (
+						<ChevronRight className="h-4 w-4" aria-hidden="true" />
+					) : (
+						<ChevronLeft className="h-4 w-4" aria-hidden="true" />
+					)}
+				</button>
 			</div>
 
 			{/* Nav */}
@@ -230,26 +246,6 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 					);
 				})}
 			</nav>
-
-			{/* Collapse toggle */}
-			<div className="border-t border-border p-2">
-				<button
-					onClick={onToggle}
-					aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-					className="flex w-full items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-300 border border-transparent hover:border-border"
-				>
-					{collapsed ? (
-						<ChevronRight className="h-4 w-4" aria-hidden="true" />
-					) : (
-						<div className="flex items-center gap-2">
-							<ChevronLeft className="h-4 w-4" aria-hidden="true" />
-							<span className="text-xs font-semibold uppercase tracking-wider">
-								Minimize
-							</span>
-						</div>
-					)}
-				</button>
-			</div>
 		</aside>
 	);
 }
