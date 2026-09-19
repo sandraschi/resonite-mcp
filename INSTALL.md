@@ -41,6 +41,9 @@ If you prefer not to use `just`:
    ```powershell
    uv sync --all-extras
    ```
+   (`--all-extras` includes the `rag` extra — LanceDB + sentence-transformers, needed for
+   `search_guides`/`ask_resonite`. Skip it, or use plain `uv sync`, for a much lighter install
+   that omits semantic doc search.)
 4. Start the server:
    ```powershell
    # stdio mode (for MCP clients like Claude Desktop)
