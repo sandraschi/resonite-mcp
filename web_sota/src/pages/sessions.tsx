@@ -55,6 +55,7 @@ export function Sessions() {
 	const [access, setAccess] = useState("All");
 	const [sort, setSort] = useState<SortKey>("users");
 	const [page, setPage] = useState(1);
+	const [copiedId, setCopiedId] = useState<string | null>(null);
 
 	const { data, isLoading, isError, refetch, isRefetching } = useQuery({
 		queryKey: ["sessions"],
@@ -320,14 +321,24 @@ export function Sessions() {
 												<span className="opacity-70">{s.maxUsers ?? "?"}</span>
 											</div>
 
-											<a
-												href={`resonite:///join/${s.sessionId}`}
+											<button
+												type="button"
+												onClick={async () => {
+													try {
+														await navigator.clipboard.writeText(s.sessionId);
+														setCopiedId(s.sessionId);
+														window.setTimeout(() => setCopiedId(null), 2000);
+													} catch {
+														setCopiedId("error");
+														window.setTimeout(() => setCopiedId(null), 2000);
+													}
+												}}
 												className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/30 text-violet-100 text-xs font-black uppercase tracking-widest transition-all active:scale-95"
-												title={`Join ${name} directly in Resonite`}
+												title="Copy session ID (join-URI scheme unverified, see below)"
 											>
 												<Globe2 className="w-3.5 h-3.5" />
-												Join
-											</a>
+												{copiedId === s.sessionId ? "Copied" : "Copy ID"}
+											</button>
 										</div>
 									</div>
 								);

@@ -8,8 +8,9 @@
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
 		"preview": "vite preview",
+		"typecheck": "tsc -b --force",
 		"biome:ci": "biome ci .",
-		"biome": "biome check --write ."
+		"biome:write": "biome check --write ."
 	},
 	"dependencies": {
 		"@radix-ui/react-dialog": "^1.1.15",
