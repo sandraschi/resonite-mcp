@@ -228,9 +228,12 @@ def summarize_node(response: Any) -> dict[str, Any]:
 def build_map_nodes(root_children: Any) -> list[dict[str, Any]]:
     """Flatten Root children into map nodes {id, name, position, type}.
 
-    The "Users" container is replaced by its children (marked avatar):
-    otherwise every user collapses into one dot at the container origin.
-    Anything else keeps the "User"-in-name / "["-prefix avatar heuristic.
+    The "Users" container is replaced by its children — but ONLY slots
+    actually named like user slots ("User <name>") count as avatars.
+    Worlds park non-user slots (mirrors, cameras, local rigs) under Users,
+    and the old code painted every one of them as an avatar. Display names
+    go through parse_username so rich-text tags ("<noparse=8>") and the
+    trailing "(IDxxxx)" never reach the map.
     """
     nodes: list[dict[str, Any]] = []
     if not isinstance(root_children, list):
@@ -240,18 +243,34 @@ def build_map_nodes(root_children: Any) -> list[dict[str, Any]]:
         if summary["name"] == "Users" and isinstance(child, dict):
             for user_slot in child.get("children") or []:
                 user = summarize_slot(user_slot)
-                nodes.append(
-                    {
-                        "id": user["refId"],
-                        "name": user["name"],
-                        "position": user["position"],
-                        "type": "avatar",
-                    }
-                )
+                raw = user["name"] if isinstance(user["name"], str) else "Unknown"
+                clean = parse_username(user["name"])
+                if raw.startswith("User ") and clean:
+                    nodes.append(
+                        {
+                            "id": user["refId"],
+                            "name": clean,
+                            "position": user["position"],
+                            "type": "avatar",
+                        }
+                    )
+                else:
+                    nodes.append(
+                        {
+                            "id": user["refId"],
+                            "name": raw,
+                            "position": user["position"],
+                            "type": "object",
+                        }
+                    )
             continue
-        name = summary["name"]
-        node_type = "avatar" if ("User" in name or name.startswith("[")) else "object"
-        nodes.append({"id": summary["refId"], "name": name, "position": summary["position"], "type": node_type})
+        raw = summary["name"] if isinstance(summary["name"], str) else "Unknown"
+        if raw.startswith("User ") or raw.startswith("["):
+            clean = parse_username(raw) or raw
+            node_type, display = "avatar", clean
+        else:
+            node_type, display = "object", raw
+        nodes.append({"id": summary["refId"], "name": display, "position": summary["position"], "type": node_type})
     return nodes
 
 

@@ -5,6 +5,7 @@ functionality for real-time control of audio/visual applications and devices.
 """
 
 import asyncio
+import json
 import logging
 import threading
 import time
@@ -51,7 +52,11 @@ async def send_osc(input_data: OSCMessageInput) -> dict[str, Any]:
             osc_clients[client_key] = udp_client.SimpleUDPClient(host, port)
 
         client = osc_clients[client_key]
+        # OSC args must be scalars; structured callers (inventory upload /
+        # spawn pass a dict) are encoded as a single JSON string blob.
+        # pythonosc raises BuildError on dicts otherwise.
         if values:
+            values = [json.dumps(v) if isinstance(v, dict) else v for v in values]
             client.send_message(address, values)
         else:
             # Send empty message (bang)

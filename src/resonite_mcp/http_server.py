@@ -21,6 +21,8 @@ from fastapi import FastAPI, File, Form, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from resonite_mcp.services.apps_routes import register_apps_routes
+
 from . import __version__
 from .activity_log import activity_log
 from .utils.structured_logging import configure_file_logging, configure_json_logging_if_enabled
@@ -227,6 +229,11 @@ class MCPToolRequest(BaseModel):
 
 
 # API Routes
+# (vends worker assumed a `router` object from the template repo's layout;
+# this module registers directly on `app`, which register_apps_routes accepts.)
+register_apps_routes(app)
+
+
 @app.get("/api/v1/health")
 @app.get("/api/health")
 @app.get("/health")
@@ -744,6 +751,32 @@ async def get_stats_api():
     return await resonite_stats_http()
 
 
+@app.get("/api/system")
+async def get_system_api():
+    """Live MCP tool manifest for the webapp Tools page and dashboard badge.
+
+    Enumerates the tools actually registered on the FastMCP server object
+    (same surface Claude Desktop sees over stdio) -- no static copy to rot.
+    Shape matches what web_sota/src/pages/tools.tsx expects:
+    {"tools": [{"name", "description", "parameters": {prop: {type, description}}}]}.
+    """
+    from .server import server as mcp_server
+
+    tools = await mcp_server.list_tools()
+    out = []
+    for tool in sorted(tools, key=lambda t: t.name):
+        schema = getattr(tool, "parameters", None) or {}
+        props = schema.get("properties", {}) if isinstance(schema, dict) else {}
+        out.append(
+            {
+                "name": tool.name,
+                "description": tool.description or "",
+                "parameters": props,
+            }
+        )
+    return {"tools": out, "count": len(out)}
+
+
 @app.get("/api/llm-discovery")
 async def discover_llms_api():
     """Detect local LLM providers (Ollama / LM Studio / LiteLLM)."""
@@ -871,6 +904,143 @@ async def upload_inventory_item(request: InventoryUploadRequest):
     except Exception as e:
         logger.error(f"Inventory upload failed: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@app.post("/api/resonite/inventory/upload-file")
+async def upload_inventory_file(
+    file: UploadFile = File(...),
+    item_name: str | None = Form(None),
+    item_type: str = Form("item"),
+    description: str | None = Form(None),
+    is_public: bool = Form(False),
+):
+    """Browser file upload: buffer multipart to temp, then run the real inventory upload.
+
+    The JSON /upload route needs a server-local path, which a browser can't
+    supply -- this endpoint bridges that gap for the webapp Upload buttons.
+    """
+    from .http_functions import resonite_inventory_upload_http
+
+    tmp_path: str | None = None
+    try:
+        suffix = Path(file.filename or "upload").suffix
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as buf:
+            tmp_path = buf.name
+            while True:
+                chunk = await file.read(1024 * 1024)
+                if not chunk:
+                    break
+                buf.write(chunk)
+        return await resonite_inventory_upload_http(
+            tmp_path,
+            item_name or (file.filename or "upload"),
+            item_type,
+            description,
+            is_public,
+        )
+    except Exception as e:
+        logger.error(f"Inventory file upload failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+    finally:
+        if tmp_path:
+            try:
+                Path(tmp_path).unlink(missing_ok=True)
+            except Exception:
+                pass
+
+
+class WorldBuildRequest(BaseModel):
+    name: str = "BuilderRoom"
+    style: str = "loft"
+    size: str = "hall"
+    furniture: list[str] = []
+    origin: dict[str, float] = {"x": 0.0, "y": 0.0, "z": 0.0}
+
+
+@app.get("/api/world-builder/presets")
+async def world_builder_presets():
+    """Form metadata for the World Builder page (styles, sizes, furniture)."""
+    from .world_builder import presets_payload
+
+    return presets_payload()
+
+
+@app.post("/api/world-builder/build")
+async def world_builder_build(req: WorldBuildRequest):
+    """Assemble a furnished room in the connected Resonite session.
+
+    Every piece is a real slot + BoxMesh + MeshRenderer + PBS material
+    (live-verified primitives); the response reports each piece's slot ID
+    so a partial build is still inspectable and deletable.
+    """
+    from . import world_builder
+
+    client = _get_rl_client()
+    if not client.connected:
+        raise HTTPException(
+            status_code=503,
+            detail="Not connected to ResoniteLink. Open Resonite, then connect from the ResoniteLink page.",
+        )
+    name = (req.name or "").strip()[:60] or "BuilderRoom"
+    try:
+        report = await world_builder.build_room(client, name, req.style, req.size, req.furniture, req.origin)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.error(f"World build failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"Build failed: {exc}") from exc
+    from .spawn_registry import record as record_spawn
+
+    record_spawn(
+        "room",
+        name,
+        slot_id=report.get("room_slot_id"),
+        detail=f"{report.get('pieces_ok')}/{report.get('pieces_total')} pieces, {report.get('style')}",
+    )
+    return report
+
+
+@app.get("/api/spawns")
+async def list_spawns():
+    """Slots this backend spawned via the webapp path (see spawn_registry).
+
+    Newest first. Entries without a slot_id (none currently recorded that
+    way) cannot be deleted through here.
+    """
+    from .spawn_registry import list_entries
+
+    return {"spawns": list_entries()}
+
+
+@app.delete("/api/spawns/{entry_id}")
+async def delete_spawn(entry_id: str):
+    """Destroy a spawned slot in-world and drop its registry entry."""
+    from . import spawn_registry
+
+    match = next(
+        (e for e in spawn_registry.list_entries() if e.get("id") == entry_id),
+        None,
+    )
+    if match is None:
+        raise HTTPException(status_code=404, detail=f"Unknown spawn {entry_id!r}")
+    if not match.get("slot_id"):
+        raise HTTPException(
+            status_code=400,
+            detail="No world slot recorded for this entry — nothing to destroy.",
+        )
+    client = _get_rl_client()
+    if not client.connected:
+        raise HTTPException(
+            status_code=503,
+            detail="Not connected to ResoniteLink — the slot may still exist in-world.",
+        )
+    try:
+        await client.destroy_slot(match["slot_id"])
+    except Exception as exc:
+        logger.error(f"Spawn delete failed: {exc}")
+        raise HTTPException(status_code=502, detail=f"Destroy failed: {exc}") from exc
+    spawn_registry.remove(entry_id)
+    return {"status": "deleted", "id": entry_id, "slot_id": match["slot_id"]}
 
 
 @app.delete("/api/resonite/inventory/delete")
@@ -1532,6 +1702,62 @@ async def inject_file(
         # Clean up the temporary file after import attempt
         if temp_path.exists():
             temp_path.unlink()
+
+
+class SpawnModelRequest(BaseModel):
+    file_path: str  # absolute path to .glb/.vrm/.gltf on this host (same machine as Resonite)
+    slot_name: str = ""
+    pos_x: float = 0.0
+    pos_y: float = 0.0
+    pos_z: float = 0.0
+
+
+@app.post("/rl/world/spawn-model")
+async def spawn_model(req: SpawnModelRequest):
+    """Convert a model file to mesh JSON and spawn it in the connected world.
+
+    Same live-verified path as the depot spawner (gltf_to_mesh_json +
+    spawn_mesh: importMeshJSON -> addSlot -> StaticMesh -> MeshRenderer).
+    Requires a connected client: call GET /rl/status?autoconnect=true first.
+    """
+    from .utils.gltf_meshjson import GltfConversionError, gltf_to_mesh_json
+
+    fp = Path(req.file_path)
+    if fp.suffix.lower() not in (".glb", ".vrm", ".gltf"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported model {fp.suffix!r} (use .glb, .vrm, .gltf).",
+        )
+    if not fp.is_file():
+        raise HTTPException(status_code=404, detail=f"File not found: {req.file_path}")
+    client = _get_rl_client()
+    if not client.connected:
+        raise HTTPException(
+            status_code=503,
+            detail="Not connected to ResoniteLink. Call GET /rl/status?autoconnect=true first.",
+        )
+    try:
+        mesh = gltf_to_mesh_json(fp)
+    except GltfConversionError as exc:
+        raise HTTPException(status_code=400, detail=f"Could not convert {fp.name}: {exc}") from exc
+    try:
+        result = await client.spawn_mesh(
+            mesh["vertices"],
+            mesh["submeshes"],
+            position={"x": req.pos_x, "y": req.pos_y, "z": req.pos_z},
+            name=req.slot_name or fp.stem,
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Spawn failed: {exc}") from exc
+    from .spawn_registry import record as record_spawn
+
+    record_spawn(
+        "model",
+        req.slot_name or fp.stem,
+        slot_id=result.get("slot_id") if isinstance(result, dict) else None,
+        detail=fp.name,
+    )
+    return {"status": "spawned", "slot": req.slot_name or fp.stem, **result}
 
 
 @app.get("/rl/world/asset-files")

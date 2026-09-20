@@ -73,20 +73,29 @@ def test_build_map_nodes_expands_users():
                     "id": "U1",
                     "name": env("User <noparse=8>sanschip (ID2E00)"),
                     "position": env({"x": 1.0, "y": 2.0, "z": 3.0}),
-                }
+                },
+                {
+                    "id": "U2",
+                    "name": env("Mirror"),
+                    "position": env({"x": 2.0, "y": 1.0, "z": 0.0}),
+                },
             ],
         },
+        {"id": "M", "name": env("UserManual"), "position": env({"x": 0, "y": 0, "z": 0})},
     ]
     nodes = build_map_nodes(children)
-    assert len(nodes) == 2
-    by_name = {n["name"]: n for n in nodes}
-    assert by_name["World"]["type"] == "object"
-    assert by_name["User <noparse=8>sanschip (ID2E00)"]["type"] == "avatar"
-    assert by_name["User <noparse=8>sanschip (ID2E00)"]["position"] == {
-        "x": 1.0,
-        "y": 2.0,
-        "z": 3.0,
-    }
+    assert len(nodes) == 4
+    by_id = {n["id"]: n for n in nodes}
+    assert by_id["W"]["type"] == "object"
+    # Real user slot: clean display name, avatar type.
+    assert by_id["U1"]["type"] == "avatar"
+    assert by_id["U1"]["name"] == "sanschip"
+    assert by_id["U1"]["position"] == {"x": 1.0, "y": 2.0, "z": 3.0}
+    # Parked non-user slot under Users: object, raw name kept.
+    assert by_id["U2"]["type"] == "object"
+    assert by_id["U2"]["name"] == "Mirror"
+    # Substring "User" alone is not a user slot.
+    assert by_id["M"]["type"] == "object"
 
 
 def test_summarize_node_flattens_components():
@@ -104,9 +113,7 @@ def test_summarize_node_flattens_components():
     }
     node = summarize_node(resp)
     assert node["refId"] == "Reso_6D"
-    assert node["components"] == [
-        {"refId": "C1", "componentType": "[FrooxEngine]FrooxEngine.UserRoot"}
-    ]
+    assert node["components"] == [{"refId": "C1", "componentType": "[FrooxEngine]FrooxEngine.UserRoot"}]
 
 
 def test_parse_username():
@@ -133,9 +140,7 @@ def _slot(sid, name, components=()):
     return {
         "id": sid,
         "name": env(name),
-        "components": [
-            {"id": f"{sid}-c{i}", "componentType": ct} for i, ct in enumerate(components)
-        ],
+        "components": [{"id": f"{sid}-c{i}", "componentType": ct} for i, ct in enumerate(components)],
     }
 
 
@@ -163,9 +168,7 @@ def _user_tree(with_avatar_marker):
                 {
                     "id": "U1-am",
                     "componentType": "[FrooxEngine]FrooxEngine.CommonAvatar.AvatarManager",
-                    "members": {
-                        "NameTagText": {"$type": "string", "value": "<b>sanschip</b>"}
-                    },
+                    "members": {"NameTagText": {"$type": "string", "value": "<b>sanschip</b>"}},
                 }
             ],
         },
@@ -222,9 +225,7 @@ def test_stats_counts_distinct_worlds(monkeypatch):
             ],
         }
 
-    monkeypatch.setattr(
-        http_functions.rest_api, "resonite_rest_get_sessions", fake_sessions
-    )
+    monkeypatch.setattr(http_functions.rest_api, "resonite_rest_get_sessions", fake_sessions)
     http_functions._STATS_CACHE["data"] = None
     stats = asyncio.run(http_functions.resonite_stats_http())
     assert stats["sessions"] == 4
