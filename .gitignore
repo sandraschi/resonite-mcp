@@ -70,3 +70,6 @@ mcpb/src/
 # Generated backup archives (data/textures and models/ are tracked; the zip snapshots of
 # them are regenerable runtime artifacts, not source - mirrors overte-mcp's convention)
 data/backups/
+
+# Spawn registry (runtime record of webapp-spawned slots, rebuilt live - never commit)
+data/spawn_registry.json
