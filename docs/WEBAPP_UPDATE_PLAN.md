@@ -106,8 +106,14 @@ actually runs. Grepped both files directly to confirm this, not assumed.
 
 ### Phase D — Sandra's call, no urgency
 - `marketplace.tsx`: recommend cutting — no real feature backs it.
+  **Decided 2026-09-20: reframed, not cut** — now "Asset Downloads":
+  real sources (Unity exporter, mod tools, model libraries, community
+  links) + import path, samples kept as a labeled install-flow preview.
 - `apps.tsx`: recommend cutting or repurposing as a real "connected fleet
   servers" status page.
+  **Decided 2026-09-20: vendored live** — `just vends resonite-mcp`
+  replaced the mock page with the fleet-standard Apps hub (237 repos,
+  live health dots), plus 6 backend modules.
 
 ## Phase A progress (2026-07-19)
 
@@ -271,3 +277,57 @@ different scope than tonight's Phase A functional-bug fixes.
 Phase A: ~0.5 day. Phase B: ~1-2 hours. Phase C: per-item, roughly
 0.5-1 day each depending on which get greenlit. Phase D: no build effort,
 just a decision.
+
+### Round 6 (2026-09-20) — dead-control sweep, World Builder, vends
+
+- [x] **Dashboard honesty gaps**: added `GET /api/system` (live 86-tool
+      manifest from the FastMCP server object); hero badge and footer now
+      show the live count, dead 0%-width "Tool Coverage" bar replaced.
+      Tools page (`/tools`) was permanently empty (fetched nonexistent
+      endpoint) — now lists all 86.
+- [x] **Dead-button audit, all 28 pages** (static scan + per-site
+      triage): fixed `inventory`/`io` spawn+delete payloads (were
+      `item_path`/POST → always 422/405; now `item_id`/DELETE); wired
+      Upload on both pages via new multipart
+      `POST /api/resonite/inventory/upload-file`; wired io quick-filters
+      locally; converted storage tabs to an honest static indicator;
+      removed io More/Download dead buttons and hardcoded "1.2 MB";
+      wired scripting templates/Clear/cursor/macros (localStorage),
+      honest-disabled arbitrary Execute (no such backend — 404), replaced
+      fake 4ms/12.4k stats; rest-api rows copy session IDs; topbar help
+      links to /help; Share buttons on inventory/io open a real
+      contact-picker dialog (contacts list when authed, manual username
+      otherwise) driving the real share endpoint. New Folder stays
+      disabled *with evidence*: Resonite answers no inventory OSC at all
+      (even list times out), so mkdir would be fake success.
+- [x] **`marketplace.tsx` reframed as Asset Downloads** (sidebar+hero
+      renamed, route kept): real source groups (all links verified
+      2026-09-20; Unity exporter confirmed as
+      Phylliida/ResoniteUnityExporter after a 404 on the assumed
+      Yellow-Dog-Man name), 3-step import guide, samples kept labeled,
+      fake Trending/Flash-sales cards removed. Card/list toggle added
+      earlier in the session; Install buttons POST the real spawn
+      endpoint with per-item status.
+- [x] **World Builder** (new): `src/resonite_mcp/world_builder.py` +
+      `GET /api/world-builder/presets` + `POST /api/world-builder/build`
+      + `/world-builder` page. 5 styles, 3 sizes, 4 furniture sets;
+      pieces spawn as real slots (BoxMesh/Size, MeshRenderer,
+      PBS_Metallic, colliders, grabbable furniture, lights — every type
+      verified via /rl/reflect). Live-verified: 23/23 scratch room built,
+      read back, deleted; 41/41 tea-room via the page UI, deleted.
+- [x] **ProtoFlux 4242 default retired**: Live Control form was
+      prefilling a guessed port while the session ran :30418.
+      Discover-first flow (mirrors resonite_link.tsx), empty default,
+      Connect disabled until a port exists; guide + help wording no
+      longer states 4242 as fact. (Backend 4242 fallback defaults kept —
+      they mirror the client's own default.)
+- [x] **Apps hub vendored** (`just vends resonite-mcp`): mock page
+      replaced, 6 backend modules, two worker misses fixed by hand
+      (`router`→`app` wiring that broke 12 tests; `/api` prefix on the
+      three routes). Suite back to green.
+- [x] **Readability floor extended**: `index.css` now lifts 10px/11px to
+      12px (was 8/9px only) — 231 usages across 27 files; measured 12px
+      minimum rendered, no layout breakage.
+- [x] Filed fleet **BUG-042** (vite dev served a stale App.tsx transform
+      with zero errors — new route fell into the catch-all; diagnosed via
+      disk-vs-served comparison, fixed by dev-server restart).

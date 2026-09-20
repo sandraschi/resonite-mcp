@@ -34,3 +34,17 @@ Moved out of README.md 2026-07-18. (Supersedes the typo-named
 resonite-mcp --log-level DEBUG --stdio
 # or LOG_LEVEL=DEBUG
 ```
+
+## Webapp shows old code after an edit (no errors anywhere)
+- The vite dev server can serve a stale transform for one file while
+  others update — a new route then falls into the catch-all redirect,
+  looking exactly like a typo. Fresh browser profiles don't help
+  (it's server-side).
+- Check before debugging the router — disk vs served:
+  ```powershell
+  Select-String -Path src\App.tsx -Pattern '<your-new-thing>'
+  (Invoke-WebRequest -Uri 'http://127.0.0.1:10978/src/App.tsx' -UseBasicParsing).Content |
+    Select-String -Pattern '<your-new-thing>'
+  ```
+- Disk yes + served no = restart the vite dev server. Fleet record:
+  `mcp-central-docs/troubleshooting/details/BUG-042_Vite_Stale_Transform_Silent.md`.
