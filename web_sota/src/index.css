@@ -110,11 +110,16 @@ html:not(.dark) iframe {
 }
 
 /* Readability floor: no text below 12px anywhere. Tailwind's text-[8px] /
-   text-[9px] utilities (35 usages across 9 pages) render unreadably small
-   on desktop; this single rule lifts them to 12px without touching each
-   call site. Remove once pages are migrated to text-xs minimum. */
+   text-[9px] / text-[10px] / text-[11px] utilities (231 usages across 27
+   files, audited 2026-09-20) render unreadably small on desktop; this
+   single rule lifts them to 12px without touching each call site.
+   Per-call migration to text-xs minimum would churn 27 files for zero
+   behavioral gain, so the floor stays. Attribute-substring selectors also
+   catch responsive variants (e.g. md:text-[10px]). */
 [class*="text-[8px]"],
-[class*="text-[9px]"] {
+[class*="text-[9px]"],
+[class*="text-[10px]"],
+[class*="text-[11px]"] {
   font-size: 0.75rem !important;
 }
 
@@ -131,3 +136,6 @@ html:not(.dark) iframe {
 .text-\[11px\].text-slate-500 {
   color: #94a3b8 !important;
 }
+
+/* Vendored Apps hub token (APPS_PAGE_STANDARD.md). */
+:root { --gh-green: 142 71% 45%; }

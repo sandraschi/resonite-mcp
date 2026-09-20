@@ -75,6 +75,7 @@ export function Dashboard() {
 	const [rl, setRl] = useState<RlStatus | null>(null);
 	const [stats, setStats] = useState<Stats | null>(null);
 	const [llms, setLlms] = useState<Llm[]>([]);
+	const [toolCount, setToolCount] = useState<number | null>(null);
 	const [loading, setLoading] = useState(true);
 
 	const fetchRl = useCallback(async () => {
@@ -92,10 +93,11 @@ export function Dashboard() {
 	const fetchData = useCallback(async () => {
 		setLoading(true);
 		try {
-			const [statusRes, llmsRes, statsRes] = await Promise.all([
+			const [statusRes, llmsRes, statsRes, systemRes] = await Promise.all([
 				fetch(apiUrl("/api/status")),
 				fetch(apiUrl("/api/llm-discovery")).catch(() => null),
 				fetch(apiUrl("/api/stats")).catch(() => null),
+				fetch(apiUrl("/api/system")).catch(() => null),
 			]);
 
 			if (statusRes?.ok) setStatus(await statusRes.json());
@@ -104,6 +106,16 @@ export function Dashboard() {
 				setLlms(d.llms || []);
 			}
 			if (statsRes?.ok) setStats(await statsRes.json());
+			if (systemRes?.ok) {
+				const d = await systemRes.json();
+				setToolCount(
+					typeof d.count === "number"
+						? d.count
+						: Array.isArray(d.tools)
+							? d.tools.length
+							: null,
+				);
+			}
 		} catch (error) {
 			console.error("Dashboard telemetry failed", error);
 		} finally {
@@ -156,10 +168,16 @@ export function Dashboard() {
 								</Link>
 							</p>
 							<div className="flex flex-wrap items-center gap-2 mt-2">
-								<span className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
+								<Link
+									to="/tools"
+									title="Browse registered MCP tools"
+									className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1 hover:border-indigo-500/40 transition-colors"
+								>
 									<Radio className="h-3 w-3 text-indigo-400" />
-									Tool count not live-counted yet
-								</span>
+									{toolCount !== null
+										? `${toolCount} tools registered`
+										: "Tools —"}
+								</Link>
 								<span className="flex items-center gap-1.5 text-xs font-medium text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1">
 									<MessageSquare className="h-3 w-3 text-emerald-400" />
 									{status?.resonite_running
@@ -483,19 +501,17 @@ export function Dashboard() {
 							</div>
 							<div className="pt-4 border-t border-border">
 								<div className="flex justify-between text-xs font-bold uppercase tracking-widest text-slate-300 mb-2">
-									<span>Tool Coverage</span>
+									<span>
+										{toolCount !== null
+											? `${toolCount} MCP tools registered`
+											: "MCP tools —"}
+									</span>
 									<Link
 										to="/tools"
 										className="text-indigo-400 hover:text-indigo-300"
 									>
 										browse tools →
 									</Link>
-								</div>
-								<div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border">
-									<div
-										className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)] opacity-30"
-										style={{ width: "0%" }}
-									/>
 								</div>
 							</div>
 						</div>
