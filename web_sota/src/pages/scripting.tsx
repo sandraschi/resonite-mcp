@@ -1,4 +1,3 @@
-import { useMutation } from "@tanstack/react-query";
 import {
 	AlertTriangle,
 	BookOpen,
@@ -10,15 +9,31 @@ import {
 	Play,
 	Save,
 	Terminal,
-	Zap,
+	Trash2,
 } from "lucide-react";
 import { useState } from "react";
-import { apiUrl } from "@/lib/api-base";
 
-interface ScriptResult {
-	status: "success" | "error";
-	message: string;
-	output?: string;
+const MACRO_KEY = "resonite-script-macros";
+
+const TEMPLATES: Record<string, string> = {
+	"World Audio Duck":
+		'// World Audio Duck — lower world volume while a user talks\n// target: world_audio\n\nawait resonite.spawn("AudioDuck", {\n  duckedVolume: 0.2,\n  releaseMs: 800,\n});',
+	"Avatar Parameter Sync":
+		'// Avatar Parameter Sync — mirror a driver value to an avatar parameter\n// target: local_avatar\n\nawait resonite.spawn("ParameterSync", {\n  source: "Voice_Volume",\n  target: "Glow_Intensity",\n});',
+	"Material Pulse":
+		'// Material Pulse — pulse emissive on the beat of world time\n// target: selected_slot\n\nawait resonite.spawn("MaterialPulse", {\n  periodSeconds: 2.0,\n  intensity: 1.5,\n});',
+	"OSC Message Relay":
+		'// OSC Message Relay — forward a Resonite event to an external OSC app\n// target: world_root\n\nawait resonite.spawn("OSCRelay", {\n  host: "127.0.0.1",\n  port: 9000,\n  address: "/resonite/event",\n});',
+};
+
+function loadMacros(): Record<string, string> {
+	try {
+		const raw = localStorage.getItem(MACRO_KEY);
+		const parsed = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+		return parsed && typeof parsed === "object" ? parsed : {};
+	} catch {
+		return {};
+	}
 }
 
 export function ScriptingPage() {
@@ -28,27 +43,49 @@ export function ScriptingPage() {
 	const [logs, setLogs] = useState<
 		{ type: "info" | "error" | "success"; msg: string; time: string }[]
 	>([]);
+	const [cursor, setCursor] = useState({ ln: 1, col: 1 });
+	const [macros, setMacros] = useState<Record<string, string>>(loadMacros);
 
-	const executeMutation = useMutation({
-		mutationFn: async (code: string) => {
-			const r = await fetch(apiUrl("/api/resonite/scripting/execute"), {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ script: code }),
-			});
-			return r.json();
-		},
-		onSuccess: (data: ScriptResult) => {
-			setLogs((prev) => [
-				{
-					type: data.status === "success" ? "success" : "error",
-					msg: data.message,
-					time: new Date().toLocaleTimeString(),
-				},
-				...prev,
-			]);
-		},
-	});
+	const updateCursor = (el: HTMLTextAreaElement) => {
+		const before = el.value.slice(0, el.selectionStart).split("\n");
+		setCursor({
+			ln: before.length,
+			col: before[before.length - 1].length + 1,
+		});
+	};
+
+	const addLog = (type: "info" | "error" | "success", msg: string) => {
+		setLogs((prev) => [
+			{ type, msg, time: new Date().toLocaleTimeString() },
+			...prev,
+		]);
+	};
+
+	const saveMacro = () => {
+		const name = `Macro ${Object.keys(macros).length + 1}`;
+		const next = { ...macros, [name]: script };
+		setMacros(next);
+		try {
+			localStorage.setItem(MACRO_KEY, JSON.stringify(next));
+		} catch {
+			// ignore storage errors
+		}
+		addLog(
+			"success",
+			`Saved ${name} locally (${Object.keys(next).length} total).`,
+		);
+	};
+
+	const deleteMacro = (name: string) => {
+		const next = { ...macros };
+		delete next[name];
+		setMacros(next);
+		try {
+			localStorage.setItem(MACRO_KEY, JSON.stringify(next));
+		} catch {
+			// ignore storage errors
+		}
+	};
 
 	return (
 		<div className="space-y-6 page-enter">
@@ -66,25 +103,21 @@ export function ScriptingPage() {
 				</div>
 				<div className="flex items-center gap-2">
 					<button
-						title="Save as Macro"
+						title="Save current script as a local macro"
 						aria-label="Save current script as a macro"
-						className="flex items-center gap-2 bg-white/[0.05] hover:bg-white/[0.1] text-white px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/[0.08]"
+						onClick={saveMacro}
+						className="flex items-center gap-2 bg-white/[0.05] hover:bg-white/[0.1] text-white px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/[0.08] active:scale-95"
 					>
 						<Save className="w-4 h-4" />
 						Save Macro
 					</button>
 					<button
-						title="Execute Script"
-						aria-label="Execute the current script in Resonite"
-						onClick={() => executeMutation.mutate(script)}
-						disabled={executeMutation.isPending}
-						className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-orange-500/20 active:scale-95"
+						title="Arbitrary script execution isn't exposed by the backend — only named ProtoFlux presets can run (see ProtoFlux page)"
+						aria-label="Execute the current script in Resonite (unavailable)"
+						disabled
+						className="flex items-center gap-2 bg-orange-500 text-white px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-orange-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
 					>
-						{executeMutation.isPending ? (
-							<Zap className="w-4 h-4 animate-pulse" />
-						) : (
-							<Play className="w-4 h-4" />
-						)}
+						<Play className="w-4 h-4" />
 						Execute
 					</button>
 				</div>
@@ -117,7 +150,11 @@ export function ScriptingPage() {
 								title="Script Editor"
 								aria-label="Write ProtoFlux script here"
 								placeholder="// ProtoFlux Script Template..."
-								onChange={(e) => setScript(e.target.value)}
+								onChange={(e) => {
+									setScript(e.target.value);
+									updateCursor(e.target);
+								}}
+								onSelect={(e) => updateCursor(e.currentTarget)}
 								className="w-full h-full bg-transparent p-6 font-mono text-sm text-slate-300 focus:outline-none resize-none spellcheck-false"
 								spellCheck={false}
 							/>
@@ -137,20 +174,19 @@ export function ScriptingPage() {
 						</div>
 						<div className="p-2 border-t border-white/[0.05] bg-black/40 flex items-center justify-between gap-4">
 							<div className="flex items-center gap-4 text-xs text-slate-600">
-								<span>Ln 4, Col 21</span>
+								<span>
+									Ln {cursor.ln}, Col {cursor.col}
+								</span>
 								<span>Spaces: 4</span>
 							</div>
 							<div className="flex items-center gap-1">
 								<button
-									title="Format Code"
-									aria-label="Auto-format script code"
-									className="p-1 px-2 rounded hover:bg-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-tighter transition-colors"
-								>
-									Format
-								</button>
-								<button
-									title="Clear Code"
+									title="Clear script editor"
 									aria-label="Clear script editor"
+									onClick={() => {
+										setScript("");
+										setCursor({ ln: 1, col: 1 });
+									}}
 									className="p-1 px-2 rounded hover:bg-white/5 text-[10px] font-bold text-slate-400 uppercase tracking-tighter transition-colors"
 								>
 									Clear
@@ -206,15 +242,19 @@ export function ScriptingPage() {
 						<div className="grid grid-cols-2 gap-4">
 							<div className="p-3 bg-white/[0.02] rounded-xl border border-white/[0.05]">
 								<span className="block text-[10px] text-slate-500 uppercase font-bold">
-									Latency
+									Macros
 								</span>
-								<span className="text-lg font-bold text-white">4ms</span>
+								<span className="text-lg font-bold text-white">
+									{Object.keys(macros).length}
+								</span>
 							</div>
 							<div className="p-3 bg-white/[0.02] rounded-xl border border-white/[0.05]">
 								<span className="block text-[10px] text-slate-500 uppercase font-bold">
-									Ops/Sec
+									Log entries
 								</span>
-								<span className="text-lg font-bold text-white">12.4k</span>
+								<span className="text-lg font-bold text-white">
+									{logs.length}
+								</span>
 							</div>
 						</div>
 					</div>
@@ -225,18 +265,22 @@ export function ScriptingPage() {
 							Logic Templates
 						</h3>
 						<div className="space-y-2">
-							{[
-								"World Audio Duck",
-								"Avatar Parameter Sync",
-								"Material Pulse",
-								"OSC Message Relay",
-							].map((t) => (
+							{Object.entries(TEMPLATES).map(([name]) => (
 								<button
-									key={t}
+									key={name}
+									title={`Load ${name} into the editor`}
+									onClick={() => {
+										setScript(TEMPLATES[name]);
+										setCursor({ ln: 1, col: 1 });
+										addLog(
+											"info",
+											`Loaded template "${name}" into the editor.`,
+										);
+									}}
 									className="w-full text-left p-3 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08] transition-all group"
 								>
 									<span className="block text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-										{t}
+										{name}
 									</span>
 									<span className="text-[10px] text-slate-600 uppercase font-bold tracking-tighter">
 										Click to load
@@ -244,6 +288,38 @@ export function ScriptingPage() {
 								</button>
 							))}
 						</div>
+						{Object.keys(macros).length > 0 && (
+							<div className="space-y-2 pt-2 border-t border-white/[0.05]">
+								<h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-1">
+									Saved macros
+								</h4>
+								{Object.entries(macros).map(([name, body]) => (
+									<div
+										key={name}
+										className="flex items-center gap-2 p-2 rounded-xl hover:bg-white/[0.05] border border-transparent hover:border-white/[0.08] transition-all group"
+									>
+										<button
+											title={`Load ${name} into the editor`}
+											onClick={() => {
+												setScript(body);
+												setCursor({ ln: 1, col: 1 });
+											}}
+											className="flex-1 text-left text-sm font-medium text-slate-300 group-hover:text-white transition-colors truncate"
+										>
+											{name}
+										</button>
+										<button
+											title={`Delete ${name}`}
+											aria-label={`Delete ${name}`}
+											onClick={() => deleteMacro(name)}
+											className="p-1 text-slate-600 hover:text-rose-400 transition-colors"
+										>
+											<Trash2 className="w-3.5 h-3.5" />
+										</button>
+									</div>
+								))}
+							</div>
+						)}
 					</div>
 
 					<div className="glass-card p-4 bg-orange-500/5 border border-orange-500/10 space-y-3">

@@ -23,6 +23,19 @@ interface ResoniteSession {
 
 export function RestApiPage() {
 	const [searchQuery, setSearchQuery] = useState("");
+	const [copiedId, setCopiedId] = useState<string | null>(null);
+
+	const copySessionId = async (sessionId: string) => {
+		try {
+			await navigator.clipboard.writeText(sessionId);
+			setCopiedId(sessionId);
+			window.setTimeout(() => {
+				setCopiedId((prev) => (prev === sessionId ? null : prev));
+			}, 2000);
+		} catch {
+			// clipboard unavailable (permissions) — no fake success shown
+		}
+	};
 
 	const { data: platformData } = useQuery({
 		queryKey: ["platform"],
@@ -182,11 +195,30 @@ export function RestApiPage() {
 											</td>
 											<td className="py-3 px-2 text-right">
 												<button
-													title="View external link"
-													className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400 hover:text-indigo-300"
+													title={
+														session.sessionId
+															? "Copy full session ID"
+															: "No session ID on this row"
+													}
+													aria-label={
+														session.sessionId
+															? `Copy session ID for ${session.name}`
+															: "No session ID to copy"
+													}
+													disabled={!session.sessionId}
+													onClick={() =>
+														session.sessionId &&
+														copySessionId(session.sessionId)
+													}
+													className="p-1.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400 hover:text-indigo-300 disabled:opacity-30"
 												>
 													<ExternalLink className="w-4 h-4" />
 												</button>
+												{copiedId === session.sessionId && (
+													<span className="ml-1 text-[10px] text-emerald-400 font-bold">
+														Copied
+													</span>
+												)}
 											</td>
 										</tr>
 									))

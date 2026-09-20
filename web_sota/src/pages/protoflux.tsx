@@ -25,7 +25,14 @@ interface RLStatus {
 
 interface ConnectForm {
 	host: string;
-	port: number;
+	port: number | null;
+}
+
+interface DiscoveredSession {
+	sessionName: string;
+	sessionID: string;
+	linkPort: number;
+	host: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -100,9 +107,29 @@ export function ProtoFluxPage() {
 	const qc = useQueryClient();
 	const [form, setForm] = useState<ConnectForm>({
 		host: "localhost",
-		port: 4242,
+		port: null,
 	});
 	const [activeTab, setActiveTab] = useState<"guide" | "control">("guide");
+	const [sessions, setSessions] = useState<DiscoveredSession[]>([]);
+	const [discovering, setDiscovering] = useState(false);
+	const [discoverError, setDiscoverError] = useState("");
+
+	const handleDiscover = async () => {
+		setDiscovering(true);
+		setDiscoverError("");
+		try {
+			const r = await fetch(apiUrl("/rl/discover"));
+			if (!r.ok) throw new Error(await r.text());
+			const data = (await r.json()) as {
+				sessions?: DiscoveredSession[];
+			};
+			setSessions(data.sessions || []);
+		} catch (e) {
+			setDiscoverError((e as Error).message);
+		} finally {
+			setDiscovering(false);
+		}
+	};
 
 	// ResoniteLink status
 	const { data: rlStatus, isLoading: rlLoading } = useQuery<RLStatus>({
@@ -231,9 +258,10 @@ export function ProtoFluxPage() {
 									<span className="text-white font-mono text-[11px] bg-white/10 px-1.5 py-0.5 rounded">
 										Enable ResoniteLink
 									</span>{" "}
-									button. The default port is{" "}
-									<span className="text-white">4242</span>. You can override it
-									in the world's session settings.
+									button. Resonite shows the port it picked — commonly 4242, but
+									live sessions often use another one, so don&apos;t hardcode
+									it: use Discover on the Live Control tab (or the ResoniteLink
+									page) instead.
 								</p>
 								<p className="text-slate-500">
 									Headless alternative — add to your headless Config.json:
@@ -394,6 +422,45 @@ To fire from MCP HTTP API:
 							</span>
 						</div>
 
+						<button
+							type="button"
+							onClick={handleDiscover}
+							disabled={discovering}
+							title="Find live ResoniteLink sessions instead of guessing a port"
+							className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border bg-teal-500/20 border-teal-500/30 text-teal-400 hover:bg-teal-500/30 transition-all active:scale-95 disabled:opacity-30"
+						>
+							{discovering
+								? "Discovering…"
+								: "Discover Sessions (don't guess a port)"}
+						</button>
+						{discoverError && (
+							<p className="text-[10px] text-red-400">{discoverError}</p>
+						)}
+						{sessions.length > 0 && (
+							<div className="space-y-1.5">
+								{sessions.map((s) => (
+									<button
+										key={s.sessionID}
+										type="button"
+										onClick={() =>
+											setForm({
+												host: s.host === "0.0.0.0" ? "localhost" : s.host,
+												port: s.linkPort,
+											})
+										}
+										title={`Use ${s.sessionName} (:${s.linkPort})`}
+										className="w-full text-left flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-white/10 bg-black/20 hover:border-teal-500/40 hover:bg-teal-500/10 transition-colors text-[11px]"
+									>
+										<span className="font-bold text-foreground truncate">
+											{s.sessionName}
+										</span>
+										<span className="font-mono text-muted-foreground shrink-0">
+											:{s.linkPort}
+										</span>
+									</button>
+								))}
+							</div>
+						)}
 						<div className="flex gap-3 items-end flex-wrap">
 							<div className="space-y-1">
 								<label
@@ -421,17 +488,22 @@ To fire from MCP HTTP API:
 								<input
 									id="pf-port"
 									type="number"
-									value={form.port}
+									value={form.port ?? ""}
+									placeholder="discover first"
+									title="ResoniteLink port — use Discover above, don't guess"
 									onChange={(e) =>
-										setForm((f) => ({ ...f, port: Number(e.target.value) }))
+										setForm((f) => ({
+											...f,
+											port: e.target.value ? Number(e.target.value) : null,
+										}))
 									}
-									className="bg-black/20 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50 w-24"
+									className="bg-black/20 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50 w-32"
 								/>
 							</div>
 							{!isConnected ? (
 								<button
 									onClick={() => connectMut.mutate(form)}
-									disabled={connectMut.isPending}
+									disabled={connectMut.isPending || form.port === null}
 									className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
 								>
 									{connectMut.isPending ? "Connecting..." : "Connect"}

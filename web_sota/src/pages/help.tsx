@@ -168,7 +168,7 @@ export function Help() {
 									<br />
 									OSC: 9000 (send), 9001 (receive)
 									<br />
-									ResoniteLink: 4242 (WS)
+									ResoniteLink: dynamic WS port (Discover it — don&apos;t guess)
 								</p>
 							</CardContent>
 						</Card>
@@ -730,7 +730,9 @@ export function Help() {
 							<p className="text-xs text-muted-foreground">
 								ResoniteLink is a WebSocket-based JSON protocol (v0.8.3+) for
 								direct slot/component manipulation inside Resonite. Enable it in
-								Resonite: Sessions → Enable ResoniteLink (default port 4242).
+								Resonite: Sessions → Enable ResoniteLink, then read the port it
+								shows (commonly 4242, but live sessions often differ — use
+								Discover on the ResoniteLink page).
 							</p>
 							<div className="overflow-x-auto">
 								<table className="w-full text-[10px]">
@@ -970,7 +972,7 @@ export function Help() {
 						},
 						{
 							q: "What is ResoniteLink and when should I use it?",
-							a: "ResoniteLink is a WebSocket JSON protocol for direct slot/component CRUD in Resonite. Use it when you need fine-grained world manipulation (create/destroy slots, read/write component fields). Enable it in Resonite: Sessions → Enable ResoniteLink, default port 4242.",
+							a: "ResoniteLink is a WebSocket JSON protocol for direct slot/component CRUD in Resonite. Use it when you need fine-grained world manipulation (create/destroy slots, read/write component fields). Enable it in Resonite: Sessions → Enable ResoniteLink, then Discover the live port on the ResoniteLink page — it is commonly 4242 but often differs per session.",
 						},
 						{
 							q: "How do cloud variables work?",
