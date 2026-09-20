@@ -17,7 +17,8 @@ import {
 	Trash2,
 	Upload,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import { ShareDialog } from "@/components/share-dialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiUrl } from "@/lib/api-base";
 import { cn } from "../common/utils";
@@ -79,29 +80,65 @@ export function Inventory() {
 			const r = await fetch(apiUrl("/api/resonite/inventory/spawn"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					item_path: record.path || `${path}/${record.name}`,
-				}),
+				body: JSON.stringify({ item_id: record.id }),
 			});
-			if (!r.ok) throw new Error("Spawn failed");
-			return r.json();
+			const data = (await r.json().catch(() => null)) as {
+				detail?: string;
+			} | null;
+			if (!r.ok) throw new Error(data?.detail || "Spawn failed");
+			return data;
 		},
 	});
 
 	const deleteMutation = useMutation({
 		mutationFn: async (record: Record) => {
 			const r = await fetch(apiUrl("/api/resonite/inventory/delete"), {
-				method: "POST",
+				method: "DELETE",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					item_path: record.path || `${path}/${record.name}`,
+					item_id: record.id,
+					confirm_deletion: true,
 				}),
 			});
-			if (!r.ok) throw new Error("Delete failed");
-			return r.json();
+			const data = (await r.json().catch(() => null)) as {
+				detail?: string;
+			} | null;
+			if (!r.ok) throw new Error(data?.detail || "Delete failed");
+			return data;
 		},
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["records"] }),
 	});
+
+	const fileRef = useRef<HTMLInputElement>(null);
+	const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+	const [uploading, setUploading] = useState(false);
+	const [shareTarget, setShareTarget] = useState<Record | null>(null);
+
+	const handleUploadFile = async (file: File) => {
+		setUploading(true);
+		setUploadMsg(null);
+		try {
+			const form = new FormData();
+			form.append("file", file);
+			form.append("item_name", file.name);
+			const r = await fetch(apiUrl("/api/resonite/inventory/upload-file"), {
+				method: "POST",
+				body: form,
+			});
+			const data = (await r.json().catch(() => null)) as {
+				detail?: string;
+				message?: string;
+			} | null;
+			if (!r.ok) throw new Error(data?.detail || "Upload failed");
+			setUploadMsg(data?.message || `Uploaded ${file.name}.`);
+			queryClient.invalidateQueries({ queryKey: ["records"] });
+		} catch (error) {
+			setUploadMsg(error instanceof Error ? error.message : "Upload failed.");
+		} finally {
+			setUploading(false);
+			if (fileRef.current) fileRef.current.value = "";
+		}
+	};
 
 	const breadcrumbs = useMemo(() => {
 		const parts = path.split("/").filter(Boolean);
@@ -148,16 +185,34 @@ export function Inventory() {
 					<div className="flex items-center gap-3">
 						<button
 							type="button"
-							title="Upload Asset"
-							className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-purple-500/20 active:scale-95 border border-purple-400/30"
+							title="Upload a file to Resonite inventory"
+							onClick={() => fileRef.current?.click()}
+							disabled={uploading}
+							className="flex items-center gap-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-purple-500/20 active:scale-95 border border-purple-400/30"
 						>
-							<Upload className="w-4 h-4" />
-							Upload
+							{uploading ? (
+								<Loader2 className="w-4 h-4 animate-spin" />
+							) : (
+								<Upload className="w-4 h-4" />
+							)}
+							{uploading ? "Uploading…" : "Upload"}
 						</button>
+						<input
+							ref={fileRef}
+							type="file"
+							className="hidden"
+							tabIndex={-1}
+							aria-hidden="true"
+							onChange={(e) => {
+								const file = e.target.files?.[0];
+								if (file) void handleUploadFile(file);
+							}}
+						/>
 						<button
 							type="button"
-							title="New Folder"
-							className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-white/10 active:scale-95"
+							title="Folders can't be created: Resonite isn't answering inventory requests (even list returns nothing)"
+							disabled
+							className="flex items-center gap-2 bg-white/5 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							<Plus className="w-4 h-4" />
 							Folder
@@ -308,6 +363,12 @@ export function Inventory() {
 				</div>
 			)}
 
+			{uploadMsg && (
+				<p role="status" className="text-xs text-slate-400 -mt-4">
+					{uploadMsg}
+				</p>
+			)}
+
 			{/* Data Display */}
 			{!isLoading &&
 				!isError &&
@@ -392,8 +453,9 @@ export function Inventory() {
 												type="button"
 												onClick={(e) => {
 													e.stopPropagation();
+													setShareTarget(rec);
 												}}
-												title={`Share ${rec.name}`}
+												title={`Share ${rec.name} with a contact`}
 												className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-500/40 transition-all active:scale-95"
 											>
 												<Share2 className="w-4 h-4" />
@@ -465,9 +527,24 @@ export function Inventory() {
 									? warning
 									: `The path ${path} contains no items, or no in-world responder answered this request.`}
 							</p>
+							{warning && (
+								<p className="text-[11px] text-slate-500 max-w-[320px] mx-auto mt-2">
+									Inventory listing needs Resonite&apos;s OSC output: in
+									Resonite go to Settings → Interface → OSC → enable Output
+									(port 9001), then press Sync Path above. Spawning works with
+									input alone; listing needs output.
+								</p>
+							)}
 						</div>
 					</div>
 				))}
+			{shareTarget && (
+				<ShareDialog
+					itemId={shareTarget.id}
+					itemName={shareTarget.name}
+					onClose={() => setShareTarget(null)}
+				/>
+			)}
 		</div>
 	);
 }

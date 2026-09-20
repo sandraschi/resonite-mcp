@@ -1,13 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	Box,
-	Download,
 	FolderOpen,
 	Globe2,
 	HardDrive,
 	LayoutGrid,
 	List as ListIcon,
-	MoreVertical,
 	Package,
 	Plus,
 	Search,
@@ -16,7 +14,8 @@ import {
 	Trash2,
 	Upload,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { ShareDialog } from "@/components/share-dialog";
 import { apiUrl } from "@/lib/api-base";
 
 interface InventoryItem {
@@ -33,6 +32,39 @@ export function IoPage() {
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 	const [currentPath, setCurrentPath] = useState("");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [typeFilter, setTypeFilter] = useState<"all" | "avatar" | "world">(
+		"all",
+	);
+	const fileRef = useRef<HTMLInputElement>(null);
+	const [uploadMsg, setUploadMsg] = useState<string | null>(null);
+	const [uploading, setUploading] = useState(false);
+	const [shareTarget, setShareTarget] = useState<InventoryItem | null>(null);
+
+	const handleUploadFile = async (file: File) => {
+		setUploading(true);
+		setUploadMsg(null);
+		try {
+			const form = new FormData();
+			form.append("file", file);
+			form.append("item_name", file.name);
+			const r = await fetch(apiUrl("/api/resonite/inventory/upload-file"), {
+				method: "POST",
+				body: form,
+			});
+			const data = (await r.json().catch(() => null)) as {
+				detail?: string;
+				message?: string;
+			} | null;
+			if (!r.ok) throw new Error(data?.detail || "Upload failed");
+			setUploadMsg(data?.message || `Uploaded ${file.name}.`);
+			queryClient.invalidateQueries({ queryKey: ["inventory"] });
+		} catch (error) {
+			setUploadMsg(error instanceof Error ? error.message : "Upload failed.");
+		} finally {
+			setUploading(false);
+			if (fileRef.current) fileRef.current.value = "";
+		}
+	};
 
 	const { data: inventory, isLoading } = useQuery({
 		queryKey: ["inventory", currentPath],
@@ -52,27 +84,40 @@ export function IoPage() {
 			const r = await fetch(apiUrl("/api/resonite/inventory/spawn"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ item_path: item.path }),
+				body: JSON.stringify({ item_id: item.id || item.path }),
 			});
-			return r.json();
+			const data = (await r.json().catch(() => null)) as {
+				detail?: string;
+			} | null;
+			if (!r.ok) throw new Error(data?.detail || "Spawn failed");
+			return data;
 		},
 	});
 
 	const deleteMutation = useMutation({
 		mutationFn: async (item: InventoryItem) => {
 			const r = await fetch(apiUrl("/api/resonite/inventory/delete"), {
-				method: "POST",
+				method: "DELETE",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ item_path: item.path }),
+				body: JSON.stringify({
+					item_id: item.id || item.path,
+					confirm_deletion: true,
+				}),
 			});
-			return r.json();
+			const data = (await r.json().catch(() => null)) as {
+				detail?: string;
+			} | null;
+			if (!r.ok) throw new Error(data?.detail || "Delete failed");
+			return data;
 		},
 		onSuccess: () => queryClient.invalidateQueries({ queryKey: ["inventory"] }),
 	});
 
 	const items: InventoryItem[] = inventory?.items || [];
-	const filteredItems = items.filter((item) =>
-		item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
+	const filteredItems = items.filter(
+		(item) =>
+			(typeFilter === "all" || item.type === typeFilter) &&
+			item.name?.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
 	return (
@@ -93,23 +138,42 @@ export function IoPage() {
 				</div>
 				<div className="flex items-center gap-2">
 					<button
-						title="Upload Asset"
+						title="Upload a file to Resonite inventory"
 						aria-label="Upload Asset"
-						className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
+						onClick={() => fileRef.current?.click()}
+						disabled={uploading}
+						className="flex items-center gap-2 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all shadow-lg shadow-indigo-500/20 active:scale-95"
 					>
 						<Upload className="w-4 h-4" />
-						Upload Asset
+						{uploading ? "Uploading…" : "Upload Asset"}
 					</button>
+					<input
+						ref={fileRef}
+						type="file"
+						className="hidden"
+						tabIndex={-1}
+						aria-hidden="true"
+						onChange={(e) => {
+							const file = e.target.files?.[0];
+							if (file) void handleUploadFile(file);
+						}}
+					/>
 					<button
-						title="New Folder"
+						title="Folders can't be created: Resonite isn't answering inventory requests (even list returns nothing)"
 						aria-label="New Folder"
-						className="flex items-center gap-2 bg-white/[0.05] hover:bg-white/[0.1] text-white px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/[0.08] active:scale-95"
+						disabled
+						className="flex items-center gap-2 bg-white/[0.05] text-white px-4 py-2 rounded-xl text-sm font-medium transition-all border border-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed"
 					>
 						<Plus className="w-4 h-4" />
 						New Folder
 					</button>
 				</div>
 			</div>
+			{uploadMsg && (
+				<p role="status" className="text-xs text-slate-400">
+					{uploadMsg}
+				</p>
+			)}
 
 			<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 				<div className="md:col-span-1 space-y-4">
@@ -118,49 +182,49 @@ export function IoPage() {
 							Storage
 						</h3>
 						<div className="space-y-2">
-							<button
-								title="Primary Cloud Storage"
-								aria-label="Switch to Primary Cloud Storage"
-								className="w-full flex items-center justify-between p-2 rounded-lg bg-indigo-500/10 text-indigo-400 text-sm border border-indigo-500/20"
-							>
+							<div className="w-full flex items-center justify-between p-2 rounded-lg bg-indigo-500/10 text-indigo-400 text-sm border border-indigo-500/20">
 								<div className="flex items-center gap-2">
 									<HardDrive className="w-4 h-4" />
 									<span>Primary Cloud</span>
 								</div>
-								<span className="text-[10px] font-mono opacity-60">S-1</span>
-							</button>
-							<button
-								title="Local Cache Storage"
-								aria-label="Switch to Local Cache Storage"
-								className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-white/5 text-slate-400 text-sm transition-colors border border-transparent"
-							>
-								<div className="flex items-center gap-2">
-									<Box className="w-4 h-4" />
-									<span>Local Cache</span>
-								</div>
-							</button>
+								<span
+									className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"
+									title="Live via OSC"
+								/>
+							</div>
+							<p className="text-[10px] text-slate-600 px-2">
+								Single live source — the backend exposes one inventory list, so
+								there is no second store to switch to.
+							</p>
 						</div>
 
 						<div className="pt-4 border-t border-white/[0.05] space-y-2">
 							<h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2">
 								Quick Filters
 							</h3>
-							<button
-								title="Filter by Avatars"
-								aria-label="Filter by Avatars"
-								className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 text-slate-500 hover:text-slate-300 text-xs transition-colors"
-							>
-								<ShieldCheck className="w-3.5 h-3.5" />
-								<span>Avatars</span>
-							</button>
-							<button
-								title="Filter by Worlds"
-								aria-label="Filter by Worlds"
-								className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 text-slate-500 hover:text-slate-300 text-xs transition-colors"
-							>
-								<Globe2 className="w-3.5 h-3.5" />
-								<span>Worlds</span>
-							</button>
+							{(
+								[
+									{ id: "avatar", label: "Avatars", Icon: ShieldCheck },
+									{ id: "world", label: "Worlds", Icon: Globe2 },
+								] as const
+							).map(({ id, label, Icon }) => {
+								const on = typeFilter === id;
+								return (
+									<button
+										key={id}
+										title={`Filter by ${label}`}
+										aria-label={`Filter by ${label}`}
+										aria-pressed={on}
+										onClick={() =>
+											setTypeFilter((prev) => (prev === id ? "all" : id))
+										}
+										className={`w-full flex items-center gap-2 p-1.5 rounded-lg text-xs transition-colors ${on ? "bg-indigo-500/15 text-indigo-300" : "hover:bg-white/5 text-slate-500 hover:text-slate-300"}`}
+									>
+										<Icon className="w-3.5 h-3.5" />
+										<span>{label}</span>
+									</button>
+								);
+							})}
 						</div>
 					</div>
 				</div>
@@ -298,8 +362,11 @@ export function IoPage() {
 															Spawn
 														</button>
 														<button
-															onClick={(e) => e.stopPropagation()}
-															title={`Share ${item.name}`}
+															onClick={(e) => {
+																e.stopPropagation();
+																setShareTarget(item);
+															}}
+															title={`Share ${item.name} with a contact`}
 															aria-label={`Share ${item.name}`}
 															className="p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-lg transition-colors border border-white/10"
 														>
@@ -313,21 +380,15 @@ export function IoPage() {
 													<h4 className="text-sm font-medium text-slate-200 truncate">
 														{item.name}
 													</h4>
-													<button
-														onClick={(e) => e.stopPropagation()}
-														title="More options"
-														aria-label={`More options for ${item.name}`}
-														className="text-slate-600 hover:text-slate-400"
-													>
-														<MoreVertical className="w-4 h-4" />
-													</button>
 												</div>
 												<div className="flex items-center justify-between mt-1">
 													<span className="text-[10px] text-slate-500 uppercase font-bold tracking-tight">
 														{item.type}
 													</span>
 													<span className="text-[10px] text-slate-600 font-mono">
-														1.2 MB
+														{item.lastModified
+															? new Date(item.lastModified).toLocaleDateString()
+															: ""}
 													</span>
 												</div>
 											</div>
@@ -359,14 +420,6 @@ export function IoPage() {
 													className="text-xs text-indigo-400 font-bold px-2 py-1 hover:bg-indigo-500/10 rounded"
 												>
 													SPAWN
-												</button>
-												<button
-													onClick={(e) => e.stopPropagation()}
-													title={`Download ${item.name}`}
-													aria-label={`Download ${item.name}`}
-													className="p-1 text-slate-500 hover:text-slate-300"
-												>
-													<Download className="w-4 h-4" />
 												</button>
 												<button
 													onClick={(e) => {
@@ -403,6 +456,13 @@ export function IoPage() {
 					)}
 				</div>
 			</div>
+			{shareTarget && (
+				<ShareDialog
+					itemId={shareTarget.id || shareTarget.path}
+					itemName={shareTarget.name}
+					onClose={() => setShareTarget(null)}
+				/>
+			)}
 		</div>
 	);
 }
