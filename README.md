@@ -21,6 +21,9 @@ Resonite MCP is an integration bridge and state-of-the-art web dashboard that co
 * 🧬 **Avatar & Biometric Tuning**: Adjust tracking smoothing, toggle eye tracking, and monitor lipsync parameters in real-time.
 * 👥 **Socials & Contacts**: Check who is online, read chat logs, and join your friends' sessions with one click.
 * 📦 **In-World Spawning**: Search, organize, and spawn assets directly from your inventory database.
+* 🏠 **World Builder**: Assemble a furnished room in your live session from a form — 5 styles, 3 sizes, 4 furniture sets, spawned piece-by-piece over ResoniteLink with a full build report.
+* 📥 **Asset Downloads**: No official marketplace exists, so the page collects the real sources instead — Unity exporter, mod tools, model libraries, community links — plus the import path into Resonite.
+* 🛰️ **Fleet Apps Hub**: Live registry of every installed fleet webapp with health dots and click-to-open.
 * 🎨 **Visual Dashboard & Gallery**: Monitor connection health, inspect the world's node tree, and browse a visual gallery of screenshots and popular worlds.
 
 ---
@@ -37,7 +40,7 @@ This repository is not just a standalone connector, but a vital node in a wider 
 
 ## ⛩️ The Miko's Digital Shrine
 
-In the spirit of kami and miko — this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The kawaii and clever miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
+In the spirit of kami and miko -- this MCP server serves as a bridge between human creators and the digital spirits of virtual worlds. The kawaii and clever miko tends the shrines of code, ensuring the kami of creation flow freely through our digital spaces.
 
 ---
 
@@ -69,6 +72,21 @@ Add the server configuration to your Claude Desktop config file (`claude_desktop
 
 ---
 
+## Fleet Crossconnects (Companions)
+
+`resonite-mcp` works completely standalone. You can optionally connect it with companion servers in the `sandraschi` fleet to unlock extended features:
+
+| Companion Server | Feature Unlocked | Status | Setup |
+|---|---|---|---|
+| [`blender-mcp`](https://github.com/sandraschi/blender-mcp) | asset-decimation, gltf-vrm-pipeline | Optional | [Install Guide](https://github.com/sandraschi/blender-mcp#quick-install) |
+| [`yahboom-mcp`](https://github.com/sandraschi/yahboom-mcp) | digital-twin-visualization, vbot-teleoperation | Optional | [Install Guide](https://github.com/sandraschi/yahboom-mcp#quick-install) |
+| [`teleoperator-mcp`](https://github.com/sandraschi/teleoperator-mcp) | osc-robot-teleop, vr-controller-stream | Optional | [Install Guide](https://github.com/sandraschi/teleoperator-mcp#quick-install) |
+| [`mixx-dj-mcp`](https://github.com/sandraschi/mixx-dj-mcp) | live-dj-audio-stream, bpm-reactive-dance-rig | Optional | [Install Guide](https://github.com/sandraschi/mixx-dj-mcp#quick-install) |
+
+> **Self-Contained Companions**: Fleet companions operate independently. Installing companions does not trigger transitive dependency chains.
+
+---
+
 ## 📚 Documentation Index
 
 For deep architectural details, setup advice, and API references, check out our dedicated guides:
@@ -77,7 +95,7 @@ For deep architectural details, setup advice, and API references, check out our 
 | :--- | :--- |
 | **[ARCHITECTURE.md](ARCHITECTURE.md)** | High-level system architecture, protocols, and port mappings |
 | **[INSTALL.md](INSTALL.md)** | Full installation paths and environment configurations |
-| **[docs/TOOLS.md](docs/TOOLS.md)** | List of the 65+ Python tools and HTTP API endpoints |
+| **[docs/TOOLS.md](docs/TOOLS.md)** | List of the 86 Python tools and HTTP API endpoints |
 | **[docs/RESONITELINK_GUIDE.md](docs/RESONITELINK_GUIDE.md)** | Deep-dive into the ResoniteLink WebSocket protocol |
 | **[VR_WORLDS_COMPARISON.md](VR_WORLDS_COMPARISON.md)** | Detailed comparison between Resonite, VRChat, and Vircadia |
 | **[BUILD_AND_INHABIT_PIPELINE.md](BUILD_AND_INHABIT_PIPELINE.md)** | Automation stages from Blender/GIMP to live VR injection |
@@ -89,5 +107,5 @@ For deep architectural details, setup advice, and API references, check out our 
 ## 📈 Status & Roadmap
 * **Current Version**: `v1.1.0` (ResoniteLink Protocol 0.13.1).
 * **Compliance**: Agent Lab Phases 1–6 complete. Real-time slot CRUD, OSC synchronization, and cached asset syncing are fully live-verified.
-* **TODO — nearby-object search**: overte-mcp has a spatial `find_nearby` query built on Overte's `Entities.findEntities`; ResoniteLink has no equivalent primitive, so this hasn't been ported. Building it would mean walking the scene graph (recursive `get_children`/`get_slot` from a root, filtering by distance client-side) instead of a single server-side spatial query — a different, slower design, not a straight port. See `CHANGELOG.md` (2026-09-02 entries) for the rest of what *did* port cleanly from overte-mcp (animate, fixture spawner, model/texture depot + backup).
+* **TODO -- nearby-object search**: overte-mcp has a spatial `find_nearby` query built on Overte's `Entities.findEntities`; ResoniteLink has no equivalent primitive, so this hasn't been ported. Building it would mean walking the scene graph (recursive `get_children`/`get_slot` from a root, filtering by distance client-side) instead of a single server-side spatial query -- a different, slower design, not a straight port. See `CHANGELOG.md` (2026-09-02 entries) for the rest of what *did* port cleanly from overte-mcp (animate, fixture spawner, model/texture depot + backup).
 * **License**: MIT Licensed. Made with care for the Resonite community.

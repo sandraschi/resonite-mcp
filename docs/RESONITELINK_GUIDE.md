@@ -17,7 +17,10 @@ Unlike OSC, which sends individual packets, ResoniteLink maintains a persistent 
   - Graphical client: Sessions → "Enable ResoniteLink"
   - Headless config: `"enableResoniteLink": true` (optional `"forceResoniteLinkPort"`)
   - Running headless console: `enableResoniteLink <port>` (0 = random port)
-- Default ResoniteLink port: **4242**.
+- ResoniteLink port: **varies per session** (commonly 4242, which is also
+  the client's fallback default — live sessions often use another port,
+  e.g. :30418). Never hardcode it: run discovery (UDP 12512) or use the
+  Discover button on the ResoniteLink / ProtoFlux pages.
 
 ### Upstream protocol status (upgraded 2026-07-11)
 

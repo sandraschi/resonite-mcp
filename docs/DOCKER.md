@@ -24,8 +24,8 @@ docker compose --profile monitoring up -d
 |----------|---------|-------|
 | `MCP_PORT` | 10979 | HTTP API |
 | `PROMETHEUS_PORT` | 9079 | Metrics sidecar |
-| `RESONITE_LINK_HOST` | host.docker.internal | ResoniteLink on host |
-| `RESONITE_LINK_PORT` | 4242 | ResoniteLink WebSocket |
+| `RESONITE_LINK_HOST` | host.docker.internal | Set but currently unread by the app — connect via Discover |
+| `RESONITE_LINK_PORT` | 4242 | Set but currently unread by the app; 4242 is only the client's fallback default, live ports vary |
 | `RESONITE_MCP_LOG_FORMAT` | json | Loki-friendly logs |
 | `RESONITE_MCP_LOG_DIR` | /app/logs | Promtail volume |
 

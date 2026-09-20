@@ -72,6 +72,35 @@ adapter modes mock/live/auto via `RESONITE_INVENTORY_MODE` (v1.0.0), plus
 ## System (3 tools)
 `help(level?, topic?)`, `status(level?, focus?)`, `health_check()`
 
+## HTTP API additions (2026-09-20)
+
+New since the inventory above — all live-verified:
+
+- `GET /api/system` — live MCP tool manifest (name, description, parameters
+  for each of the 86 registered tools). Backs the webapp Tools page and the
+  dashboard's tool-count badge; enumerated from the FastMCP server object,
+  no static copy.
+- `GET /api/world-builder/presets` + `POST /api/world-builder/build` —
+  procedural room builder (`src/resonite_mcp/world_builder.py`). Form takes
+  name/style/size/furniture-set/origin; every piece spawns as a real slot
+  (BoxMesh + MeshRenderer + PBS_Metallic, colliders on shell, grabbable
+  furniture, lights on lamps) over ResoniteLink. Requires a live link
+  connection (503 otherwise); per-piece slot IDs in the response.
+- `POST /api/resonite/inventory/upload-file` — multipart bridge for the
+  webapp Upload buttons: buffers the browser file to temp, then runs the
+  real inventory upload. (The JSON `/upload` route needs a server-local
+  path, which a browser can't supply.)
+- `GET /api/apps`, `GET /api/apps/health`, `POST /api/apps/ensure` —
+  fleet Apps hub (`src/resonite_mcp/services/`), vendored 2026-09-20:
+  registry entries with webapp ports, health-dot proxy, click-to-open.
+
+Known honestly-unavailable (verified 2026-09-20, not silently stubbed):
+inventory folder creation and OSC round-trips report nothing back —
+Resonite isn't answering inventory requests at all right now (even list
+times out), so the webapp Folder buttons stay disabled with the reason in
+the tooltip. Contacts listing needs cloud auth (`resonite_rest_login`
+first); the Share dialog falls back to manual username entry.
+
 ## Usage Examples
 
 ```python
