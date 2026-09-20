@@ -172,12 +172,14 @@ export function Topbar() {
 					</DropdownMenu.Portal>
 				</DropdownMenu.Root>
 
-				<button
+				<Link
+					to="/help"
 					className="flex h-8 w-8 items-center justify-center rounded-md border border-border bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-300 glass"
 					title="System Help"
+					aria-label="System Help"
 				>
 					<HelpCircle className="h-4 w-4" />
-				</button>
+				</Link>
 			</div>
 		</header>
 	);

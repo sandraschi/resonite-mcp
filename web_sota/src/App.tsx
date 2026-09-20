@@ -9,7 +9,7 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { PresenceGate } from "@/components/presence-gate";
 import { AgentTools } from "@/pages/agent-tools";
 import { ApiDocs } from "@/pages/api_docs";
-import { Apps } from "@/pages/apps";
+import { AppsPage as Apps } from "@/pages/apps";
 import { AvatarPage } from "@/pages/avatar";
 import { Chat } from "@/pages/chat";
 import { Contacts } from "@/pages/contacts";
@@ -32,9 +32,11 @@ import { ScriptingPage } from "@/pages/scripting";
 import { SearchPage } from "@/pages/search";
 import { Sessions } from "@/pages/sessions";
 import { Settings } from "@/pages/settings";
+import { SpawnedPage } from "@/pages/spawned";
 import { Status } from "@/pages/status";
 import { Tools } from "@/pages/tools";
 import { World } from "@/pages/world";
+import { WorldBuilderPage } from "@/pages/world-builder";
 
 const queryClient = new QueryClient({
 	defaultOptions: {
@@ -77,6 +79,11 @@ function App() {
 											element={<ResoniteLinkPage />}
 										/>
 										<Route path="/world" element={<World />} />
+										<Route
+											path="/world-builder"
+											element={<WorldBuilderPage />}
+										/>
+										<Route path="/spawned" element={<SpawnedPage />} />
 										<Route path="/control" element={<Control />} />
 										<Route path="/map" element={<WorldMap />} />
 										<Route path="/search" element={<SearchPage />} />
