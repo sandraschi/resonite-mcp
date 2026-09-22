@@ -20,11 +20,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from .data_dir import data_dir as _resolve_data_dir
+
 
 def default_path() -> Path:
-    root = Path(__file__).resolve().parents[2]
-    data_dir = root / "data"
-    data_dir.mkdir(exist_ok=True)
+    data_dir = _resolve_data_dir()
+    data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir / "spawn_registry.json"
 
 
