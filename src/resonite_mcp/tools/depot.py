@@ -53,7 +53,7 @@ def _load_manifest(path: Path) -> list[dict[str, Any]]:
             with open(path) as f:
                 return json.load(f)
         except Exception:
-            pass
+            logger.warning("corrupt depot manifest %s; starting empty", path, exc_info=True)
     return []
 
 

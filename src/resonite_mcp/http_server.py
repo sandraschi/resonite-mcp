@@ -75,7 +75,8 @@ register_metrics_routes(app)
 
 activity_log.info("server", "Server started")
 
-_RESONITE_TAURI = os.environ.get("RESONITE_TAURI", "").lower() in ("1", "true", "yes")
+# NOTE: RESONITE_TAURI env is retired; the allow_origin_regex below covers
+# tauri://localhost unconditionally (fleet CORS standard: never gate the regex).
 
 # Add CORS middleware
 app.add_middleware(
@@ -88,7 +89,7 @@ app.add_middleware(
         "https://tauri.localhost",
         "tauri://localhost",
     ],
-    allow_origin_regex=r"https?://tauri\.localhost(:\d+)?" if _RESONITE_TAURI else None,
+    allow_origin_regex=r"https?://(tauri\.localhost|127\.0\.0\.1|localhost|goliath)(:\d+)?",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -282,6 +283,63 @@ async def _mark_shutting_down():
     fires before the process actually exits, giving health checks a
     window to see this."""
     _SHUTTING_DOWN["value"] = True
+
+
+@app.post("/api/shutdown")
+async def api_shutdown() -> dict[str, Any]:
+    """Orderly self-termination for fleet launcher restarts.
+
+    ## Return Format
+    `{"success": True, "message": str}` — always 200 immediately; the process
+    exits ~500 ms later so in-flight writes can flush.
+
+    ## Examples
+    `POST /api/shutdown` -> `{"success": True, "message": "shutting down"}`
+    """
+    import threading
+
+    _SHUTTING_DOWN["value"] = True
+    logger.info("api/shutdown requested — exiting in ~500 ms")
+    threading.Timer(0.5, lambda: os._exit(0)).start()
+    return {"success": True, "message": "resonite-mcp shutting down in ~500 ms"}
+
+
+@app.get("/api/v1/diagnostics")
+async def api_diagnostics() -> dict[str, Any]:
+    """Full diagnostics for CUA-NSIS smoke testing: tool list, system info, errors.
+
+    ## Return Format
+    `{"success": True, "message": str, "data": {...}}` with tool_count, tools,
+    versions, platform, and recent error tail.
+
+    ## Examples
+    `GET /api/v1/diagnostics` -> 200 with `data.tool_count >= 1`
+    """
+    import platform
+
+    tools: list[str] = []
+    try:
+        from .server import server as _mcp_server
+
+        mgr = getattr(_mcp_server, "_tool_manager", None)
+        raw = getattr(mgr, "_tools", None) or {}
+        tools = sorted(raw.keys())
+    except Exception:
+        logger.exception("diagnostics: MCP tool listing failed")
+    return {
+        "success": True,
+        "message": f"resonite-mcp diagnostics: {len(tools)} MCP tools",
+        "data": {
+            "server": "resonite-mcp",
+            "version": __version__,
+            "git_sha": _GIT_SHA,
+            "uptime_seconds": (datetime.datetime.now(datetime.UTC) - _STARTED).total_seconds(),
+            "python": platform.python_version(),
+            "platform": platform.platform(),
+            "tool_count": len(tools),
+            "tools": tools,
+        },
+    }
 
 
 @app.post("/api/v1/tool")
@@ -946,7 +1004,7 @@ async def upload_inventory_file(
             try:
                 Path(tmp_path).unlink(missing_ok=True)
             except Exception:
-                pass
+                logger.debug("tmp upload cleanup failed for %s", tmp_path, exc_info=True)
 
 
 class WorldBuildRequest(BaseModel):
@@ -1274,7 +1332,7 @@ async def rl_connect(req: RLConnectRequest):
         try:
             await previous.disconnect()
         except Exception:
-            pass
+            logger.debug("previous ResoniteLink disconnect failed", exc_info=True)
     client = ResoniteLinkClient(host=req.host, port=req.port)
     _rl_state["client"] = client
     ok = await client.connect()

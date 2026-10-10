@@ -260,7 +260,7 @@ async def resonite_system_status_http() -> dict[str, Any]:
             rl_port = getattr(client, "port", None)
             rl_session = getattr(client, "session_info", None) or None
     except Exception:
-        pass
+        logger.debug("ResoniteLink client probe failed; reporting disconnected", exc_info=True)
 
     return {
         "status": "success",

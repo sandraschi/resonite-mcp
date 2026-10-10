@@ -35,7 +35,7 @@ def _repo_url(default: str) -> str:
         if re.match(r"^https?://", out):
             return out
     except Exception:
-        pass
+        logger.debug("git remote probe failed; using default repo URL", exc_info=True)
     return default
 
 

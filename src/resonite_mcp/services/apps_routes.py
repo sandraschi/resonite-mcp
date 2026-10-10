@@ -42,7 +42,7 @@ def _read_pyproject_desc(repo_path: Path) -> str | None:
         if desc and len(desc) >= 10 and "hardened substrate" not in desc.lower():
             return desc
     except Exception:
-        pass
+        logger.debug("tomllib description parse failed for %s", p, exc_info=True)
     try:
         import re
 
@@ -53,7 +53,7 @@ def _read_pyproject_desc(repo_path: Path) -> str | None:
             if len(d) >= 10 and "hardened substrate" not in d.lower():
                 return d
     except Exception:
-        pass
+        logger.debug("regex description parse failed for %s", p, exc_info=True)
     return None
 
 
@@ -157,6 +157,7 @@ def _check_port_health_sync(port: int, timeout: float = 1.2) -> dict[str, Any]:
                         "reason": "http ok",
                     }
         except Exception:
+            logger.debug("health probe failed for port %s", port, exc_info=True)
             continue
     return {
         "port": port,
@@ -186,7 +187,7 @@ def _is_process_running(name: str) -> list[int]:
                             if pid > 4:
                                 pids.append(pid)
                         except Exception:
-                            pass
+                            logger.debug("non-numeric tasklist token %r", p)
         return pids
     except Exception:
         return []
@@ -318,7 +319,7 @@ def register_apps_routes(router: Any) -> None:
                                 port = cand
                         break
             except Exception:
-                pass
+                logger.debug("candidate-port health check failed", exc_info=True)
         if health.get("alive"):
             if app_id:
                 pids = await asyncio.to_thread(_is_process_running, app_id)

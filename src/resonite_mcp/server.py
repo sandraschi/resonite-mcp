@@ -290,7 +290,7 @@ def is_resonite_running() -> bool:
             if "resonite" in name:
                 return True
     except Exception:
-        pass
+        logger.debug("psutil process scan failed; falling back to tasklist", exc_info=True)
 
     # Fallback to tasklist with safe decoding and case insensitivity
     try:
