@@ -28,6 +28,8 @@ init: bootstrap
 # --- Development ---
 
 # Start the backend server (port 10979)
+serve: start-be
+
 start-be:
     uv run python -m resonite_mcp --port 10979
 
@@ -56,6 +58,8 @@ lint:
     Set-Location '{{justfile_directory()}}\web_sota'; npx @biomejs/biome ci .
 
 # Auto-fix lint issues (Ruff fix + Biome write)
+fmt: fix
+
 fix:
     uv run ruff check src/resonite_mcp/ --fix --unsafe-fixes
     uv run ruff format src/resonite_mcp/
@@ -101,7 +105,7 @@ build-sidecar:
 # Tauri desktop app (requires sidecar for release)
 build-native:
     powershell.exe -NoProfile -File '{{justfile_directory()}}\native\ensure-sidecar-stub.ps1'
-    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; pwsh -NoProfile -File '{{justfile_directory()}}\native\build.ps1'
+    Set-Location '{{justfile_directory()}}\native'; $env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"; npm install; powershell.exe -NoProfile -File '{{justfile_directory()}}\native\build.ps1'
 
 # Full release: web_sota + sidecar + NSIS installer
 build-all:

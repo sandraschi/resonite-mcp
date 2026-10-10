@@ -73,3 +73,6 @@ data/backups/
 
 # Spawn registry (runtime record of webapp-spawned slots, rebuilt live - never commit)
 data/spawn_registry.json
+
+# Assess reports (regenerable snapshots; timestamp is the committed audit trail)
+reports/

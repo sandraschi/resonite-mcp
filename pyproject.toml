@@ -161,8 +161,8 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "S", "UP", "RUF"]
-ignore = ["S101", "B008", "S106", "S110", "S112", "S101", "B008", "S106", "S110", "S112", "RUF012", "S603", "S607", "S324", "E402", "E501"]
+select = ["E", "F", "W", "I", "B", "S", "UP", "RUF", "T20"]
+ignore = ["S101", "B008", "S106", "RUF012", "S603", "S607", "S324", "E402", "E501"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -181,3 +181,6 @@ dev = [
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/*" = ["B007", "S310", "S603", "S607"]
+# CLI smoke-test entry points: stdout is the interface, not a logging bypass
+"src/resonite_mcp/utils/gltf_meshjson.py" = ["T201"]
+"src/resonite_mcp/utils/stl_meshjson.py" = ["T201"]
