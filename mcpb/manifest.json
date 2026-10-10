@@ -8,10 +8,10 @@
     "type": "python",
     "entry_point": "run_server.py",
     "mcp_config": {
-      "command": "uv",
-      "args": ["run","--directory","${PWD}","run_server.py"],
+      "command": "python",
+      "args": ["-m", "resonite_mcp", "--stdio"],
       "env": {
-        "PYTHONPATH": "${PWD}/src",
+        "PYTHONPATH": "${__dirname}/src",
         "PYTHONUNBUFFERED": "1"
       }
     }
