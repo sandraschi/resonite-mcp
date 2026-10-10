@@ -5,6 +5,34 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased] — 2026-10-10 — assfix audit + hardening
+
+### Added
+- `POST /api/shutdown` orderly self-termination (fleet launcher restarts).
+- `GET /api/v1/diagnostics` tool list + system info for CUA-NSIS smoke tests.
+- `docs/ONBOARDING.md` 10-minute setup guide; README links it.
+- Session-context injection: `.cursorrules`, `.windsurfrules`,
+  `.claude-plugin/plugin.json` + `hooks/hooks.json`, `.github/copilot-instructions.md`,
+  `.opencode/skills/resonite/SKILL.md`.
+- justfile `serve` + `fmt` aliases.
+
+### Fixed
+- `mcpb/manifest.json`: `${PWD}` → `${__dirname}`, entry now stdio
+  (`python -m resonite_mcp --stdio`) instead of HTTP-mode `uv run`.
+- CORS `allow_origin_regex` unconditional (was gated on `RESONITE_TAURI`).
+- `web_sota/src/lib/api-base.ts`: absolute backend URL only inside Tauri; LAN/prod
+  browser tabs stay same-origin.
+- Ruff: removed `S110`/`S112` from ignore (11 silent swallows now log), added `T20`
+  with per-file ignores for the two mesh-JSON CLI smoke mains.
+- justfile `build-native`: bare `pwsh` → `powershell.exe`.
+- `reports/` added to `.gitignore`.
+
+### Deferred (scored OPEN, see `docs/assess-reports/2026-10-10.md`)
+- Chat page direct browser→Ollama fetch (needs backend `/api/llm/chat` proxy first).
+- `transport.py` `run_http_async` retirement analysis; tool-annotation + docstring
+  remainder; zustand store; data-testid/font sweeps; bun migration.
+- Issue #3 companion mods documented in `docs/ROADMAP.md`, not implemented.
+
 ## [Unreleased] — 2026-09-03 — First FastMCP-native skill (resonite-user)
 
 ### Added

@@ -156,7 +156,16 @@
 | `RESONITE_TOKEN` | — | Cloud API auth token |
 | `RESONITE_USER_ID` | — | Cloud API user ID |
 | `MCP_BRIDGE_URLS` | — | Fleet MCP bridge URLs |
-| `RESONITE_TAURI` | 0 | Tauri embedded mode flag |
+## HTTP Endpoints (backend :10979)
+
+- `GET /health`, `/api/health`, `/api/v1/health` — liveness probe (fleet launcher)
+- `POST /api/shutdown` — orderly self-termination (200 now, exit ~500 ms later)
+- `GET /api/v1/diagnostics` — tool list + system info (CUA-NSIS smoke)
+- `GET /api/status`, `/api/stats`, `/api/system` — status surfaces
+- `POST /api/v1/tool` — MCP tool bridge for the webapp Agent Lab
+- `GET /api/llm-discovery` — local LLM provider probe
+- `/api/osc/*`, `/api/resonite/*`, `/api/resonite/inventory/*`, `/api/plugins/*`,
+  `/rl/*`, `/api/world-builder/*`, `/api/logs*` — domain routes
 
 ## Quick Start
 

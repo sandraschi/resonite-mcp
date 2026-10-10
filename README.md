@@ -13,6 +13,10 @@
 
 Resonite MCP is an integration bridge and state-of-the-art web dashboard that connects AI assistants to the **Resonite** social VR platform. Using natural language, you can command your world, customize your avatar, inspect your sessions, and control your telemetry directly through chat.
 
+> **Claude Desktop (1-click):**
+> `irm https://github.com/sandraschi/resonite-mcp/releases/latest/download/install.ps1 | iex`
+> Other clients (stdio): `python -m resonite_mcp --stdio` with `PYTHONPATH=src`.
+
 ---
 
 ## ✨ Key Features
@@ -101,6 +105,7 @@ For deep architectural details, setup advice, and API references, check out our 
 | **[BUILD_AND_INHABIT_PIPELINE.md](BUILD_AND_INHABIT_PIPELINE.md)** | Automation stages from Blender/GIMP to live VR injection |
 | **[COMMUNITY_RESOURCES.md](COMMUNITY_RESOURCES.md)** | Links to RML modding, video tutorials, subreddits, and Discords |
 | **[BEGINNERS_GUIDE.md](BEGINNERS_GUIDE.md)** | Onboarding basics and control references for new users |
+| **[docs/ONBOARDING.md](docs/ONBOARDING.md)** | 10-minute setup: prerequisites, env vars, sanity check, pitfalls |
 
 ---
 

@@ -117,3 +117,12 @@ blender-mcp (GLB/VRM) → resonite_fleet (import_blender_asset)
 gimp-mcp (textures)   → resonite_fleet (import_gimp_texture)
 worldlabs-mcp (splats) → resonite_import_worldlabs_url
 ```
+
+## Backlog — optional companion Resonite mods (GitHub issue #3)
+
+Community request (2026-09-19, jfmherokiller): optional client-side mods exposing
+more API/UI (model creator automation), file loading into the game (avatar-edit
+test pipelines, e.g. VRChat→Resonite conversion), and array-protocol robustness
+fixes. Scoped as a separate Resonite-side development effort: mods must stay
+entirely OPTIONAL (never required to install). Not started; needs a Resonite-mod
+developer. Assfix 2026-10-10 documented without implementing (out of scope).
