@@ -1,0 +1,14 @@
+# Resonite MCP — Cursor rules
+
+Python 3.12+, `uv run` (never naked python), Ruff line-length 120, T20 prints
+banned in server code (CLI smoke mains get per-file T20 ignores). Ports
+10978 (web_sota) / 10979 (backend) — never hardcode others. just recipes run
+each line as a separate powershell.exe: join `Set-Location` with `; `.
+
+## Session Context (Resonite MCP)
+
+Before starting work: query the running backend (`GET /health`,
+`POST /api/v1/tool` with `search_guides`/`ask_resonite`) for current tool
+state; read `docs/assess-reports/2026-10-10.md` for known gaps.
+At end of work: run `uv run ruff check src/` + `pytest tests/ -q`, update
+`docs/assess-reports/` date-entry if behavior changed.
