@@ -5,6 +5,7 @@ real OSC commands to trigger ProtoFlux node execution in-world, and use
 ResoniteLink for slot/component introspection where available.
 """
 
+import asyncio
 from typing import Any
 
 from fastmcp import FastMCP
@@ -90,7 +91,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                 from ..server import is_resonite_running
                 from ..tools.osc import send_osc
 
-                if not is_resonite_running():
+                if not await asyncio.to_thread(is_resonite_running):
                     return {
                         "success": False,
                         "message": "Resonite is not running. Cannot analyze scripts.",
@@ -183,7 +184,7 @@ class ProtoFluxHelpersPlugin(BasePlugin):
                 from ..server import is_resonite_running, resonite_link_client
                 from ..tools.osc import send_osc
 
-                if not is_resonite_running():
+                if not await asyncio.to_thread(is_resonite_running):
                     return {
                         "success": False,
                         "message": "Resonite not running.",

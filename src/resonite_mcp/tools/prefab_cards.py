@@ -11,6 +11,7 @@ All tools return ToolResult with structured_content=PrefabApp when Prefab
 is available; plain-text fallback otherwise.
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -37,7 +38,7 @@ async def resonite_dashboard_card() -> dict[str, Any]:
         osc_active = False
         osc_ports = []
 
-    res_running = is_resonite_running()
+    res_running = await asyncio.to_thread(is_resonite_running)
     rl_connected = resonite_link_client.running if resonite_link_client else False
 
     return {

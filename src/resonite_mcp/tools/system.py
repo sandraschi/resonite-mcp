@@ -444,7 +444,7 @@ async def status(level: str = "basic", focus: str | None = None) -> str:
         }
 
     # Session status - probe reality
-    res_running = is_resonite_running()
+    res_running = await asyncio.to_thread(is_resonite_running)
     rl_connected = resonite_link_client.running if resonite_link_client else False
     session_status = {
         "resonite_running": res_running,

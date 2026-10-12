@@ -4,6 +4,7 @@ This module provides comprehensive session management functionality for Resonite
 including session initialization, world loading, and session lifecycle management.
 """
 
+import asyncio
 import logging
 import uuid
 from datetime import datetime
@@ -112,7 +113,7 @@ async def resonite_session_status() -> dict[str, Any]:
     try:
         from ..server import is_resonite_running, resonite_link_client
 
-        res_running = is_resonite_running()
+        res_running = await asyncio.to_thread(is_resonite_running)
         link_connected = resonite_link_client.running if resonite_link_client else False
         osc_active = len(osc_servers) > 0
 
@@ -166,7 +167,7 @@ async def resonite_world_load(world_path: str) -> dict[str, Any]:
 
         from ..server import is_resonite_running
 
-        if not is_resonite_running():
+        if not await asyncio.to_thread(is_resonite_running):
             return {
                 "status": "error",
                 "message": "Resonite is not running. Start Resonite first, then retry.",

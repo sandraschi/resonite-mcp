@@ -325,7 +325,7 @@ async def health_check() -> dict[str, Any]:
           returns raw passages instead of synthesized answers.
     """
     installed = is_resonite_installed()
-    running = is_resonite_running()
+    running = await asyncio.to_thread(is_resonite_running)
 
     return {
         "status": "success",
@@ -404,7 +404,7 @@ async def launch_resonite(request):
 async def get_status(request):
     """SOTA Status endpoint."""
     installed = is_resonite_installed()
-    running = is_resonite_running()
+    running = await asyncio.to_thread(is_resonite_running)
 
     return JSONResponse(
         {

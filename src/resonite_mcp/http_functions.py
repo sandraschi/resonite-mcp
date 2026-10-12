@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """HTTP-only functions for Resonite MCP - avoids FastMCP tool wrapping."""
 
+import asyncio
 import logging
 import time
 import webbrowser
@@ -268,7 +269,7 @@ async def resonite_system_status_http() -> dict[str, Any]:
         "workspace": "Resonite MCP",
         "server_running": True,
         "resonite_installed": is_resonite_installed(),
-        "resonite_running": is_resonite_running(),
+        "resonite_running": await asyncio.to_thread(is_resonite_running),
         "launch_url": "steam://rungameid/2519830",
         "resonite_link_connected": rl_connected,
         "resonite_link_uri": rl_uri,
