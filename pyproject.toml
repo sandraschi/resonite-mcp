@@ -176,7 +176,7 @@ dev = [
     "ruff>=0.16.0,<0.17",
     "prometheus-client>=0.20.0",
     "pre-commit>=4.6.1",
-    "pywin32>=311",
+    "pywin32>=311; sys_platform == 'win32'",
 ]
 
 [tool.ruff.lint.per-file-ignores]
