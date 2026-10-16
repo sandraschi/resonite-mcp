@@ -6,6 +6,7 @@ src/resonite_mcp/__main__.py
 src/resonite_mcp/activity_log.py
 src/resonite_mcp/agentic.py
 src/resonite_mcp/cli.py
+src/resonite_mcp/data_dir.py
 src/resonite_mcp/http_functions.py
 src/resonite_mcp/http_server.py
 src/resonite_mcp/llm.py
@@ -14,7 +15,9 @@ src/resonite_mcp/prompts.py
 src/resonite_mcp/rag.py
 src/resonite_mcp/resonite_link.py
 src/resonite_mcp/server.py
+src/resonite_mcp/spawn_registry.py
 src/resonite_mcp/transport.py
+src/resonite_mcp/world_builder.py
 src/resonite_mcp.egg-info/PKG-INFO
 src/resonite_mcp.egg-info/SOURCES.txt
 src/resonite_mcp.egg-info/dependency_links.txt
@@ -26,8 +29,12 @@ src/resonite_mcp/plugins/base_plugin.py
 src/resonite_mcp/plugins/osc_extensions.py
 src/resonite_mcp/plugins/plugin_manager.py
 src/resonite_mcp/plugins/protoflux_helpers.py
+src/resonite_mcp/services/apps_routes.py
+src/resonite_mcp/services/fleet_catalog.py
+src/resonite_mcp/services/fleet_common.py
 src/resonite_mcp/tools/__init__.py
 src/resonite_mcp/tools/avatar.py
+src/resonite_mcp/tools/depot.py
 src/resonite_mcp/tools/fleet_tools.py
 src/resonite_mcp/tools/integrations.py
 src/resonite_mcp/tools/inventory.py
@@ -40,6 +47,7 @@ src/resonite_mcp/tools/session.py
 src/resonite_mcp/tools/system.py
 src/resonite_mcp/tools/vbot.py
 src/resonite_mcp/tools/voice_tools.py
+src/resonite_mcp/utils/__init__.py
 src/resonite_mcp/utils/decimate_meshjson.py
 src/resonite_mcp/utils/execution_mode.py
 src/resonite_mcp/utils/fleet_audit.py
@@ -48,10 +56,12 @@ src/resonite_mcp/utils/fleet_e2e_offline.py
 src/resonite_mcp/utils/fleet_e2e_strict.py
 src/resonite_mcp/utils/fleet_http.py
 src/resonite_mcp/utils/fleet_staging.py
+src/resonite_mcp/utils/gh_cli.py
 src/resonite_mcp/utils/gltf_meshjson.py
 src/resonite_mcp/utils/inventory_adapter.py
 src/resonite_mcp/utils/marble_staging.py
 src/resonite_mcp/utils/protoflux_avatar_presets.py
+src/resonite_mcp/utils/response.py
 src/resonite_mcp/utils/stl_meshjson.py
 src/resonite_mcp/utils/structured_logging.py
 src/resonite_mcp/utils/telemetry.py
