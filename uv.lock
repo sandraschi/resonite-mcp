@@ -2477,11 +2477,9 @@ dependencies = [
     { name = "fastapi" },
     { name = "fastmcp" },
     { name = "httpx" },
-    { name = "lancedb" },
     { name = "prefab-ui" },
     { name = "psutil" },
     { name = "python-osc" },
-    { name = "sentence-transformers" },
     { name = "starlette" },
     { name = "uvicorn" },
     { name = "websockets" },
@@ -2509,6 +2507,10 @@ docs = [
 monitoring = [
     { name = "prometheus-client" },
 ]
+rag = [
+    { name = "lancedb" },
+    { name = "sentence-transformers" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -2530,7 +2532,7 @@ requires-dist = [
     { name = "flake8", marker = "extra == 'dev'", specifier = ">=6.0.0" },
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "isort", marker = "extra == 'dev'", specifier = ">=5.12.0" },
-    { name = "lancedb", specifier = ">=0.17.0" },
+    { name = "lancedb", marker = "extra == 'rag'", specifier = ">=0.17.0" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.4.0" },
     { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.0.0" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'docs'", specifier = ">=0.20.0" },
@@ -2544,14 +2546,14 @@ requires-dist = [
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4.0.0" },
     { name = "python-osc", specifier = ">=1.8.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.16.0,<0.17" },
-    { name = "sentence-transformers", specifier = ">=3.0.0" },
+    { name = "sentence-transformers", marker = "extra == 'rag'", specifier = ">=3.0.0" },
     { name = "starlette", specifier = ">=0.40.0" },
     { name = "types-aiofiles", marker = "extra == 'dev'" },
     { name = "types-requests", marker = "extra == 'dev'" },
     { name = "uvicorn", specifier = ">=0.30.0" },
     { name = "websockets", specifier = ">=12.0" },
 ]
-provides-extras = ["dev", "docs", "monitoring"]
+provides-extras = ["rag", "dev", "docs", "monitoring"]
 
 [package.metadata.requires-dev]
 dev = [

@@ -17,7 +17,7 @@ install-fe:
     Set-Location '{{justfile_directory()}}\web_sota'; npm ci
 
 bootstrap:
-    uv sync --group dev
+    uv sync --group dev --extra rag
     uv run pre-commit install
     Set-Location web_sota; npm ci; if ($LASTEXITCODE -ne 0) { npm install }
     Write-Host "Pre-commit hooks installed." -ForegroundColor Green

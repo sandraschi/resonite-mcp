@@ -30,8 +30,6 @@ dependencies = [
     "httpx>=0.25.0",
     "python-osc>=1.8.0",
     "psutil>=5.9.0",
-    "lancedb>=0.17.0",
-    "sentence-transformers>=3.0.0",
     "websockets>=12.0",
     "starlette>=0.40.0",
     "uvicorn>=0.30.0",
@@ -40,6 +38,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+rag = [
+    "lancedb>=0.17.0",
+    "sentence-transformers>=3.0.0",
+]
 dev = [
     "pytest>=7.0.0",
     "pytest-asyncio>=0.21.0",
