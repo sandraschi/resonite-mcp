@@ -27,13 +27,14 @@ Requires-Dist: fastapi>=0.100.0
 Requires-Dist: httpx>=0.25.0
 Requires-Dist: python-osc>=1.8.0
 Requires-Dist: psutil>=5.9.0
-Requires-Dist: lancedb>=0.17.0
-Requires-Dist: sentence-transformers>=3.0.0
 Requires-Dist: websockets>=12.0
 Requires-Dist: starlette>=0.40.0
 Requires-Dist: uvicorn>=0.30.0
 Requires-Dist: prefab-ui>=0.14.0
 Requires-Dist: charset-normalizer>=3.4.5
+Provides-Extra: rag
+Requires-Dist: lancedb>=0.17.0; extra == "rag"
+Requires-Dist: sentence-transformers>=3.0.0; extra == "rag"
 Provides-Extra: dev
 Requires-Dist: pytest>=7.0.0; extra == "dev"
 Requires-Dist: pytest-asyncio>=0.21.0; extra == "dev"
